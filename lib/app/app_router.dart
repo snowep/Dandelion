@@ -1,10 +1,10 @@
 import 'package:go_router/go_router.dart';
 
 import 'package:dandelion/features/home/home_screen.dart';
-import 'screens/library_screen.dart';
-import 'screens/wishlist_screen.dart';
-import 'screens/discover_screen.dart';
-import 'screens/insights_screen.dart';
+import 'package:dandelion/features/library/library_screen.dart';
+import 'package:dandelion/features/wishlist/wishlist_screen.dart';
+import 'package:dandelion/features/discover/discover_screen.dart';
+import 'package:dandelion/features/insights/insights_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   routes: [
