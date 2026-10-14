@@ -16,7 +16,10 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Welcome to Dandelion', style: TextStyle(fontSize: 24)),
+                const Text(
+                  'Welcome to Dandelion',
+                  style: TextStyle(fontSize: 24),
+                ),
                 const SizedBox(height: 8),
                 const Text('Your personal library dashboard.'),
                 const SizedBox(height: 16),
