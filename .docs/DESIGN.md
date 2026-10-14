@@ -2,112 +2,117 @@
 
 ## 1. Design direction
 
-Use **Material 3 Expressive** with Material You principles: personal color, clear hierarchy, approachable shapes, purposeful motion, and layouts that adapt to the available space. Expressive does not mean every component should be animated or oversized. Reading content remains the focus.
+Use **Material 3 Expressive** and Material You principles: personal color, clear hierarchy, approachable shapes, purposeful motion, and responsive layouts. Keep the reading content primary; don't animate every component.
 
 ## 2. Visual system
 
 ### Color
 
-- Use Flutter's Material 3 `ColorScheme` generated from a seed color.
-- Support light and dark themes.
-- On Android, use dynamic system colors when available and when the user chooses **System colors**.
-- Provide a Dandelion seed palette fallback on platforms without dynamic color.
-- Never hard-code colors throughout widgets. Use `Theme.of(context).colorScheme` and `Theme.of(context).textTheme`.
-- Check text and icon contrast for both themes. Do not assume generated color pairs always meet every use case.
+- Use Flutter Material 3 `ColorScheme` generated from a seed color.
+- Support light, dark, and system theme modes.
+- On Android, offer dynamic system color when available; also provide a Dandelion seed palette for every platform.
+- Read colors and typography from `Theme.of(context)`, not hard-coded widget colors.
+- Test contrast in both themes. Generated palettes do not remove the need to check important text/icon pairings.
 
-Suggested seed direction: muted botanical green or warm golden yellow. Treat these as a starting point, not final locked brand colors.
+Suggested seed direction: muted botanical green or warm dandelion yellow. These are proposals, not locked brand colors.
 
-### Type
+### Type, shape, and surfaces
 
-- Use Material typography roles (`display`, `headline`, `title`, `body`, `label`) rather than arbitrary font sizes.
-- Book titles should be prominent; metadata should remain readable and secondary.
-- Respect system text scaling. Avoid fixed-height text containers that clip larger text.
+- Prefer Material typography roles over arbitrary font sizes.
+- Keep book title prominent and metadata secondary but readable.
+- Respect text scaling; don't use fixed-height boxes that clip large text.
+- Use rounded surfaces, tonal elevation, and clear grouping. Avoid heavy shadows and blur.
+- Keep cover aspect ratios consistent and display a neutral fallback when no cover is available.
 
-### Shape and elevation
-
-- Use rounded Material surfaces and cards where they clarify grouping.
-- Prefer tonal surfaces and borders over stacks of shadows.
-- Reserve strong emphasis for the primary action and the currently selected navigation destination.
-- Keep book covers visually consistent with a fixed aspect ratio.
-
-## 3. Navigation and screen structure
+## 3. Navigation
 
 Primary destinations:
-1. **Home** — current reading, activity, quick actions, and compact statistics.
-2. **Library** — searchable collection with filters and sorting.
-3. **Wishlist** — books the user wants to read or acquire.
-4. **Discover** — explainable local recommendations.
-5. **Insights** — reading history and statistics.
+1. **Home** — currently reading, recently updated, quick actions, and compact statistics.
+2. **Library** — local collection, search, status and genre filters.
+3. **Wishlist** — wanted books and simple status changes.
+4. **Discover** — recommendations from local data and optional online catalog results.
+5. **Insights** — finished count and other basic statistics.
 
-On compact windows, use `NavigationBar` with four or five destinations only if labels remain clear; otherwise move secondary destinations into a menu. On medium/expanded windows, use `NavigationRail` or a drawer/navigation panel. Do not create separate navigation implementations for each platform; adapt the shell.
+Use `NavigationBar` on compact layouts, `NavigationRail` or a navigation panel at medium/expanded widths. Keep the same navigation model; adapt its presentation rather than creating per-platform versions.
 
-## 4. Sliver-based screen patterns
+## 4. Add-book and lookup experience
 
-Use `CustomScrollView` for dashboard and library pages where collapsing headers or mixed content are useful.
+- Make **Enter manually** and **Look up by title/ISBN** obvious choices.
+- Catalog lookup is optional and must have a visible progress, offline, empty, rate-limited, and error state.
+- Show result title, author, edition/ISBN when available, publication year, and cover thumbnail.
+- Before saving a result, show a preview/edit form. The user controls imported fields.
+- Never overwrite reading status, progress, rating, or personal notes from catalog metadata.
+- Show a source link/attribution when metadata comes from a provider.
+- Cover actions: choose local image, use a provider cover, remove cover. On web, file selection and persistent image storage use browser-compatible APIs.
 
-- `SliverAppBar`: title, search/filter actions, optional pinned behavior.
-- `SliverToBoxAdapter`: small summary or filter region.
-- `SliverPersistentHeader`: only for a filter row that genuinely needs to remain visible.
-- `SliverList` / `SliverGrid`: lazy book cards or rows.
-- `SliverFillRemaining`: empty, error, or first-run state.
-- `SliverPadding`: consistent content margins.
+## 5. Sliver patterns
 
-Do not wrap a `ListView` inside another scrolling view when a single `CustomScrollView` can express the layout. Use `SliverChildBuilderDelegate` for large collections. Keep `shrinkWrap: true` out of long lists unless the list is genuinely small.
+Use `CustomScrollView` where pages combine headers, filters, summaries, and large lists.
 
-## 5. Adaptive layout
+- `SliverAppBar`: page title and search/filter actions; pinned only when useful.
+- `SliverToBoxAdapter`: small summaries or an add-book prompt.
+- `SliverPersistentHeader`: only for a filter/sort row that benefits from staying visible.
+- `SliverList` / `SliverGrid`: lazy book cards and rows.
+- `SliverFillRemaining`: empty, error, or first-run states.
+- `SliverPadding`: consistent page margins.
 
-Use available width and layout constraints, not device names, to choose layout.
+Don't nest a `ListView` inside another scrolling view when slivers can model the page directly. Use lazy builders and avoid `shrinkWrap: true` for large lists.
 
-- **Compact:** one main content column, bottom navigation, compact book rows or two-column cover grid when covers are the main signal.
-- **Medium:** navigation rail, wider content margins, two-pane library/detail layout when helpful.
-- **Expanded:** persistent navigation, constrained reading-width content, optional list/detail split view.
-- **Desktop:** support mouse, keyboard, hover, right-click only where useful, and resizable windows. Do not stretch text and forms edge-to-edge.
+## 6. Adaptive layout
 
-Use `LayoutBuilder` or `MediaQuery.sizeOf(context)` at the screen boundary. Define a small set of breakpoints in one place; do not scatter arbitrary width checks across widgets. Confirm layout behavior on Flutter web and desktop as well as mobile.
+Use available width, not a device-name check.
 
-## 6. Interaction and motion
+- **Compact:** one main content column, bottom navigation, book rows or a two-column cover grid.
+- **Medium:** navigation rail, wider margins, optional list/detail split.
+- **Expanded:** persistent navigation, constrained content width, list/detail split where useful.
+- **Desktop:** support keyboard navigation, focus indicators, pointer/hover behavior, and resizable windows. Don't stretch forms across the whole screen.
 
-- Use standard Material interaction states, focus rings, ripples, and semantic controls.
-- Animate only to communicate a state change, hierarchy, or continuity.
-- Keep transitions short and interruptible. Respect reduced-motion settings where supported.
-- Avoid continuously animated backgrounds, parallax, or expensive blur behind scrolling content.
-- Save progress on explicit actions or with a small debounced update; do not rebuild the whole dashboard on each keystroke.
-- Provide undo for reversible actions such as archive or remove-from-wishlist when practical.
+Define breakpoints in one place and use `LayoutBuilder` or `MediaQuery.sizeOf(context)` at screen boundaries.
 
-## 7. Accessibility
+## 7. Motion and interaction
 
-- Every icon-only control needs a tooltip and semantic label.
-- Do not communicate status by color alone; include text or an icon with a label.
-- Support keyboard navigation, visible focus, screen readers, and system text scaling.
-- Interactive targets should be comfortably tappable; aim for at least 48 logical pixels where practical.
-- Use `Semantics` only where standard widgets do not provide correct semantics.
-- Test with TalkBack, VoiceOver, keyboard-only navigation, and high text scaling.
-- Use meaningful cover alt text when a cover conveys information; decorative images should not create redundant announcements.
+- Use Material interaction states and standard controls first.
+- Animate meaningful changes only; keep transitions short and interruptible.
+- Respect reduced-motion settings where supported.
+- Avoid animated backgrounds, parallax, and repeated expensive blur in scrolling regions.
+- Update reading progress on explicit save or a small debounced interaction, not by rebuilding the whole dashboard on every keystroke.
+- Offer undo for reversible actions such as archive when practical.
 
-## 8. Loading, empty, and error states
+## 8. Accessibility
 
-Every data-driven screen must define:
-- **Loading:** small progress indicator or skeleton-like placeholder without large animated shimmer lists.
-- **Empty:** one sentence explaining the state and one clear action.
-- **No results:** preserve the query and offer a clear-filter action.
-- **Error:** explain what failed and offer retry or export/recovery where relevant.
-- **Offline:** core local features remain available; network-dependent features show their offline status.
+- Icon-only actions need semantic labels and tooltips.
+- Don't communicate status through color alone.
+- Support screen readers, keyboard navigation, visible focus, and system text scaling.
+- Aim for 48 logical-pixel interaction targets where practical.
+- Use `Semantics` when built-in widgets do not already provide accurate labels.
+- Test TalkBack, VoiceOver, keyboard-only use, high text scaling, and light/dark contrast.
 
-## 9. Performance rules
+## 9. States every data screen must handle
 
-- Use lazy sliver delegates for book collections.
-- Keep list item widgets small and stable; use keys based on stable book IDs when state preservation requires them.
-- Use thumbnail-sized cover images and a bounded image cache.
-- Avoid large opacity, blur, and clipping effects over thousands of items.
-- Keep database work off the UI thread when it becomes measurably expensive.
-- Use DevTools to profile frame time, rebuilds, memory, and image cache before adding optimization layers.
+- **Loading:** concise indicator or static placeholder; no large animated shimmer lists.
+- **Empty:** explain the state and show one clear action.
+- **No results:** preserve the query and offer clear filters.
+- **Lookup unavailable:** state that catalog lookup needs a connection; keep manual entry available.
+- **Lookup failure:** show the cause when known and offer retry/manual entry.
+- **Offline:** local collection stays available; only online features are disabled.
+- **Import/export failure:** do not imply success; preserve the source data and offer retry.
 
-## 10. Design acceptance checklist
+## 10. Performance checklist
 
-- [ ] Light, dark, and system-color themes work.
-- [ ] Layout adapts at compact, medium, and expanded widths.
-- [ ] Library uses lazy list/grid construction.
-- [ ] Large text does not clip primary actions or book titles.
-- [ ] Keyboard focus is visible and logical on desktop/web.
-- [ ] Empty, error, loading, and no-result states are designed.
-- [ ] Motion is purposeful and does not block interaction.
+- Lazy slivers for large collections.
+- Bounded database queries and stable IDs/keys.
+- Thumbnail-sized cover images and bounded image cache.
+- No queries, file reads, or expensive recommendation ranking inside `build`.
+- Avoid expensive clipping/opacity effects across long lists.
+- Profile frame time, rebuilds, and memory using Flutter DevTools before optimizing further.
+
+## 11. Acceptance checklist
+
+- [ ] Light, dark, and system color modes work.
+- [ ] Layout adapts to compact, medium, and expanded widths.
+- [ ] Library list uses lazy sliver construction.
+- [ ] Manual entry works without internet.
+- [ ] Lookup has loading, empty, error, rate-limit, and manual fallback states.
+- [ ] Both locally selected and provider-sourced covers render with a fallback.
+- [ ] Large text does not clip controls.
+- [ ] Keyboard focus and screen-reader labels are logical.

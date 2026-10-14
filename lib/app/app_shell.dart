@@ -42,7 +42,7 @@ class _AppShellState extends State<AppShell> {
     final isCompact = width < 720;
 
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_selectedIndex])),
+      appBar: _selectedIndex == 0 ? null : AppBar(title: Text(_titles[_selectedIndex])),
       body: isCompact
           ? _buildBody()
           : Row(

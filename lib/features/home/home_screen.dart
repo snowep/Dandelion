@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dandelion/shared/widgets/primary_button.dart';
 import 'package:dandelion/shared/widgets/sliver_app_bar_widget.dart';
 
@@ -25,7 +26,9 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 PrimaryButton(
                   text: 'Get Started',
-                  onPressed: () {},
+                  onPressed: () {
+                    context.go('/library');
+                  },
                   semanticLabel: 'Get started button',
                 ),
               ],
