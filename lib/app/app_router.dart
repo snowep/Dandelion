@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 
-import 'screens/home_screen.dart';
+import 'package:dandelion/features/home/home_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/wishlist_screen.dart';
 import 'screens/discover_screen.dart';
