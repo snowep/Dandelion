@@ -68,10 +68,9 @@ class Book {
     this.externalSourceUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
-    DateTime? archivedAt,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now(),
-        archivedAt = archivedAt;
+    this.archivedAt,
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   /// Copy with modified fields - used for updates and archiving
   Book copyWith({
