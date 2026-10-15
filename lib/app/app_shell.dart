@@ -1,58 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:dandelion/features/home/home_screen.dart';
+import 'package:go_router/go_router.dart';
 
-class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+class AppShell extends StatelessWidget {
+  final Widget child;
+  final int selectedIndex;
+  final ValueChanged<int> onDestinationSelected;
 
-  @override
-  State<AppShell> createState() => _AppShellState();
-}
-
-class _AppShellState extends State<AppShell> {
-  int _selectedIndex = 0;
-
-  static const List<String> _titles = [
-    'Home',
-    'Library',
-    'Wishlist',
-    'Discover',
-    'Insights',
-  ];
-
-  Widget _buildBody() {
-    switch (_selectedIndex) {
-      case 0:
-        return const HomeScreen();
-      case 1:
-        return const Center(child: Text('Library Content'));
-      case 2:
-        return const Center(child: Text('Wishlist Content'));
-      case 3:
-        return const Center(child: Text('Discover Content'));
-      case 4:
-        return const Center(child: Text('Insights Content'));
-      default:
-        return const Center(child: Text('Unknown'));
-    }
-  }
+  const AppShell({
+    super.key,
+    required this.child,
+    required this.selectedIndex,
+    required this.onDestinationSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final isCompact = width < 720;
 
+    const List<String> titles = [
+      'Home',
+      'Library',
+      'Wishlist',
+      'Discover',
+      'Insights',
+    ];
+
     return Scaffold(
-      appBar: _selectedIndex == 0
+      appBar: selectedIndex == 0
           ? null
-          : AppBar(title: Text(_titles[_selectedIndex])),
+          : AppBar(title: Text(titles[selectedIndex])),
       body: isCompact
-          ? _buildBody()
+          ? child
           : Row(
               children: [
                 NavigationRail(
-                  selectedIndex: _selectedIndex,
-                  onDestinationSelected: (i) =>
-                      setState(() => _selectedIndex = i),
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: onDestinationSelected,
                   labelType: NavigationRailLabelType.all,
                   destinations: const [
                     NavigationRailDestination(
@@ -83,13 +67,13 @@ class _AppShellState extends State<AppShell> {
                   ],
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
-                Expanded(child: _buildBody()),
+                Expanded(child: child),
               ],
             ),
       bottomNavigationBar: isCompact
           ? NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+              selectedIndex: selectedIndex,
+              onDestinationSelected: onDestinationSelected,
               destinations: const [
                 NavigationDestination(
                   icon: Icon(Icons.home_outlined),
