@@ -1,0 +1,21 @@
+import 'package:dandelion/features/library/book.dart';
+import 'package:dandelion/features/library/reading_record.dart';
+
+abstract class BookRepository {
+  Future<void> createBook(Book book);
+  Future<void> updateBook(Book book);
+  Future<Book?> getBookById(int id);
+  Future<List<Book>> getAll();
+  Future<List<Book>> listBooks({
+    Map<String, dynamic>? filters,
+    String? sortBy,
+    bool ascending = true,
+  });
+  Future<void> archiveBook(int id);
+  Future<void> deleteBook(int id);
+  Future<void> createReadingRecord(ReadingRecord record);
+  Future<void> updateReadingRecord(ReadingRecord record);
+  Future<ReadingRecord?> getReadingRecordForBook(int bookId);
+  Future<List<ReadingRecord>> listReadingRecords({int? bookId});
+  Future<void> close();
+}
