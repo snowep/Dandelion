@@ -170,6 +170,21 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _isInWishlistMeta = const VerificationMeta(
+    'isInWishlist',
+  );
+  @override
+  late final GeneratedColumn<bool> isInWishlist = GeneratedColumn<bool>(
+    'is_in_wishlist',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_in_wishlist" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _externalCatalogIdMeta = const VerificationMeta(
     'externalCatalogId',
   );
@@ -194,21 +209,6 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
-  static const VerificationMeta _isInWishlistMeta = const VerificationMeta(
-    'isInWishlist',
-  );
-  @override
-  late final GeneratedColumn<bool> isInWishlist = GeneratedColumn<bool>(
-    'is_in_wishlist',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_in_wishlist" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -261,9 +261,9 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
     pageCount,
     coverAssetKey,
     coverUrl,
+    isInWishlist,
     externalCatalogId,
     externalSourceUrl,
-    isInWishlist,
     createdAt,
     updatedAt,
     archivedAt,
@@ -378,6 +378,15 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         coverUrl.isAcceptableOrUnknown(data['cover_url']!, _coverUrlMeta),
       );
     }
+    if (data.containsKey('is_in_wishlist')) {
+      context.handle(
+        _isInWishlistMeta,
+        isInWishlist.isAcceptableOrUnknown(
+          data['is_in_wishlist']!,
+          _isInWishlistMeta,
+        ),
+      );
+    }
     if (data.containsKey('external_catalog_id')) {
       context.handle(
         _externalCatalogIdMeta,
@@ -393,15 +402,6 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         externalSourceUrl.isAcceptableOrUnknown(
           data['external_source_url']!,
           _externalSourceUrlMeta,
-        ),
-      );
-    }
-    if (data.containsKey('is_in_wishlist')) {
-      context.handle(
-        _isInWishlistMeta,
-        isInWishlist.isAcceptableOrUnknown(
-          data['is_in_wishlist']!,
-          _isInWishlistMeta,
         ),
       );
     }
@@ -494,6 +494,10 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         DriftSqlType.string,
         data['${effectivePrefix}cover_url'],
       ),
+      isInWishlist: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_in_wishlist'],
+      )!,
       externalCatalogId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}external_catalog_id'],
@@ -502,10 +506,6 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         DriftSqlType.string,
         data['${effectivePrefix}external_source_url'],
       ),
-      isInWishlist: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_in_wishlist'],
-      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -548,9 +548,9 @@ class BookRow extends DataClass implements Insertable<BookRow> {
   final int? pageCount;
   final String? coverAssetKey;
   final String? coverUrl;
+  final bool isInWishlist;
   final String? externalCatalogId;
   final String? externalSourceUrl;
-  final bool isInWishlist;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? archivedAt;
@@ -570,9 +570,9 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     this.pageCount,
     this.coverAssetKey,
     this.coverUrl,
+    required this.isInWishlist,
     this.externalCatalogId,
     this.externalSourceUrl,
-    required this.isInWishlist,
     required this.createdAt,
     required this.updatedAt,
     this.archivedAt,
@@ -623,13 +623,13 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     if (!nullToAbsent || coverUrl != null) {
       map['cover_url'] = Variable<String>(coverUrl);
     }
+    map['is_in_wishlist'] = Variable<bool>(isInWishlist);
     if (!nullToAbsent || externalCatalogId != null) {
       map['external_catalog_id'] = Variable<String>(externalCatalogId);
     }
     if (!nullToAbsent || externalSourceUrl != null) {
       map['external_source_url'] = Variable<String>(externalSourceUrl);
     }
-    map['is_in_wishlist'] = Variable<bool>(isInWishlist);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || archivedAt != null) {
@@ -679,13 +679,13 @@ class BookRow extends DataClass implements Insertable<BookRow> {
       coverUrl: coverUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(coverUrl),
+      isInWishlist: Value(isInWishlist),
       externalCatalogId: externalCatalogId == null && nullToAbsent
           ? const Value.absent()
           : Value(externalCatalogId),
       externalSourceUrl: externalSourceUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(externalSourceUrl),
-      isInWishlist: Value(isInWishlist),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       archivedAt: archivedAt == null && nullToAbsent
@@ -715,13 +715,13 @@ class BookRow extends DataClass implements Insertable<BookRow> {
       pageCount: serializer.fromJson<int?>(json['pageCount']),
       coverAssetKey: serializer.fromJson<String?>(json['coverAssetKey']),
       coverUrl: serializer.fromJson<String?>(json['coverUrl']),
+      isInWishlist: serializer.fromJson<bool>(json['isInWishlist']),
       externalCatalogId: serializer.fromJson<String?>(
         json['externalCatalogId'],
       ),
       externalSourceUrl: serializer.fromJson<String?>(
         json['externalSourceUrl'],
       ),
-      isInWishlist: serializer.fromJson<bool>(json['isInWishlist']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
@@ -746,9 +746,9 @@ class BookRow extends DataClass implements Insertable<BookRow> {
       'pageCount': serializer.toJson<int?>(pageCount),
       'coverAssetKey': serializer.toJson<String?>(coverAssetKey),
       'coverUrl': serializer.toJson<String?>(coverUrl),
+      'isInWishlist': serializer.toJson<bool>(isInWishlist),
       'externalCatalogId': serializer.toJson<String?>(externalCatalogId),
       'externalSourceUrl': serializer.toJson<String?>(externalSourceUrl),
-      'isInWishlist': serializer.toJson<bool>(isInWishlist),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'archivedAt': serializer.toJson<DateTime?>(archivedAt),
@@ -771,9 +771,9 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     Value<int?> pageCount = const Value.absent(),
     Value<String?> coverAssetKey = const Value.absent(),
     Value<String?> coverUrl = const Value.absent(),
+    bool? isInWishlist,
     Value<String?> externalCatalogId = const Value.absent(),
     Value<String?> externalSourceUrl = const Value.absent(),
-    bool? isInWishlist,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> archivedAt = const Value.absent(),
@@ -801,13 +801,13 @@ class BookRow extends DataClass implements Insertable<BookRow> {
         ? coverAssetKey.value
         : this.coverAssetKey,
     coverUrl: coverUrl.present ? coverUrl.value : this.coverUrl,
+    isInWishlist: isInWishlist ?? this.isInWishlist,
     externalCatalogId: externalCatalogId.present
         ? externalCatalogId.value
         : this.externalCatalogId,
     externalSourceUrl: externalSourceUrl.present
         ? externalSourceUrl.value
         : this.externalSourceUrl,
-    isInWishlist: isInWishlist ?? this.isInWishlist,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
@@ -839,15 +839,15 @@ class BookRow extends DataClass implements Insertable<BookRow> {
           ? data.coverAssetKey.value
           : this.coverAssetKey,
       coverUrl: data.coverUrl.present ? data.coverUrl.value : this.coverUrl,
+      isInWishlist: data.isInWishlist.present
+          ? data.isInWishlist.value
+          : this.isInWishlist,
       externalCatalogId: data.externalCatalogId.present
           ? data.externalCatalogId.value
           : this.externalCatalogId,
       externalSourceUrl: data.externalSourceUrl.present
           ? data.externalSourceUrl.value
           : this.externalSourceUrl,
-      isInWishlist: data.isInWishlist.present
-          ? data.isInWishlist.value
-          : this.isInWishlist,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       archivedAt: data.archivedAt.present
@@ -874,9 +874,9 @@ class BookRow extends DataClass implements Insertable<BookRow> {
           ..write('pageCount: $pageCount, ')
           ..write('coverAssetKey: $coverAssetKey, ')
           ..write('coverUrl: $coverUrl, ')
+          ..write('isInWishlist: $isInWishlist, ')
           ..write('externalCatalogId: $externalCatalogId, ')
           ..write('externalSourceUrl: $externalSourceUrl, ')
-          ..write('isInWishlist: $isInWishlist, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt')
@@ -901,9 +901,9 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     pageCount,
     coverAssetKey,
     coverUrl,
+    isInWishlist,
     externalCatalogId,
     externalSourceUrl,
-    isInWishlist,
     createdAt,
     updatedAt,
     archivedAt,
@@ -927,9 +927,9 @@ class BookRow extends DataClass implements Insertable<BookRow> {
           other.pageCount == this.pageCount &&
           other.coverAssetKey == this.coverAssetKey &&
           other.coverUrl == this.coverUrl &&
+          other.isInWishlist == this.isInWishlist &&
           other.externalCatalogId == this.externalCatalogId &&
           other.externalSourceUrl == this.externalSourceUrl &&
-          other.isInWishlist == this.isInWishlist &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.archivedAt == this.archivedAt);
@@ -951,9 +951,9 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
   final Value<int?> pageCount;
   final Value<String?> coverAssetKey;
   final Value<String?> coverUrl;
+  final Value<bool> isInWishlist;
   final Value<String?> externalCatalogId;
   final Value<String?> externalSourceUrl;
-  final Value<bool> isInWishlist;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> archivedAt;
@@ -973,9 +973,9 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     this.pageCount = const Value.absent(),
     this.coverAssetKey = const Value.absent(),
     this.coverUrl = const Value.absent(),
+    this.isInWishlist = const Value.absent(),
     this.externalCatalogId = const Value.absent(),
     this.externalSourceUrl = const Value.absent(),
-    this.isInWishlist = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archivedAt = const Value.absent(),
@@ -996,9 +996,9 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     this.pageCount = const Value.absent(),
     this.coverAssetKey = const Value.absent(),
     this.coverUrl = const Value.absent(),
+    this.isInWishlist = const Value.absent(),
     this.externalCatalogId = const Value.absent(),
     this.externalSourceUrl = const Value.absent(),
-    this.isInWishlist = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archivedAt = const Value.absent(),
@@ -1019,9 +1019,9 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     Expression<int>? pageCount,
     Expression<String>? coverAssetKey,
     Expression<String>? coverUrl,
+    Expression<bool>? isInWishlist,
     Expression<String>? externalCatalogId,
     Expression<String>? externalSourceUrl,
-    Expression<bool>? isInWishlist,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? archivedAt,
@@ -1042,9 +1042,9 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
       if (pageCount != null) 'page_count': pageCount,
       if (coverAssetKey != null) 'cover_asset_key': coverAssetKey,
       if (coverUrl != null) 'cover_url': coverUrl,
+      if (isInWishlist != null) 'is_in_wishlist': isInWishlist,
       if (externalCatalogId != null) 'external_catalog_id': externalCatalogId,
       if (externalSourceUrl != null) 'external_source_url': externalSourceUrl,
-      if (isInWishlist != null) 'is_in_wishlist': isInWishlist,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (archivedAt != null) 'archived_at': archivedAt,
@@ -1067,9 +1067,9 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     Value<int?>? pageCount,
     Value<String?>? coverAssetKey,
     Value<String?>? coverUrl,
+    Value<bool>? isInWishlist,
     Value<String?>? externalCatalogId,
     Value<String?>? externalSourceUrl,
-    Value<bool>? isInWishlist,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? archivedAt,
@@ -1090,9 +1090,9 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
       pageCount: pageCount ?? this.pageCount,
       coverAssetKey: coverAssetKey ?? this.coverAssetKey,
       coverUrl: coverUrl ?? this.coverUrl,
+      isInWishlist: isInWishlist ?? this.isInWishlist,
       externalCatalogId: externalCatalogId ?? this.externalCatalogId,
       externalSourceUrl: externalSourceUrl ?? this.externalSourceUrl,
-      isInWishlist: isInWishlist ?? this.isInWishlist,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
@@ -1149,14 +1149,14 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     if (coverUrl.present) {
       map['cover_url'] = Variable<String>(coverUrl.value);
     }
+    if (isInWishlist.present) {
+      map['is_in_wishlist'] = Variable<bool>(isInWishlist.value);
+    }
     if (externalCatalogId.present) {
       map['external_catalog_id'] = Variable<String>(externalCatalogId.value);
     }
     if (externalSourceUrl.present) {
       map['external_source_url'] = Variable<String>(externalSourceUrl.value);
-    }
-    if (isInWishlist.present) {
-      map['is_in_wishlist'] = Variable<bool>(isInWishlist.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1188,9 +1188,9 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
           ..write('pageCount: $pageCount, ')
           ..write('coverAssetKey: $coverAssetKey, ')
           ..write('coverUrl: $coverUrl, ')
+          ..write('isInWishlist: $isInWishlist, ')
           ..write('externalCatalogId: $externalCatalogId, ')
           ..write('externalSourceUrl: $externalSourceUrl, ')
-          ..write('isInWishlist: $isInWishlist, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt')
@@ -1874,9 +1874,9 @@ typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
   Value<int?> pageCount,
   Value<String?> coverAssetKey,
   Value<String?> coverUrl,
+  Value<bool> isInWishlist,
   Value<String?> externalCatalogId,
   Value<String?> externalSourceUrl,
-  Value<bool> isInWishlist,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> archivedAt,
@@ -1897,9 +1897,9 @@ typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<int?> pageCount,
   Value<String?> coverAssetKey,
   Value<String?> coverUrl,
+  Value<bool> isInWishlist,
   Value<String?> externalCatalogId,
   Value<String?> externalSourceUrl,
-  Value<bool> isInWishlist,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> archivedAt,
@@ -2012,6 +2012,11 @@ class $$BooksTableFilterComposer extends Composer<_$AppDatabase, $BooksTable> {
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isInWishlist => $composableBuilder(
+    column: $table.isInWishlist,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get externalCatalogId => $composableBuilder(
     column: $table.externalCatalogId,
     builder: (column) => ColumnFilters(column),
@@ -2019,11 +2024,6 @@ class $$BooksTableFilterComposer extends Composer<_$AppDatabase, $BooksTable> {
 
   ColumnFilters<String> get externalSourceUrl => $composableBuilder(
     column: $table.externalSourceUrl,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isInWishlist => $composableBuilder(
-    column: $table.isInWishlist,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2152,6 +2152,11 @@ class $$BooksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isInWishlist => $composableBuilder(
+    column: $table.isInWishlist,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get externalCatalogId => $composableBuilder(
     column: $table.externalCatalogId,
     builder: (column) => ColumnOrderings(column),
@@ -2159,11 +2164,6 @@ class $$BooksTableOrderingComposer
 
   ColumnOrderings<String> get externalSourceUrl => $composableBuilder(
     column: $table.externalSourceUrl,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get isInWishlist => $composableBuilder(
-    column: $table.isInWishlist,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2247,6 +2247,11 @@ class $$BooksTableAnnotationComposer
   GeneratedColumn<String> get coverUrl =>
       $composableBuilder(column: $table.coverUrl, builder: (column) => column);
 
+  GeneratedColumn<bool> get isInWishlist => $composableBuilder(
+    column: $table.isInWishlist,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get externalCatalogId => $composableBuilder(
     column: $table.externalCatalogId,
     builder: (column) => column,
@@ -2254,11 +2259,6 @@ class $$BooksTableAnnotationComposer
 
   GeneratedColumn<String> get externalSourceUrl => $composableBuilder(
     column: $table.externalSourceUrl,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get isInWishlist => $composableBuilder(
-    column: $table.isInWishlist,
     builder: (column) => column,
   );
 
@@ -2342,9 +2342,9 @@ class $$BooksTableTableManager
                 Value<int?> pageCount = const Value.absent(),
                 Value<String?> coverAssetKey = const Value.absent(),
                 Value<String?> coverUrl = const Value.absent(),
+                Value<bool> isInWishlist = const Value.absent(),
                 Value<String?> externalCatalogId = const Value.absent(),
                 Value<String?> externalSourceUrl = const Value.absent(),
-                Value<bool> isInWishlist = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> archivedAt = const Value.absent(),
@@ -2364,9 +2364,9 @@ class $$BooksTableTableManager
                 pageCount: pageCount,
                 coverAssetKey: coverAssetKey,
                 coverUrl: coverUrl,
+                isInWishlist: isInWishlist,
                 externalCatalogId: externalCatalogId,
                 externalSourceUrl: externalSourceUrl,
-                isInWishlist: isInWishlist,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
@@ -2388,9 +2388,9 @@ class $$BooksTableTableManager
                 Value<int?> pageCount = const Value.absent(),
                 Value<String?> coverAssetKey = const Value.absent(),
                 Value<String?> coverUrl = const Value.absent(),
+                Value<bool> isInWishlist = const Value.absent(),
                 Value<String?> externalCatalogId = const Value.absent(),
                 Value<String?> externalSourceUrl = const Value.absent(),
-                Value<bool> isInWishlist = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> archivedAt = const Value.absent(),
@@ -2410,9 +2410,9 @@ class $$BooksTableTableManager
                 pageCount: pageCount,
                 coverAssetKey: coverAssetKey,
                 coverUrl: coverUrl,
+                isInWishlist: isInWishlist,
                 externalCatalogId: externalCatalogId,
                 externalSourceUrl: externalSourceUrl,
-                isInWishlist: isInWishlist,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,

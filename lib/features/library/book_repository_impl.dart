@@ -36,25 +36,26 @@ class BookRepositoryImpl implements BookRepository {
 
     return _database.transaction(() async {
       final id = await _database.into(_database.books).insert(
-            BooksCompanion.insert(
-              id: Value.absentIfNull(book.id > 0 ? book.id : null),
-              title: book.title.trim(),
-              author: Value(_optional(book.authors)),
-              description: Value(_optional(book.description)),
-              genres: Value(_optional(book.genres)),
-              isbn: Value(book.isbn13 ?? book.isbn10),
-              normalizedIsbn: Value(normalizedIsbn),
-              publisher: Value(_optional(book.publisher)),
-              publicationDate: Value(book.publicationDate),
-              publishedYear: Value(book.publicationDate?.year),
-              pageCount: Value(book.pageCount),
-              coverAssetKey: Value(book.coverAssetKey),
-              externalCatalogId: Value(book.externalCatalogId),
-              externalSourceUrl: Value(book.externalSourceUrl),
-              createdAt: Value(book.createdAt),
-              updatedAt: Value(book.updatedAt),
-              archivedAt: Value(book.archivedAt),
-            ),
+                  BooksCompanion.insert(
+                    id: Value.absentIfNull(book.id > 0 ? book.id : null),
+                    title: book.title.trim(),
+                    author: Value(_optional(book.authors)),
+                    description: Value(_optional(book.description)),
+                    genres: Value(_optional(book.genres)),
+                    isbn: Value(book.isbn13 ?? book.isbn10),
+                    normalizedIsbn: Value(normalizedIsbn),
+                    publisher: Value(_optional(book.publisher)),
+                    publicationDate: Value(book.publicationDate),
+                    publishedYear: Value(book.publicationDate?.year),
+                    pageCount: Value(book.pageCount),
+                    coverAssetKey: Value(book.coverAssetKey),
+                    isInWishlist: Value(book.isInWishlist),
+                    externalCatalogId: Value(book.externalCatalogId),
+                    externalSourceUrl: Value(book.externalSourceUrl),
+                    createdAt: Value(book.createdAt),
+                    updatedAt: Value(book.updatedAt),
+                    archivedAt: Value(book.archivedAt),
+                  ),
           );
       await _database.saveReadingRecord(
         ReadingRecordsCompanion.insert(
@@ -94,6 +95,7 @@ class BookRepositoryImpl implements BookRepository {
         publishedYear: Value(book.publicationDate?.year),
         pageCount: Value(book.pageCount),
         coverAssetKey: Value(book.coverAssetKey),
+        isInWishlist: Value(book.isInWishlist),
         externalCatalogId: Value(book.externalCatalogId),
         externalSourceUrl: Value(book.externalSourceUrl),
         updatedAt: Value(DateTime.now()),
@@ -164,6 +166,27 @@ class BookRepositoryImpl implements BookRepository {
   }
 
   @override
+  Future<void> toggleWishlist(int bookId) async {
+    final book = await getBookById(bookId);
+    if (book == null) {
+      throw ArgumentError('Book not found: $bookId');
+    }
+    await updateBook(book.copyWith(
+      isInWishlist: !book.isInWishlist,
+      updatedAt: DateTime.now(),
+    ));
+  }
+
+  @override
+  Future<List<Book>> getBooksByWishlist({bool isInWishlist = true}) async {
+    final rows = await (_database.select(_database.books)
+          ..where((book) => book.isInWishlist.equals(isInWishlist))
+          ..where((book) => book.archivedAt.isNull()))
+        .get();
+    return rows.map(_toBook).toList(growable: false);
+  }
+
+  @override
   Future<void> createReadingRecord(ReadingRecord record) async {
     await _validateProgress(record);
     if (await _database.getReadingRecordForBook(record.bookId) != null) {
@@ -218,6 +241,7 @@ class BookRepositoryImpl implements BookRepository {
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
         archivedAt: row.archivedAt,
+        isInWishlist: row.isInWishlist,
       );
 
   ReadingRecordsCompanion _toCompanion(ReadingRecord record) =>
@@ -303,5 +327,60 @@ class BookRepositoryImpl implements BookRepository {
     if (left is int && right is int) return left.compareTo(right);
     if (left is DateTime && right is DateTime) return left.compareTo(right);
     return left.toString().compareTo(right.toString());
+  }
+
+  @override
+  Future<int> getTotalBooksCount() async {
+    return (await (_database.select(_database.books)
+          ..where((book) => book.archivedAt.isNull()))
+        .get()).length;
+  }
+
+  @override
+  Future<int> getWishlistCount() async {
+    return (await (_database.select(_database.books)
+          ..where((book) => book.isInWishlist.equals(true)))
+        .get()).length;
+  }
+
+  @override
+  Future<Map<String, int>> getReadingStatusCounts() async {
+    final records = await _database.select(_database.readingRecords).get();
+    final counts = <String, int>{};
+    for (final record in records) {
+      counts[record.status] = (counts[record.status] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  @override
+  Future<double> getAverageRating() async {
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) => record.personalRating.isNotNull()))
+        .get();
+    if (rows.isEmpty) return 0.0;
+    final sum = rows.fold<double>(0.0, (s, r) => s + (r.personalRating ?? 0.0));
+    return sum / rows.length;
+  }
+
+  @override
+  Future<int> getTotalPagesRead() async {
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) => record.status.isIn(['reading', 'finished'])))
+        .get();
+    return rows.fold<int>(0, (s, r) => s + (r.currentPage ?? 0));
+  }
+
+  @override
+  Future<int> getBooksFinishedThisMonth() async {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1);
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) =>
+              record.status.equals('finished') &
+              record.finishDate.isNotNull() &
+              record.finishDate.isBiggerOrEqualValue(start)))
+        .get();
+    return rows.length;
   }
 }

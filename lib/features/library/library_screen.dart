@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -22,11 +23,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
   bool _loading = true;
   String? _error;
   String _query = '';
+  String _sortBy = 'title';
+  bool _sortAscending = true;
+  String? _statusFilter;
+  String? _genreFilter;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _loadBooks();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadBooks() async {
@@ -36,7 +48,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
     });
     try {
       final books = await widget.repository.listBooks(
-        filters: {'search': _query},
+        filters: {
+          'search': _query,
+          if (_statusFilter != null) 'status': _statusFilter!,
+          if (_genreFilter != null) 'genre': _genreFilter!,
+        },
+        sortBy: _sortBy,
+        ascending: _sortAscending,
       );
       final covers = <int, Uint8List>{};
       for (final book in books) {
@@ -340,8 +358,73 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 leading: const Icon(Icons.search),
                 onChanged: (query) {
                   _query = query;
-                  _loadBooks();
+                  _debounce?.cancel();
+                  _debounce = Timer(const Duration(milliseconds: 300), _loadBooks);
                 },
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverToBoxAdapter(
+              child: Row(
+                children: [
+                  PopupMenuButton<String>(
+                    child: const Text('Sort'),
+                    onSelected: (value) {
+                      setState(() {
+                        if (value == 'title' && _sortBy == 'title') {
+                          _sortAscending = !_sortAscending;
+                        } else {
+                          _sortBy = value;
+                          _sortAscending = true;
+                        }
+                        _loadBooks();
+                      });
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(value: 'title', child: Text('Title')),
+                      const PopupMenuItem(value: 'author', child: Text('Author')),
+                      const PopupMenuItem(value: 'updated', child: Text('Date')),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('Want'),
+                        selected: _statusFilter == 'wantToRead',
+                        onSelected: (_) {
+                          setState(() {
+                            _statusFilter = _statusFilter == 'wantToRead' ? null : 'wantToRead';
+                            _loadBooks();
+                          });
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('Reading'),
+                        selected: _statusFilter == 'reading',
+                        onSelected: (_) {
+                          setState(() {
+                            _statusFilter = _statusFilter == 'reading' ? null : 'reading';
+                            _loadBooks();
+                          });
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('Finished'),
+                        selected: _statusFilter == 'finished',
+                        onSelected: (_) {
+                          setState(() {
+                            _statusFilter = _statusFilter == 'finished' ? null : 'finished';
+                            _loadBooks();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -439,26 +522,41 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         book.authors.isEmpty ? 'Unknown author' : book.authors,
                       ),
                       onTap: () => _showProgressEditor(book),
-                      trailing: PopupMenuButton<String>(
-                        tooltip: 'Book actions',
-                        onSelected: (action) {
-                          if (action == 'edit') {
-                            _showBookEditor(book: book);
-                          } else if (action == 'archive') {
-                            widget.repository
-                                .archiveBook(book.id)
-                                .then((_) => _loadBooks());
-                          } else if (action == 'delete') {
-                            _deleteBook(book);
-                          }
-                        },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(
-                            value: 'archive',
-                            child: Text('Archive'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              book.isInWishlist ? Icons.favorite : Icons.favorite_border,
+                              color: book.isInWishlist ? Colors.red : null,
+                            ),
+                            tooltip: book.isInWishlist ? 'Remove from wishlist' : 'Add to wishlist',
+                            onPressed: () {
+                              widget.repository.toggleWishlist(book.id).then((_) => _loadBooks());
+                            },
                           ),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                          PopupMenuButton<String>(
+                            tooltip: 'Book actions',
+                            onSelected: (action) {
+                              if (action == 'edit') {
+                                _showBookEditor(book: book);
+                              } else if (action == 'archive') {
+                                widget.repository
+                                    .archiveBook(book.id)
+                                    .then((_) => _loadBooks());
+                              } else if (action == 'delete') {
+                                _deleteBook(book);
+                              }
+                            },
+                            itemBuilder: (context) => const [
+                              PopupMenuItem(value: 'edit', child: Text('Edit')),
+                              PopupMenuItem(
+                                value: 'archive',
+                                child: Text('Archive'),
+                              ),
+                              PopupMenuItem(value: 'delete', child: Text('Delete')),
+                            ],
+                          ),
                         ],
                       ),
                     ),
