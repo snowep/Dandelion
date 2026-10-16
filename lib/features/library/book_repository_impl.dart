@@ -49,6 +49,7 @@ class BookRepositoryImpl implements BookRepository {
               publishedYear: Value(book.publicationDate?.year),
               pageCount: Value(book.pageCount),
               coverAssetKey: Value(book.coverAssetKey),
+              isInWishlist: Value(book.isInWishlist),
               externalCatalogId: Value(book.externalCatalogId),
               externalSourceUrl: Value(book.externalSourceUrl),
               createdAt: Value(book.createdAt),
@@ -94,6 +95,7 @@ class BookRepositoryImpl implements BookRepository {
         publishedYear: Value(book.publicationDate?.year),
         pageCount: Value(book.pageCount),
         coverAssetKey: Value(book.coverAssetKey),
+        isInWishlist: Value(book.isInWishlist),
         externalCatalogId: Value(book.externalCatalogId),
         externalSourceUrl: Value(book.externalSourceUrl),
         updatedAt: Value(DateTime.now()),
@@ -164,6 +166,18 @@ class BookRepositoryImpl implements BookRepository {
   }
 
   @override
+  Future<void> toggleWishlist(int bookId) async {
+    final book = await getBookById(bookId);
+    if (book == null) {
+      throw ArgumentError('Book not found: $bookId');
+    }
+    await updateBook(book.copyWith(
+      isInWishlist: !book.isInWishlist,
+      updatedAt: DateTime.now(),
+    ));
+  }
+
+  @override
   Future<void> createReadingRecord(ReadingRecord record) async {
     await _validateProgress(record);
     if (await _database.getReadingRecordForBook(record.bookId) != null) {
@@ -218,6 +232,7 @@ class BookRepositoryImpl implements BookRepository {
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
         archivedAt: row.archivedAt,
+        isInWishlist: row.isInWishlist,
       );
 
   ReadingRecordsCompanion _toCompanion(ReadingRecord record) =>

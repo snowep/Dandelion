@@ -36,6 +36,9 @@ class Book {
   /// Reference to locally stored cover asset
   final String? coverAssetKey;
 
+  /// Wishlist status flag
+  final bool isInWishlist;
+
   /// External catalog ID source (e.g. Open Library ID)
   final String? externalCatalogId;
 
@@ -69,8 +72,10 @@ class Book {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.archivedAt,
+    bool? isInWishlist,
   }) : createdAt = createdAt ?? DateTime.now(),
-       updatedAt = updatedAt ?? DateTime.now();
+       updatedAt = updatedAt ?? DateTime.now(),
+       isInWishlist = isInWishlist ?? false;
 
   /// Copy with modified fields - used for updates and archiving
   Book copyWith({
@@ -85,6 +90,7 @@ class Book {
     DateTime? publicationDate,
     int? pageCount,
     String? coverAssetKey,
+    bool? isInWishlist,
     String? externalCatalogId,
     String? externalSourceUrl,
     DateTime? createdAt,
@@ -108,6 +114,7 @@ class Book {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
+      isInWishlist: isInWishlist ?? this.isInWishlist,
     );
   }
 
