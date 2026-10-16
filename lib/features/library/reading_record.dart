@@ -1,4 +1,4 @@
-enum ReadingStatus { WantToRead, Reading, Paused, Finished, DidNotFinish }
+enum ReadingStatus { wantToRead, reading, paused, finished, didNotFinish }
 
 class ReadingRecord {
   final int? id;

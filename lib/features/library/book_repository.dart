@@ -2,7 +2,10 @@ import 'package:dandelion/features/library/book.dart';
 import 'package:dandelion/features/library/reading_record.dart';
 
 abstract class BookRepository {
-  Future<void> createBook(Book book);
+  Future<int> createBook(
+    Book book, {
+    ReadingStatus initialStatus = ReadingStatus.wantToRead,
+  });
   Future<void> updateBook(Book book);
   Future<Book?> getBookById(int id);
   Future<List<Book>> getAll();

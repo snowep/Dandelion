@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -29,9 +30,15 @@ Future<Map<String, dynamic>> probeFts5Support() async {
 
     final stopwatch = Stopwatch()..start();
     try {
-      db.execute('CREATE VIRTUAL TABLE IF NOT EXISTS fts5_probe USING fts5(content)');
-      db.execute("INSERT INTO fts5_probe(rowid, content) VALUES (1, 'test content')");
-      final match = db.select("SELECT * FROM fts5_probe WHERE fts5_probe MATCH 'test'");
+      db.execute(
+        'CREATE VIRTUAL TABLE IF NOT EXISTS fts5_probe USING fts5(content)',
+      );
+      db.execute(
+        "INSERT INTO fts5_probe(rowid, content) VALUES (1, 'test content')",
+      );
+      final match = db.select(
+        "SELECT * FROM fts5_probe WHERE fts5_probe MATCH 'test'",
+      );
       if (match.isNotEmpty) {
         fts5Available = true;
         fallbackMethod = 'none';

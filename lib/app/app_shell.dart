@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -18,18 +17,7 @@ class AppShell extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final isCompact = width < 720;
 
-    const List<String> titles = [
-      'Home',
-      'Library',
-      'Wishlist',
-      'Discover',
-      'Insights',
-    ];
-
     return Scaffold(
-      appBar: selectedIndex == 0
-          ? null
-          : AppBar(title: Text(titles[selectedIndex])),
       body: isCompact
           ? child
           : Row(

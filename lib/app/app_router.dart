@@ -1,28 +1,30 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dandelion/app/app_shell.dart';
 import 'package:dandelion/features/home/home_screen.dart';
+import 'package:dandelion/features/library/book_database.dart';
+import 'package:dandelion/features/library/book_repository.dart';
+import 'package:dandelion/features/library/book_repository_impl.dart';
 import 'package:dandelion/features/library/library_screen.dart';
 import 'package:dandelion/features/wishlist/wishlist_screen.dart';
 import 'package:dandelion/features/discover/discover_screen.dart';
 import 'package:dandelion/features/insights/insights_screen.dart';
 
-final GoRouter appRouter = GoRouter(
+final BookRepository _bookRepository = BookRepositoryImpl(AppDatabase());
+
+final GoRouter appRouter = createAppRouter(_bookRepository);
+
+GoRouter createAppRouter(BookRepository repository) => GoRouter(
   initialLocation: '/',
   routes: [
     ShellRoute(
       builder: (context, state, child) {
-        // Determine selected index from location
-        int selectedIndex = 0;
-        final location = state.uri.toString();
-        if (location.startsWith('/library')) {
-          selectedIndex = 1;
-        } else if (location.startsWith('/wishlist'))
-          selectedIndex = 2;
-        else if (location.startsWith('/discover'))
-          selectedIndex = 3;
-        else if (location.startsWith('/insights'))
-          selectedIndex = 4;
+        final selectedIndex = switch (state.matchedLocation) {
+          '/library' => 1,
+          '/wishlist' => 2,
+          '/discover' => 3,
+          '/insights' => 4,
+          _ => 0,
+        };
 
         return AppShell(
           selectedIndex: selectedIndex,
@@ -52,7 +54,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
         GoRoute(
           path: '/library',
-          builder: (context, state) => const LibraryScreen(),
+          builder: (context, state) => LibraryScreen(repository: repository),
         ),
         GoRoute(
           path: '/wishlist',
