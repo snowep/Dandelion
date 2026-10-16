@@ -45,6 +45,7 @@ class Books extends Table {
   TextColumn get coverUrl => text().nullable()();
   TextColumn get externalCatalogId => text().nullable()();
   TextColumn get externalSourceUrl => text().nullable()();
+  BoolColumn get isInWishlist => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get archivedAt => dateTime().nullable()();
@@ -82,7 +83,7 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -90,6 +91,9 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (migrator, from, to) async {
       if (from < 2) {
         await migrator.addColumn(books, books.summary);
+      }
+      if (from < 3) {
+        await migrator.addColumn(books, books.isInWishlist);
       }
     },
   );

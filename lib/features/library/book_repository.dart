@@ -20,5 +20,6 @@ abstract class BookRepository {
   Future<void> updateReadingRecord(ReadingRecord record);
   Future<ReadingRecord?> getReadingRecordForBook(int bookId);
   Future<List<ReadingRecord>> listReadingRecords({int? bookId});
+  Future<void> toggleWishlist(int bookId);
   Future<void> close();
 }

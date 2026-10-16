@@ -49,7 +49,10 @@ class Book {
   final DateTime updatedAt;
 
   /// When the book was archived (null if active)
-  final DateTime? archivedAt;
+    final DateTime? archivedAt;
+
+    /// Whether this book is in the user's wishlist
+    final bool isInWishlist;
 
   /// Named constructor for creating a new active book
   Book({
@@ -69,8 +72,10 @@ class Book {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.archivedAt,
+    bool? isInWishlist,
   }) : createdAt = createdAt ?? DateTime.now(),
-       updatedAt = updatedAt ?? DateTime.now();
+       updatedAt = updatedAt ?? DateTime.now(),
+       isInWishlist = isInWishlist ?? false;
 
   /// Copy with modified fields - used for updates and archiving
   Book copyWith({
@@ -85,6 +90,7 @@ class Book {
     DateTime? publicationDate,
     int? pageCount,
     String? coverAssetKey,
+    bool? isInWishlist,
     String? externalCatalogId,
     String? externalSourceUrl,
     DateTime? createdAt,
@@ -108,6 +114,7 @@ class Book {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
+      isInWishlist: isInWishlist ?? this.isInWishlist,
     );
   }
 
