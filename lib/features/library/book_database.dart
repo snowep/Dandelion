@@ -46,7 +46,6 @@ class Books extends Table {
   BoolColumn get isInWishlist => boolean().withDefault(const Constant(false))();
   TextColumn get externalCatalogId => text().nullable()();
   TextColumn get externalSourceUrl => text().nullable()();
-  BoolColumn get isInWishlist => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get archivedAt => dateTime().nullable()();

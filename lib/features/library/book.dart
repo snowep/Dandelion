@@ -52,10 +52,7 @@ class Book {
   final DateTime updatedAt;
 
   /// When the book was archived (null if active)
-    final DateTime? archivedAt;
-
-    /// Whether this book is in the user's wishlist
-    final bool isInWishlist;
+  final DateTime? archivedAt;
 
   /// Named constructor for creating a new active book
   Book({

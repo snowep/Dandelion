@@ -36,27 +36,26 @@ class BookRepositoryImpl implements BookRepository {
 
     return _database.transaction(() async {
       final id = await _database.into(_database.books).insert(
-            BooksCompanion.insert(
-              id: Value.absentIfNull(book.id > 0 ? book.id : null),
-              title: book.title.trim(),
-              author: Value(_optional(book.authors)),
-              description: Value(_optional(book.description)),
-              genres: Value(_optional(book.genres)),
-              isbn: Value(book.isbn13 ?? book.isbn10),
-              normalizedIsbn: Value(normalizedIsbn),
-              publisher: Value(_optional(book.publisher)),
-              publicationDate: Value(book.publicationDate),
-              publishedYear: Value(book.publicationDate?.year),
-              pageCount: Value(book.pageCount),
-              coverAssetKey: Value(book.coverAssetKey),
-              isInWishlist: Value(book.isInWishlist),
-              externalCatalogId: Value(book.externalCatalogId),
-              externalSourceUrl: Value(book.externalSourceUrl),
-              isInWishlist: Value(book.isInWishlist),
-              createdAt: Value(book.createdAt),
-              updatedAt: Value(book.updatedAt),
-              archivedAt: Value(book.archivedAt),
-            ),
+                  BooksCompanion.insert(
+                    id: Value.absentIfNull(book.id > 0 ? book.id : null),
+                    title: book.title.trim(),
+                    author: Value(_optional(book.authors)),
+                    description: Value(_optional(book.description)),
+                    genres: Value(_optional(book.genres)),
+                    isbn: Value(book.isbn13 ?? book.isbn10),
+                    normalizedIsbn: Value(normalizedIsbn),
+                    publisher: Value(_optional(book.publisher)),
+                    publicationDate: Value(book.publicationDate),
+                    publishedYear: Value(book.publicationDate?.year),
+                    pageCount: Value(book.pageCount),
+                    coverAssetKey: Value(book.coverAssetKey),
+                    isInWishlist: Value(book.isInWishlist),
+                    externalCatalogId: Value(book.externalCatalogId),
+                    externalSourceUrl: Value(book.externalSourceUrl),
+                    createdAt: Value(book.createdAt),
+                    updatedAt: Value(book.updatedAt),
+                    archivedAt: Value(book.archivedAt),
+                  ),
           );
       await _database.saveReadingRecord(
         ReadingRecordsCompanion.insert(
@@ -99,7 +98,6 @@ class BookRepositoryImpl implements BookRepository {
         isInWishlist: Value(book.isInWishlist),
         externalCatalogId: Value(book.externalCatalogId),
         externalSourceUrl: Value(book.externalSourceUrl),
-        isInWishlist: Value(book.isInWishlist),
         updatedAt: Value(DateTime.now()),
         archivedAt: Value(book.archivedAt),
       ),
@@ -177,6 +175,15 @@ class BookRepositoryImpl implements BookRepository {
       isInWishlist: !book.isInWishlist,
       updatedAt: DateTime.now(),
     ));
+  }
+
+  @override
+  Future<List<Book>> getBooksByWishlist({bool isInWishlist = true}) async {
+    final rows = await (_database.select(_database.books)
+          ..where((book) => book.isInWishlist.equals(isInWishlist))
+          ..where((book) => book.archivedAt.isNull()))
+        .get();
+    return rows.map(_toBook).toList(growable: false);
   }
 
   @override

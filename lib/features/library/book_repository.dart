@@ -17,10 +17,10 @@ abstract class BookRepository {
   Future<void> archiveBook(int id);
   Future<void> deleteBook(int id);
   Future<void> toggleWishlist(int bookId);
+  Future<List<Book>> getBooksByWishlist({bool isInWishlist = true});
   Future<void> createReadingRecord(ReadingRecord record);
   Future<void> updateReadingRecord(ReadingRecord record);
   Future<ReadingRecord?> getReadingRecordForBook(int bookId);
   Future<List<ReadingRecord>> listReadingRecords({int? bookId});
-  Future<void> toggleWishlist(int bookId);
   Future<void> close();
 }
