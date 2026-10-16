@@ -52,6 +52,7 @@ class BookRepositoryImpl implements BookRepository {
               isInWishlist: Value(book.isInWishlist),
               externalCatalogId: Value(book.externalCatalogId),
               externalSourceUrl: Value(book.externalSourceUrl),
+              isInWishlist: Value(book.isInWishlist),
               createdAt: Value(book.createdAt),
               updatedAt: Value(book.updatedAt),
               archivedAt: Value(book.archivedAt),
@@ -98,6 +99,7 @@ class BookRepositoryImpl implements BookRepository {
         isInWishlist: Value(book.isInWishlist),
         externalCatalogId: Value(book.externalCatalogId),
         externalSourceUrl: Value(book.externalSourceUrl),
+        isInWishlist: Value(book.isInWishlist),
         updatedAt: Value(DateTime.now()),
         archivedAt: Value(book.archivedAt),
       ),
@@ -318,5 +320,60 @@ class BookRepositoryImpl implements BookRepository {
     if (left is int && right is int) return left.compareTo(right);
     if (left is DateTime && right is DateTime) return left.compareTo(right);
     return left.toString().compareTo(right.toString());
+  }
+
+  @override
+  Future<int> getTotalBooksCount() async {
+    return (await (_database.select(_database.books)
+          ..where((book) => book.archivedAt.isNull()))
+        .get()).length;
+  }
+
+  @override
+  Future<int> getWishlistCount() async {
+    return (await (_database.select(_database.books)
+          ..where((book) => book.isInWishlist.equals(true)))
+        .get()).length;
+  }
+
+  @override
+  Future<Map<String, int>> getReadingStatusCounts() async {
+    final records = await _database.select(_database.readingRecords).get();
+    final counts = <String, int>{};
+    for (final record in records) {
+      counts[record.status] = (counts[record.status] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  @override
+  Future<double> getAverageRating() async {
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) => record.personalRating.isNotNull()))
+        .get();
+    if (rows.isEmpty) return 0.0;
+    final sum = rows.fold<double>(0.0, (s, r) => s + (r.personalRating ?? 0.0));
+    return sum / rows.length;
+  }
+
+  @override
+  Future<int> getTotalPagesRead() async {
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) => record.status.isIn(['reading', 'finished'])))
+        .get();
+    return rows.fold<int>(0, (s, r) => s + (r.currentPage ?? 0));
+  }
+
+  @override
+  Future<int> getBooksFinishedThisMonth() async {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1);
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) =>
+              record.status.equals('finished') &
+              record.finishDate.isNotNull() &
+              record.finishDate.isBiggerOrEqualValue(start)))
+        .get();
+    return rows.length;
   }
 }
