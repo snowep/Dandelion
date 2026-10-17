@@ -17,6 +17,14 @@ abstract class BookRepository {
   Future<void> archiveBook(int id);
   Future<void> deleteBook(int id);
   Future<void> toggleWishlist(int bookId);
+  Future<List<Book>> getBooksFiltered({
+    String? search,
+    String? status,
+    String? genre,
+    String? sortBy,
+    bool ascending = true,
+  });
+  Future<Book?> getBookByIsbn(String isbn);
   Future<void> createReadingRecord(ReadingRecord record);
   Future<void> updateReadingRecord(ReadingRecord record);
   Future<ReadingRecord?> getReadingRecordForBook(int bookId);

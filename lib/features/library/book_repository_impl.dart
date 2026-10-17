@@ -319,4 +319,36 @@ class BookRepositoryImpl implements BookRepository {
     if (left is DateTime && right is DateTime) return left.compareTo(right);
     return left.toString().compareTo(right.toString());
   }
+
+  @override
+  @override
+  Future<List<Book>> getBooksFiltered({
+    String? search,
+    String? status,
+    String? genre,
+    String? sortBy,
+    bool ascending = true,
+  }) async {
+    final rows = await _database.getBooksFiltered(
+      search: search,
+      status: status,
+      genre: genre,
+      sortBy: sortBy,
+      ascending: ascending,
+    );
+    return rows.map(_toBook).toList(growable: false);
+  }
+
+  @override
+  Future<Book?> getBookByIsbn(String isbn) async {
+    final normalizedIsbn = _normalizeIsbn(isbn);
+    if (normalizedIsbn == null) return null;
+
+    final row = await (_database.select(_database.books)
+          ..where((row) => row.normalizedIsbn.equals(normalizedIsbn)))
+        .getSingleOrNull();
+
+    return row == null ? null : _toBook(row);
+  }
+
 }

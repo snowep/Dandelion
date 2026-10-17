@@ -7,6 +7,7 @@ import 'book.dart';
 import 'book_repository.dart';
 import 'reading_record.dart';
 import '../../shared/services/cover_image_service.dart';
+import 'package:dandelion/features/library/widgets/isbn_lookup_dialog.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key, required this.repository});
@@ -240,7 +241,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
     descriptionController.dispose();
     if (saved == true) await _loadBooks();
   }
-
+  
+  Future<void> _showIsbnLookupDialog() async {
+    final Book? result = await showDialog<Book>(
+      context: context,
+      builder: (context) => const IsbnLookupDialog(),
+    );
+    if (result != null && mounted) {
+      await widget.repository.createBook(
+        result,
+        initialStatus: ReadingStatus.wantToRead,
+      );
+      await _loadBooks();
+    }
+  }
+  
   Future<void> _showProgressEditor(Book book) async {
     final currentRecord = await widget.repository.getReadingRecordForBook(
       book.id,
