@@ -424,5 +424,4 @@ class BookRepositoryImpl implements BookRepository {
     if (left is DateTime && right is DateTime) return left.compareTo(right);
     return left.toString().compareTo(right.toString());
   }
-  }
 }
