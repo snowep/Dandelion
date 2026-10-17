@@ -15,20 +15,19 @@ class CoverImageService {
   /// stores it in the app's document directory, and returns the storage key.
   static Future<String?> pickAndStoreImage() async {
     try {
-      // Pick a file.
-      final result = await FilePicker.pickFiles(
+      final FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.image,
       );
 
-      if (result.isEmpty) {
+      if (result == null || result.files.isEmpty) {
         return null;
       }
 
-      final file = result.first;
-      if (file.name == null) {
+      final file = result.files.first;
+      if (file.name == null || file.name.isEmpty) {
         throw Exception('Selected file has no name');
       }
-      if (file.path == null) {
+      if (file.path == null || file.path.isEmpty) {
         throw Exception('Selected file has no path');
       }
       final allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp', '.gif'];

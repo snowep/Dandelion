@@ -52,8 +52,8 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
     try {
       final books = await _repository.listBooks();
       state = state.copyWith(books: books, loading: false);
-    } on Object catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
+    } on Object {
+      state = state.copyWith(loading: false, error: 'Failed to load books');
     }
   }
 
@@ -61,7 +61,7 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
     try {
       await _repository.toggleWishlist(bookId);
       await loadBooks();
-    } on Object catch (e) {
+    } on Object {
       // In a real app, we might show a snackbar or update state with error
       // For now, we just reload to revert any optimistic update
       await loadBooks();

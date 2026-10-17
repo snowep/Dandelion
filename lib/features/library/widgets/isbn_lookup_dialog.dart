@@ -1,4 +1,3 @@
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:dandelion/services/isbn_lookup_service.dart';
 import 'package:dandelion/features/library/book.dart';
