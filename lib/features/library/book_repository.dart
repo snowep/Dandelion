@@ -31,4 +31,12 @@ abstract class BookRepository {
   Future<ReadingRecord?> getReadingRecordForBook(int bookId);
   Future<List<ReadingRecord>> listReadingRecords({int? bookId});
   Future<void> close();
+  
+  // Additional methods for dashboard and statistics
+  Future<int> getTotalBooksCount();
+  Future<int> getWishlistCount();
+  Future<Map<String, int>> getReadingStatusCounts();
+  Future<double> getAverageRating();
+  Future<int> getTotalPagesRead();
+  Future<int> getBooksFinishedThisMonth();
 }

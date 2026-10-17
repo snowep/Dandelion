@@ -133,12 +133,16 @@ class AppDatabase extends _$AppDatabase {
   Future<bool> updateBook(BooksCompanion book) => update(books).replace(book);
 
   Future<int> archiveBook(int id) =>
-      (update(books)..where((book) => book.id.equals(id))).write(
-        BooksCompanion(archivedAt: Value(DateTime.now())),
-      );
+        (update(books)..where((book) => book.id.equals(id))).write(
+          BooksCompanion(archivedAt: Value(DateTime.now())),
+        );
 
-  Future<int> deleteBook(int id) =>
-      (delete(books)..where((book) => book.id.equals(id))).go();
+    Future<int> deleteBook(int id) =>
+        (delete(books)..where((book) => book.id.equals(id))).go();
+
+    Future<void> deleteAllBooks() => (delete(books)).go();
+
+    Future<void> deleteAllReadingRecords() => (delete(readingRecords)).go();
 
   Future<ReadingRecordRow?> getReadingRecordForBook(int bookId) => (select(
     readingRecords,

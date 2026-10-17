@@ -137,19 +137,19 @@ class LibraryImportExportService {
       }
       await _database.into(_database.readingRecords).insert(
         ReadingRecordsCompanion.insert(
-          bookId: Value(newBookId),
-          status: Value(record.status.name),
-          currentPage: Value(record.currentPage),
-          progressPercent: Value(
-              record.percentageOnlyProgress == null
-                  ? null
-                  : (record.percentageOnlyProgress! * 100).round()),
-          startDate: Value(record.startDate),
-          finishDate: Value(record.finishDate),
-          lastReadDate: Value(record.lastReadDate),
-          personalRating: Value(record.personalRating),
-          notes: Value(record.notes),
-        ),
+          bookId: newBookId,
+                    status: Value(record.status.name),
+                    currentPage: Value(record.currentPage),
+                    progressPercent: Value(
+                        record.percentageOnlyProgress == null
+                            ? null
+                            : (record.percentageOnlyProgress! * 100).round()),
+                    startDate: Value(record.startDate),
+                    finishDate: Value(record.finishDate),
+                    lastReadDate: Value(record.lastReadDate),
+                    personalRating: Value(record.personalRating),
+                    notes: Value(record.notes),
+                  ),
       );
     }
 

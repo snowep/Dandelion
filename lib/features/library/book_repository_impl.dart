@@ -1,3 +1,20 @@
+import 'package:drift/drift.dart';
+
+import 'package:dandelion/features/library/book.dart';
+import 'package:dandelion/features/library/book_database.dart';
+import 'package:dandelion/features/library/book_repository.dart';
+import 'package:dandelion/features/library/reading_record.dart';
+
+class DuplicateBookIsbnException implements Exception {
+  final String isbn;
+
+  DuplicateBookIsbnException(this.isbn);
+
+  @override
+  String toString() =>
+      'DuplicateBookIsbnException: ISBN $isbn already exists in the library.';
+}
+
 class BookRepositoryImpl implements BookRepository {
   BookRepositoryImpl(this._database);
 
@@ -19,27 +36,29 @@ class BookRepositoryImpl implements BookRepository {
     }
 
     return _database.transaction(() async {
-      final id = await _database.into(_database.books).insert(
-                  BooksCompanion.insert(
-                    id: Value.absentIfNull(book.id > 0 ? book.id : null),
-                    title: book.title.trim(),
-                    author: Value(_optional(book.authors)),
-                    description: Value(_optional(book.description)),
-                    genres: Value(_optional(book.genres)),
-                    isbn: Value(book.isbn13 ?? book.isbn10),
-                    normalizedIsbn: Value(normalizedIsbn),
-                    publisher: Value(_optional(book.publisher)),
-                    publicationDate: Value(book.publicationDate),
-                    publishedYear: Value(book.publicationDate?.year),
-                    pageCount: Value(book.pageCount),
-                    coverAssetKey: Value(book.coverAssetKey),
-                    isInWishlist: Value(book.isInWishlist),
-                    externalCatalogId: Value(book.externalCatalogId),
-                    externalSourceUrl: Value(book.externalSourceUrl),
-                    createdAt: Value(book.createdAt),
-                    updatedAt: Value(book.updatedAt),
-                    archivedAt: Value(book.archivedAt),
-                  ),
+      final id = await _database
+          .into(_database.books)
+          .insert(
+            BooksCompanion.insert(
+              id: Value.absentIfNull(book.id > 0 ? book.id : null),
+              title: book.title.trim(),
+              author: Value(_optional(book.authors)),
+              description: Value(_optional(book.description)),
+              genres: Value(_optional(book.genres)),
+              isbn: Value(book.isbn13 ?? book.isbn10),
+              normalizedIsbn: Value(normalizedIsbn),
+              publisher: Value(_optional(book.publisher)),
+              publicationDate: Value(book.publicationDate),
+              publishedYear: Value(book.publicationDate?.year),
+              pageCount: Value(book.pageCount),
+              coverAssetKey: Value(book.coverAssetKey),
+              isInWishlist: Value(book.isInWishlist),
+              externalCatalogId: Value(book.externalCatalogId),
+              externalSourceUrl: Value(book.externalSourceUrl),
+              createdAt: Value(book.createdAt),
+              updatedAt: Value(book.updatedAt),
+              archivedAt: Value(book.archivedAt),
+            ),
           );
       await _database.saveReadingRecord(
         ReadingRecordsCompanion.insert(
@@ -56,11 +75,13 @@ class BookRepositoryImpl implements BookRepository {
     _validateBook(book);
     final normalizedIsbn = _normalizeIsbn(book.isbn13 ?? book.isbn10);
     if (normalizedIsbn != null) {
-      final duplicate = await (_database.select(_database.books)
-            ..where((row) =>
-                row.normalizedIsbn.equals(normalizedIsbn) &
-                row.id.isNotValue(book.id)))
-          .getSingleOrNull();
+      final duplicate =
+          await (_database.select(_database.books)..where(
+                (row) =>
+                    row.normalizedIsbn.equals(normalizedIsbn) &
+                    row.id.isNotValue(book.id),
+              ))
+              .getSingleOrNull();
       if (duplicate != null) {
         throw DuplicateBookIsbnException(normalizedIsbn);
       }
@@ -155,18 +176,21 @@ class BookRepositoryImpl implements BookRepository {
     if (book == null) {
       throw ArgumentError('Book not found: $bookId');
     }
-    await updateBook(book.copyWith(
-      isInWishlist: !book.isInWishlist,
-      updatedAt: DateTime.now(),
-    ));
+    await updateBook(
+      book.copyWith(
+        isInWishlist: !book.isInWishlist,
+        updatedAt: DateTime.now(),
+      ),
+    );
   }
 
   @override
   Future<List<Book>> getBooksByWishlist({bool isInWishlist = true}) async {
-    final rows = await (_database.select(_database.books)
-          ..where((book) => book.isInWishlist.equals(isInWishlist))
-          ..where((book) => book.archivedAt.isNull()))
-        .get();
+    final rows =
+        await (_database.select(_database.books)
+              ..where((book) => book.isInWishlist.equals(isInWishlist))
+              ..where((book) => book.archivedAt.isNull()))
+            .get();
     return rows.map(_toBook).toList(growable: false);
   }
 
@@ -193,9 +217,10 @@ class BookRepositoryImpl implements BookRepository {
     final normalizedIsbn = _normalizeIsbn(isbn);
     if (normalizedIsbn == null) return null;
 
-    final row = await (_database.select(_database.books)
-          ..where((row) => row.normalizedIsbn.equals(normalizedIsbn)))
-        .getSingleOrNull();
+    final row =
+        await (_database.select(_database.books)
+              ..where((row) => row.normalizedIsbn.equals(normalizedIsbn)))
+            .getSingleOrNull();
 
     return row == null ? null : _toBook(row);
   }
@@ -213,7 +238,7 @@ class BookRepositoryImpl implements BookRepository {
   Future<void> updateReadingRecord(ReadingRecord record) async {
     await _validateProgress(record);
     final existing = await _database.getReadingRecordForBook(record.bookId);
-    await _database.saveRecordingRecord(
+    await _database.saveReadingRecord(
       _toCompanion(
         existing == null ? record : record.copyWith(id: existing.id),
       ),
@@ -240,16 +265,16 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<int> getTotalBooksCount() async {
-    return (await (_database.select(_database.books)
-          ..where((book) => book.archivedAt.isNull()))
-        .get()).length;
+    return (await (_database.select(
+      _database.books,
+    )..where((book) => book.archivedAt.isNull())).get()).length;
   }
 
   @override
   Future<int> getWishlistCount() async {
-    return (await (_database.select(_database.books)
-          ..where((book) => book.isInWishlist.equals(true)))
-        .get()).length;
+    return (await (_database.select(
+      _database.books,
+    )..where((book) => book.isInWishlist.equals(true))).get()).length;
   }
 
   @override
@@ -264,9 +289,9 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<double> getAverageRating() async {
-    final rows = await (_database.select(_database.readingRecords)
-          ..where((record) => record.personalRating.isNotNull()))
-        .get();
+    final rows = await (_database.select(
+      _database.readingRecords,
+    )..where((record) => record.personalRating.isNotNull())).get();
     if (rows.isEmpty) return 0.0;
     final sum = rows.fold<double>(0.0, (s, r) => s + (r.personalRating ?? 0.0));
     return sum / rows.length;
@@ -274,9 +299,9 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<int> getTotalPagesRead() async {
-    final rows = await (_database.select(_database.readingRecords)
-          ..where((record) => record.status.isIn(['reading', 'finished'])))
-        .get();
+    final rows = await (_database.select(
+      _database.readingRecords,
+    )..where((record) => record.status.isIn(['reading', 'finished']))).get();
     return rows.fold<int>(0, (s, r) => s + (r.currentPage ?? 0));
   }
 
@@ -284,34 +309,36 @@ class BookRepositoryImpl implements BookRepository {
   Future<int> getBooksFinishedThisMonth() async {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, 1);
-    final rows = await (_database.select(_database.readingRecords)
-          ..where((record) =>
-              record.status.equals('finished') &
-              record.finishDate.isNotNull() &
-              record.finishDate.isBiggerOrEqualValue(start)))
-        .get();
+    final rows =
+        await (_database.select(_database.readingRecords)..where(
+              (record) =>
+                  record.status.equals('finished') &
+                  record.finishDate.isNotNull() &
+                  record.finishDate.isBiggerOrEqualValue(start),
+            ))
+            .get();
     return rows.length;
   }
 
   Book _toBook(BookRow row) => Book(
-        id: row.id,
-        title: row.title,
-        authors: row.author ?? '',
-        description: row.description,
-        genres: row.genres,
-        isbn10: row.isbn?.length == 10 ? row.isbn : null,
-        isbn13: row.isbn?.length == 13 ? row.isbn : null,
-        publisher: row.publisher,
-        publicationDate: row.publicationDate,
-        pageCount: row.pageCount,
-        coverAssetKey: row.coverAssetKey,
-        externalCatalogId: row.externalCatalogId,
-        externalSourceUrl: row.externalSourceUrl,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        archivedAt: row.archivedAt,
-        isInWishlist: row.isInWishlist,
-      );
+    id: row.id,
+    title: row.title,
+    authors: row.author ?? '',
+    description: row.description,
+    genres: row.genres,
+    isbn10: row.isbn?.length == 10 ? row.isbn : null,
+    isbn13: row.isbn?.length == 13 ? row.isbn : null,
+    publisher: row.publisher,
+    publicationDate: row.publicationDate,
+    pageCount: row.pageCount,
+    coverAssetKey: row.coverAssetKey,
+    externalCatalogId: row.externalCatalogId,
+    externalSourceUrl: row.externalSourceUrl,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    archivedAt: row.archivedAt,
+    isInWishlist: row.isInWishlist,
+  );
 
   ReadingRecordsCompanion _toCompanion(ReadingRecord record) =>
       ReadingRecordsCompanion(
@@ -332,22 +359,22 @@ class BookRepositoryImpl implements BookRepository {
       );
 
   ReadingRecord _toReadingRecord(ReadingRecordRow row) => ReadingRecord(
-        id: row.id,
-        bookId: row.bookId,
-        status: ReadingStatus.values.firstWhere(
-          (status) => status.name == row.status,
-          orElse: () => ReadingStatus.wantToRead,
-        ),
-        currentPage: row.currentPage,
-        percentageOnlyProgress: row.progressPercent == null
-            ? null
-            : row.progressPercent! / 100,
-        startDate: row.startDate,
-        finishDate: row.finishDate,
-        lastReadDate: row.lastReadDate,
-        personalRating: row.personalRating,
-        notes: row.notes,
-      );
+    id: row.id,
+    bookId: row.bookId,
+    status: ReadingStatus.values.firstWhere(
+      (status) => status.name == row.status,
+      orElse: () => ReadingStatus.wantToRead,
+    ),
+    currentPage: row.currentPage,
+    percentageOnlyProgress: row.progressPercent == null
+        ? null
+        : row.progressPercent! / 100,
+    startDate: row.startDate,
+    finishDate: row.finishDate,
+    lastReadDate: row.lastReadDate,
+    personalRating: row.personalRating,
+    notes: row.notes,
+  );
 
   Future<void> _validateProgress(ReadingRecord record) async {
     if (record.currentPage != null) {
@@ -397,111 +424,5 @@ class BookRepositoryImpl implements BookRepository {
     if (left is DateTime && right is DateTime) return left.compareTo(right);
     return left.toString().compareTo(right.toString());
   }
-}
-  }
-
-  static String? _normalizeIsbn(String? isbn) {
-    final normalized = isbn?.replaceAll(RegExp('[^0-9Xx]'), '').toUpperCase();
-    return normalized == null || normalized.isEmpty ? null : normalized;
-  }
-
-  static String? _optional(String? value) =>
-      value == null || value.trim().isEmpty ? null : value.trim();
-
-  static int _compare(Object? left, Object? right) {
-    if (left == null) return right == null ? 0 : -1;
-    if (right == null) return 1;
-    if (left is int && right is int) return left.compareTo(right);
-    if (left is DateTime && right is DateTime) return left.compareTo(right);
-    return left.toString().compareTo(right.toString());
-  }
-
-  @override
-<<<<<<< HEAD
-  Future<int> getTotalBooksCount() async {
-    return (await (_database.select(_database.books)
-          ..where((book) => book.archivedAt.isNull()))
-        .get()).length;
-  }
-
-  @override
-  Future<int> getWishlistCount() async {
-    return (await (_database.select(_database.books)
-          ..where((book) => book.isInWishlist.equals(true)))
-        .get()).length;
-  }
-
-  @override
-  Future<Map<String, int>> getReadingStatusCounts() async {
-    final records = await _database.select(_database.readingRecords).get();
-    final counts = <String, int>{};
-    for (final record in records) {
-      counts[record.status] = (counts[record.status] ?? 0) + 1;
-    }
-    return counts;
-  }
-
-  @override
-  Future<double> getAverageRating() async {
-    final rows = await (_database.select(_database.readingRecords)
-          ..where((record) => record.personalRating.isNotNull()))
-        .get();
-    if (rows.isEmpty) return 0.0;
-    final sum = rows.fold<double>(0.0, (s, r) => s + (r.personalRating ?? 0.0));
-    return sum / rows.length;
-  }
-
-  @override
-  Future<int> getTotalPagesRead() async {
-    final rows = await (_database.select(_database.readingRecords)
-          ..where((record) => record.status.isIn(['reading', 'finished'])))
-        .get();
-    return rows.fold<int>(0, (s, r) => s + (r.currentPage ?? 0));
-  }
-
-  @override
-  Future<int> getBooksFinishedThisMonth() async {
-    final now = DateTime.now();
-    final start = DateTime(now.year, now.month, 1);
-    final rows = await (_database.select(_database.readingRecords)
-          ..where((record) =>
-              record.status.equals('finished') &
-              record.finishDate.isNotNull() &
-              record.finishDate.isBiggerOrEqualValue(start)))
-        .get();
-    return rows.length;
   }
 }
-=======
-  @override
-  Future<List<Book>> getBooksFiltered({
-    String? search,
-    String? status,
-    String? genre,
-    String? sortBy,
-    bool ascending = true,
-  }) async {
-    final rows = await _database.getBooksFiltered(
-      search: search,
-      status: status,
-      genre: genre,
-      sortBy: sortBy,
-      ascending: ascending,
-    );
-    return rows.map(_toBook).toList(growable: false);
-  }
-
-  @override
-  Future<Book?> getBookByIsbn(String isbn) async {
-    final normalizedIsbn = _normalizeIsbn(isbn);
-    if (normalizedIsbn == null) return null;
-
-    final row = await (_database.select(_database.books)
-          ..where((row) => row.normalizedIsbn.equals(normalizedIsbn)))
-        .getSingleOrNull();
-
-    return row == null ? null : _toBook(row);
-  }
-
-}
->>>>>>> feature/t-cover-import
