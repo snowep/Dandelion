@@ -7,6 +7,7 @@ import 'book.dart';
 import 'book_repository.dart';
 import 'reading_record.dart';
 import '../../shared/services/cover_image_service.dart';
+
 import 'package:dandelion/features/library/widgets/isbn_lookup_dialog.dart';
 
 class LibraryScreen extends StatefulWidget {
@@ -51,8 +52,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       final books = await widget.repository.listBooks(
         filters: {
           'search': _query,
-          if (_statusFilter != null) 'status': _statusFilter!,
-          if (_genreFilter != null) 'genre': _genreFilter!,
+          'status': ?_statusFilter,
+          'genre': ?_genreFilter,
         },
         sortBy: _sortBy,
         ascending: _sortAscending,
@@ -241,7 +242,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     descriptionController.dispose();
     if (saved == true) await _loadBooks();
   }
-  
+
   Future<void> _showIsbnLookupDialog() async {
     final Book? result = await showDialog<Book>(
       context: context,
@@ -255,7 +256,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       await _loadBooks();
     }
   }
-  
+
   Future<void> _showProgressEditor(Book book) async {
     final currentRecord = await widget.repository.getReadingRecordForBook(
       book.id,
@@ -374,7 +375,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 onChanged: (query) {
                   _query = query;
                   _debounce?.cancel();
-                  _debounce = Timer(const Duration(milliseconds: 300), _loadBooks);
+                  _debounce = Timer(
+                    const Duration(milliseconds: 300),
+                    _loadBooks,
+                  );
                 },
               ),
             ),
@@ -399,8 +403,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     },
                     itemBuilder: (context) => [
                       const PopupMenuItem(value: 'title', child: Text('Title')),
-                      const PopupMenuItem(value: 'author', child: Text('Author')),
-                      const PopupMenuItem(value: 'updated', child: Text('Date')),
+                      const PopupMenuItem(
+                        value: 'author',
+                        child: Text('Author'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'updated',
+                        child: Text('Date'),
+                      ),
                     ],
                   ),
                   const SizedBox(width: 8),
@@ -412,7 +422,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         selected: _statusFilter == 'wantToRead',
                         onSelected: (_) {
                           setState(() {
-                            _statusFilter = _statusFilter == 'wantToRead' ? null : 'wantToRead';
+                            _statusFilter = _statusFilter == 'wantToRead'
+                                ? null
+                                : 'wantToRead';
                             _loadBooks();
                           });
                         },
@@ -422,7 +434,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         selected: _statusFilter == 'reading',
                         onSelected: (_) {
                           setState(() {
-                            _statusFilter = _statusFilter == 'reading' ? null : 'reading';
+                            _statusFilter = _statusFilter == 'reading'
+                                ? null
+                                : 'reading';
                             _loadBooks();
                           });
                         },
@@ -432,7 +446,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         selected: _statusFilter == 'finished',
                         onSelected: (_) {
                           setState(() {
-                            _statusFilter = _statusFilter == 'finished' ? null : 'finished';
+                            _statusFilter = _statusFilter == 'finished'
+                                ? null
+                                : 'finished';
                             _loadBooks();
                           });
                         },
@@ -542,12 +558,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         children: [
                           IconButton(
                             icon: Icon(
-                              book.isInWishlist ? Icons.favorite : Icons.favorite_border,
+                              book.isInWishlist
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
                               color: book.isInWishlist ? Colors.red : null,
                             ),
-                            tooltip: book.isInWishlist ? 'Remove from wishlist' : 'Add to wishlist',
+                            tooltip: book.isInWishlist
+                                ? 'Remove from wishlist'
+                                : 'Add to wishlist',
                             onPressed: () {
-                              widget.repository.toggleWishlist(book.id).then((_) => _loadBooks());
+                              widget.repository
+                                  .toggleWishlist(book.id)
+                                  .then((_) => _loadBooks());
                             },
                           ),
                           PopupMenuButton<String>(
@@ -569,7 +591,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                 value: 'archive',
                                 child: Text('Archive'),
                               ),
-                              PopupMenuItem(value: 'delete', child: Text('Delete')),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Delete'),
+                              ),
                             ],
                           ),
                         ],

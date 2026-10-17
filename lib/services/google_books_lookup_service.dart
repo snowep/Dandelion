@@ -187,6 +187,7 @@ class GoogleBooksLookupService {
       genres: genres,
       externalCatalogId: isbn10 ?? isbn13 ?? isbn,
       externalSourceUrl: volumeInfo['infoLink'] as String?,
+      thumbnailUrl: thumbnailUrl,
     );
   }
 

@@ -15,27 +15,31 @@ class CoverImageService {
   /// stores it in the app's document directory, and returns the storage key.
   static Future<String?> pickAndStoreImage() async {
     try {
-      final FilePickerResult? result = await FilePicker.pickFiles(
-        type: FileType.image,
-      );
+      final List<PlatformFile> result = await FilePicker.pickFiles(
+              type: FileType.image,
+            );
 
-      if (result == null || result.files.isEmpty) {
+      if (result.isEmpty) {
         return null;
       }
 
-      final file = result.files.first;
-      if (file.name == null || file.name.isEmpty) {
-        throw Exception('Selected file has no name');
-      }
-      if (file.path == null || file.path.isEmpty) {
+            final PlatformFile file = result.first;
+            if (file.name.isEmpty) {
+              throw Exception('Selected file has no name');
+            }
+      final path = file.path;
+      if (path == null || path.isEmpty) {
         throw Exception('Selected file has no path');
       }
-      final allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp', '.gif'];
-      if (!allowedExtensions.any((ext) => file.name!.toLowerCase().endsWith(ext))) {
+      final allowedExtensions = ['.png', '.jpg', '.jpeg'];
+      if (!allowedExtensions.any((ext) => file.name.toLowerCase().endsWith(ext))) {
         throw Exception('Selected file is not an image');
       }
-      final path = file.path!;
-
+      // Validate file size (max 5MB)
+      final length = await File(path).length();
+      if (length > 5 * 1024 * 1024) {
+        throw Exception('File size exceeds 5MB');
+      }
       // Read the image bytes from the file.
       final bytes = await File(path).readAsBytes();
 
@@ -51,16 +55,21 @@ class CoverImageService {
       // Encode thumbnail as PNG.
       final thumbnailBytes = Uint8List.fromList(img.encodePng(thumbnail));
 
-      // Generate a unique key for storage.
-      final key = 'cover_${_uuid.v4()}.png';
+      // Generate a unique key for storage (in covers/ subdirectory).
+            final fileName = 'cover_${_uuid.v4()}.png';
+            final key = 'covers/$fileName';
 
-      // Get storage directory and save the thumbnail.
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/$key';
-      final thumbnailFile = File(filePath);
-      await thumbnailFile.writeAsBytes(thumbnailBytes);
+            // Get storage directory and save the thumbnail.
+            final directory = await getApplicationDocumentsDirectory();
+            final coversDir = Directory('${directory.path}/covers');
+            if (!await coversDir.exists()) {
+              await coversDir.create(recursive: true);
+            }
+            final filePath = '${coversDir.path}/$fileName';
+            final thumbnailFile = File(filePath);
+            await thumbnailFile.writeAsBytes(thumbnailBytes);
 
-      return key;
+            return key;
     } catch (e) {
       debugPrint('Error picking and storing image: $e');
       rethrow;
@@ -68,48 +77,48 @@ class CoverImageService {
   }
 
   /// Loads an image from storage by its key.
-  static Future<Uint8List?> loadImage(String key) async {
-    try {
-      // Validate key format to prevent path traversal.
-      if (!key.startsWith('cover_') || !key.endsWith('.png')) {
+    static Future<Uint8List?> loadImage(String key) async {
+      try {
+        // Validate key format to prevent path traversal.
+        if (!key.startsWith('covers/cover_') || !key.endsWith('.png')) {
+          return null;
+        }
+
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/$key';
+        final file = File(filePath);
+
+        if (!await file.exists()) {
+          return null;
+        }
+
+        return await file.readAsBytes();
+      } catch (e) {
+        debugPrint('Error loading image: $e');
         return null;
       }
-
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/$key';
-      final file = File(filePath);
-
-      if (!await file.exists()) {
-        return null;
-      }
-
-      return await file.readAsBytes();
-    } catch (e) {
-      debugPrint('Error loading image: $e');
-      return null;
     }
-  }
 
-  /// Stores the image bytes from [bytes] at the given [key].
-  /// Returns true if successful, false otherwise.
-  static Future<bool> storeImage(Uint8List bytes, {required String key}) async {
-    try {
-      // Validate key format to prevent path traversal
-      if (!key.startsWith('cover_') || !key.endsWith('.png')) {
+    /// Stores the image bytes from [bytes] at the given [key].
+    /// Returns true if successful, false otherwise.
+    static Future<bool> storeImage(Uint8List bytes, {required String key}) async {
+      try {
+        // Validate key format to prevent path traversal
+        if (!key.startsWith('covers/cover_') || !key.endsWith('.png')) {
+          return false;
+        }
+
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/$key';
+        final file = File(filePath);
+
+        await file.writeAsBytes(bytes);
+        return true;
+      } catch (e) {
+        debugPrint('Error storing image: $e');
         return false;
       }
-
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/$key';
-      final file = File(filePath);
-
-      await file.writeAsBytes(bytes);
-      return true;
-    } catch (e) {
-      debugPrint('Error storing image: $e');
-      return false;
     }
-  }
 
   /// Generates a thumbnail maintaining aspect ratio within maxWidth and maxHeight.
   static img.Image _generateThumbnail(img.Image image, int maxWidth, int maxHeight) {
@@ -137,25 +146,25 @@ class CoverImageService {
   }
 
   /// Deletes an image from storage by its key.
-  static Future<bool> deleteImage(String key) async {
-    try {
-      // Validate key format to prevent path traversal
-      if (!key.startsWith('cover_') || !key.endsWith('.png')) {
+    static Future<bool> deleteImage(String key) async {
+      try {
+        // Validate key format to prevent path traversal
+        if (!key.startsWith('covers/cover_') || !key.endsWith('.png')) {
+          return false;
+        }
+
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/$key';
+        final file = File(filePath);
+
+        if (await file.exists()) {
+          await file.delete();
+          return true;
+        }
+        return false;
+      } catch (e) {
+        debugPrint('Error deleting image: $e');
         return false;
       }
-
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/$key';
-      final file = File(filePath);
-
-      if (await file.exists()) {
-        await file.delete();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      debugPrint('Error deleting image: $e');
-      return false;
     }
   }
-}

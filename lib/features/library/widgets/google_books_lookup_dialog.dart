@@ -1,24 +1,43 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:dandelion/features/library/book.dart';
 import 'package:dandelion/services/google_books_lookup_service.dart';
 
 /// Dialog for looking up books by ISBN with Google Books API and result preview
 class GoogleBooksLookupDialog extends StatefulWidget {
-  const GoogleBooksLookupDialog({super.key});
+  const GoogleBooksLookupDialog({super.key, this.service});
+
+  final GoogleBooksLookupService? service;
 
   @override
-  State<GoogleBooksLookupDialog> createState() => _GoogleBooksLookupDialogState();
+  State<GoogleBooksLookupDialog> createState() =>
+      _GoogleBooksLookupDialogState();
 }
 
 class _GoogleBooksLookupDialogState extends State<GoogleBooksLookupDialog> {
+  late final GoogleBooksLookupService _service;
   final _formKey = GlobalKey<FormState>();
   final _isbnController = TextEditingController();
-  final GoogleBooksLookupService _service = GoogleBooksLookupService();
   Book? _result;
   bool _isLoading = false;
   String? _error;
+
+  // Track which fields are selected for import
+  final Set<String> _selectedFields = {
+    'title',
+    'authors',
+    'description',
+    'publisher',
+    'publicationDate',
+    'pageCount',
+    'isbn10',
+    'isbn13',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _service = widget.service ?? GoogleBooksLookupService();
+  }
 
   @override
   void dispose() {
@@ -98,12 +117,22 @@ class _GoogleBooksLookupDialogState extends State<GoogleBooksLookupDialog> {
               else if (_error != null)
                 Text(
                   _error!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.error),
                   textAlign: TextAlign.center,
                 )
               else if (_result != null) ...[
+                const SizedBox(height: 12),
+                // Thumbnail
+                if (_result!.thumbnailUrl != null)
+                  Image.network(
+                    _result!.thumbnailUrl!,
+                    width: 100,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  )
+                else
+                  const Icon(Icons.menu_book, size: 100),
                 const SizedBox(height: 12),
                 Text(
                   'Found: ${_result!.title}',
@@ -157,16 +186,32 @@ class _GoogleBooksLookupDialogState extends State<GoogleBooksLookupDialog> {
                     spacing: 8,
                     children: [
                       if (_result!.isbn10 != null)
-                        Chip(
-                          label: Text('ISBN-10: ${_result!.isbn10}'),
-                        ),
+                        Chip(label: Text('ISBN-10: ${_result!.isbn10}')),
                       if (_result!.isbn13 != null)
-                        Chip(
-                          label: Text('ISBN-13: ${_result!.isbn13}'),
-                        ),
+                        Chip(label: Text('ISBN-13: ${_result!.isbn13}')),
                     ],
                   ),
                 ],
+                const SizedBox(height: 16),
+                const Text(
+                  'Select fields to import:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    _buildFieldCheckbox('Title', 'title'),
+                    _buildFieldCheckbox('Authors', 'authors'),
+                    _buildFieldCheckbox('Description', 'description'),
+                    _buildFieldCheckbox('Publisher', 'publisher'),
+                    _buildFieldCheckbox('Publication Date', 'publicationDate'),
+                    _buildFieldCheckbox('Page Count', 'pageCount'),
+                    _buildFieldCheckbox('ISBN-10', 'isbn10'),
+                    _buildFieldCheckbox('ISBN-13', 'isbn13'),
+                  ],
+                ),
               ],
             ],
           ),
@@ -182,11 +227,65 @@ class _GoogleBooksLookupDialogState extends State<GoogleBooksLookupDialog> {
           ),
           if (_result != null)
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(_result),
+              onPressed: () {
+                // Build book with only selected fields
+                final selectedBook = Book(
+                  id: 0, // Will be set when saved to database
+                  title: _selectedFields.contains('title')
+                      ? _result!.title
+                      : '',
+                  authors: _selectedFields.contains('authors')
+                      ? _result!.authors
+                      : '',
+                  description: _selectedFields.contains('description')
+                      ? _result!.description
+                      : null,
+                  publisher: _selectedFields.contains('publisher')
+                      ? _result!.publisher
+                      : null,
+                  publicationDate: _selectedFields.contains('publicationDate')
+                      ? _result!.publicationDate
+                      : null,
+                  pageCount: _selectedFields.contains('pageCount')
+                      ? _result!.pageCount
+                      : null,
+                  isbn10: _selectedFields.contains('isbn10')
+                      ? _result!.isbn10
+                      : null,
+                  isbn13: _selectedFields.contains('isbn13')
+                      ? _result!.isbn13
+                      : null,
+                  // We don't have coverAssetKey from lookup; that's handled by cover service
+                  coverAssetKey: null,
+                  genres: null,
+                  externalCatalogId: _result!.externalCatalogId,
+                  externalSourceUrl: _result!.externalSourceUrl,
+                  thumbnailUrl: _result!.thumbnailUrl,
+                );
+                Navigator.of(context).pop(selectedBook);
+              },
               child: const Text('Use this book'),
-            )
+            ),
         ],
       ],
+    );
+  }
+
+  Widget _buildFieldCheckbox(String label, String field) {
+    return CheckboxListTile(
+      title: Text(label),
+      value: _selectedFields.contains(field),
+      onChanged: (bool? value) {
+        setState(() {
+          if (value == true) {
+            _selectedFields.add(field);
+          } else {
+            _selectedFields.remove(field);
+          }
+        });
+      },
+      controlAffinity: ListTileControlAffinity.leading, // Checkbox leading
+      dense: true,
     );
   }
 }

@@ -41,9 +41,11 @@ class Book {
 
   /// External catalog ID source (e.g. Open Library ID)
   final String? externalCatalogId;
-
   /// Source URL for external catalog metadata
   final String? externalSourceUrl;
+
+  /// Thumbnail URL for the book cover (from external catalog, not stored locally)
+  final String? thumbnailUrl;
 
   /// When the book record was created
   final DateTime createdAt;
@@ -69,12 +71,14 @@ class Book {
     this.coverAssetKey,
     this.externalCatalogId,
     this.externalSourceUrl,
+    String? thumbnailUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.archivedAt,
     bool? isInWishlist,
   }) : createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now(),
+       this.thumbnailUrl = thumbnailUrl,
        isInWishlist = isInWishlist ?? false;
 
   /// Copy with modified fields - used for updates and archiving
@@ -93,6 +97,7 @@ class Book {
     bool? isInWishlist,
     String? externalCatalogId,
     String? externalSourceUrl,
+    String? thumbnailUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? archivedAt,
@@ -111,6 +116,7 @@ class Book {
       coverAssetKey: coverAssetKey ?? this.coverAssetKey,
       externalCatalogId: externalCatalogId ?? this.externalCatalogId,
       externalSourceUrl: externalSourceUrl ?? this.externalSourceUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
