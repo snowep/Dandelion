@@ -1,19 +1,3 @@
-import 'package:drift/drift.dart';
-
-import 'book.dart';
-import 'book_database.dart';
-import 'book_repository.dart';
-import 'reading_record.dart';
-
-class DuplicateBookIsbnException implements Exception {
-  const DuplicateBookIsbnException(this.isbn);
-
-  final String isbn;
-
-  @override
-  String toString() => 'A book with ISBN $isbn is already in the library.';
-}
-
 class BookRepositoryImpl implements BookRepository {
   BookRepositoryImpl(this._database);
 
@@ -187,6 +171,36 @@ class BookRepositoryImpl implements BookRepository {
   }
 
   @override
+  Future<List<Book>> getBooksFiltered({
+    String? search,
+    String? status,
+    String? genre,
+    String? sortBy,
+    bool ascending = true,
+  }) async {
+    final rows = await _database.getBooksFiltered(
+      search: search,
+      status: status,
+      genre: genre,
+      sortBy: sortBy,
+      ascending: ascending,
+    );
+    return rows.map(_toBook).toList(growable: false);
+  }
+
+  @override
+  Future<Book?> getBookByIsbn(String isbn) async {
+    final normalizedIsbn = _normalizeIsbn(isbn);
+    if (normalizedIsbn == null) return null;
+
+    final row = await (_database.select(_database.books)
+          ..where((row) => row.normalizedIsbn.equals(normalizedIsbn)))
+        .getSingleOrNull();
+
+    return row == null ? null : _toBook(row);
+  }
+
+  @override
   Future<void> createReadingRecord(ReadingRecord record) async {
     await _validateProgress(record);
     if (await _database.getReadingRecordForBook(record.bookId) != null) {
@@ -199,7 +213,7 @@ class BookRepositoryImpl implements BookRepository {
   Future<void> updateReadingRecord(ReadingRecord record) async {
     await _validateProgress(record);
     final existing = await _database.getReadingRecordForBook(record.bookId);
-    await _database.saveReadingRecord(
+    await _database.saveRecordingRecord(
       _toCompanion(
         existing == null ? record : record.copyWith(id: existing.id),
       ),
@@ -223,6 +237,61 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<void> close() => _database.close();
+
+  @override
+  Future<int> getTotalBooksCount() async {
+    return (await (_database.select(_database.books)
+          ..where((book) => book.archivedAt.isNull()))
+        .get()).length;
+  }
+
+  @override
+  Future<int> getWishlistCount() async {
+    return (await (_database.select(_database.books)
+          ..where((book) => book.isInWishlist.equals(true)))
+        .get()).length;
+  }
+
+  @override
+  Future<Map<String, int>> getReadingStatusCounts() async {
+    final records = await _database.select(_database.readingRecords).get();
+    final counts = <String, int>{};
+    for (final record in records) {
+      counts[record.status] = (counts[record.status] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  @override
+  Future<double> getAverageRating() async {
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) => record.personalRating.isNotNull()))
+        .get();
+    if (rows.isEmpty) return 0.0;
+    final sum = rows.fold<double>(0.0, (s, r) => s + (r.personalRating ?? 0.0));
+    return sum / rows.length;
+  }
+
+  @override
+  Future<int> getTotalPagesRead() async {
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) => record.status.isIn(['reading', 'finished'])))
+        .get();
+    return rows.fold<int>(0, (s, r) => s + (r.currentPage ?? 0));
+  }
+
+  @override
+  Future<int> getBooksFinishedThisMonth() async {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1);
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) =>
+              record.status.equals('finished') &
+              record.finishDate.isNotNull() &
+              record.finishDate.isBiggerOrEqualValue(start)))
+        .get();
+    return rows.length;
+  }
 
   Book _toBook(BookRow row) => Book(
         id: row.id,
@@ -328,8 +397,27 @@ class BookRepositoryImpl implements BookRepository {
     if (left is DateTime && right is DateTime) return left.compareTo(right);
     return left.toString().compareTo(right.toString());
   }
+}
+  }
+
+  static String? _normalizeIsbn(String? isbn) {
+    final normalized = isbn?.replaceAll(RegExp('[^0-9Xx]'), '').toUpperCase();
+    return normalized == null || normalized.isEmpty ? null : normalized;
+  }
+
+  static String? _optional(String? value) =>
+      value == null || value.trim().isEmpty ? null : value.trim();
+
+  static int _compare(Object? left, Object? right) {
+    if (left == null) return right == null ? 0 : -1;
+    if (right == null) return 1;
+    if (left is int && right is int) return left.compareTo(right);
+    if (left is DateTime && right is DateTime) return left.compareTo(right);
+    return left.toString().compareTo(right.toString());
+  }
 
   @override
+<<<<<<< HEAD
   Future<int> getTotalBooksCount() async {
     return (await (_database.select(_database.books)
           ..where((book) => book.archivedAt.isNull()))
@@ -384,3 +472,36 @@ class BookRepositoryImpl implements BookRepository {
     return rows.length;
   }
 }
+=======
+  @override
+  Future<List<Book>> getBooksFiltered({
+    String? search,
+    String? status,
+    String? genre,
+    String? sortBy,
+    bool ascending = true,
+  }) async {
+    final rows = await _database.getBooksFiltered(
+      search: search,
+      status: status,
+      genre: genre,
+      sortBy: sortBy,
+      ascending: ascending,
+    );
+    return rows.map(_toBook).toList(growable: false);
+  }
+
+  @override
+  Future<Book?> getBookByIsbn(String isbn) async {
+    final normalizedIsbn = _normalizeIsbn(isbn);
+    if (normalizedIsbn == null) return null;
+
+    final row = await (_database.select(_database.books)
+          ..where((row) => row.normalizedIsbn.equals(normalizedIsbn)))
+        .getSingleOrNull();
+
+    return row == null ? null : _toBook(row);
+  }
+
+}
+>>>>>>> feature/t-cover-import

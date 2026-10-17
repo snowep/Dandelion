@@ -1,0 +1,361 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dandelion/services/isbn_lookup_service.dart';
+import 'package:dandelion/features/library/book.dart';
+import 'package:dandelion/features/library/book_repository.dart';
+import 'package:dandelion/features/library/reading_record.dart';
+
+/// Provider for the ISBN lookup service.
+final isbnLookupServiceProvider = Provider<IsbnLookupService>((ref) {
+  return IsbnLookupService();
+});
+
+/// Discover screen for searching and adding books via ISBN lookup.
+class DiscoverScreen extends ConsumerStatefulWidget {
+  const DiscoverScreen({super.key});
+
+  @override
+  ConsumerState<DiscoverScreen> createState() => _DiscoverScreenState();
+}
+
+class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
+  final _isbnController = TextEditingController();
+  final _titleAuthorController = TextEditingController();
+  bool _isSearching = false;
+  Book? _searchResult;
+  String? _errorMessage;
+  List<Book> _searchResults = [];
+
+  @override
+  void dispose() {
+    _isbnController.dispose();
+    _titleAuthorController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _lookupByIsbn() async {
+    final isbn = _isbnController.text.trim();
+    if (isbn.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter an ISBN';
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _errorMessage = null;
+      _searchResult = null;
+    });
+
+    try {
+      final isbnService = ref.read(isbnLookupServiceProvider);
+      final book = await isbnService.lookupByIsbn(isbn);
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSearching = false;
+      });
+
+      if (book != null) {
+        setState(() {
+          _searchResult = book;
+          _errorMessage = null;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Book not found for ISBN: $isbn';
+          _searchResult = null;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSearching = false;
+        _errorMessage = 'Error searching for book: $e';
+        _searchResult = null;
+      });
+    }
+  }
+
+  Future<void> _searchByTitleOrAuthor() async {
+    final query = _titleAuthorController.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter a title or author');
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _errorMessage = null;
+      _searchResults = [];
+    });
+
+    try {
+      final isbnService = ref.read(isbnLookupServiceProvider);
+      final results =
+          await isbnService.searchByTitleOrAuthor(query, limit: 10);
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSearching = false;
+        _searchResults = results;
+        if (results.isEmpty) {
+          _errorMessage = 'No books found for "$query"';
+        } else {
+          _errorMessage = null;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSearching = false;
+        _errorMessage = 'Error searching: $e';
+        _searchResults = [];
+      });
+    }
+  }
+
+  Future<void> _addBookToLibrary(Book book) async {
+    try {
+      final repository = ref.read(bookRepositoryProvider);
+      // Check if book already exists by ISBN
+      final String? isbn13 = book.isbn13;
+      final String? isbn10 = book.isbn10;
+      final String? normalizedIsbn =
+          isbn13 != null ? isbn13 : isbn10 != null ? isbn10 : null;
+
+      if (normalizedIsbn != null && normalizedIsbn.isNotEmpty) {
+        final existingBook =
+            await repository.getBookByIsbn(normalizedIsbn);
+        if (existingBook != null) {
+          if (!mounted) return;
+          setState(() {
+            _errorMessage =
+                'A book with this ISBN already exists in your library';
+          });
+          return;
+        }
+      }
+
+      // Add the book
+      final bookId = await repository.createBook(book);
+      // Create a default reading record (want to read)
+      await repository.createReadingRecord(
+        ReadingRecord(bookId: bookId),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _searchResult = null;
+        _searchResults = [];
+        _isbnController.clear();
+        _titleAuthorController.clear();
+        _errorMessage = 'Book added to your library!';
+      });
+
+      // Clear the success message after 2 seconds
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        setState(() {
+          _errorMessage = null;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Failed to add book: $e';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Discover Books'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Find books by ISBN, title, or author',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _isbnController,
+              decoration: const InputDecoration(
+                labelText: 'ISBN-10 or ISBN-13',
+                hintText: 'Enter ISBN to lookup book',
+                prefixIcon: Icon(Icons.book),
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              onSubmitted: (_) => _lookupByIsbn(),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _isSearching ? null : _lookupByIsbn,
+              icon: _isSearching
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.search),
+              label: Text(_isSearching ? 'Searching...' : 'Lookup by ISBN'),
+            ),
+            if (_errorMessage != null && _searchResult == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            if (_searchResult != null) ...[
+              const SizedBox(height: 24),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _searchResult!.title,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'by ${_searchResult!.authors}',
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                        ),
+                      ),
+                      if (_searchResult!.description != null &&
+                          _searchResult!.description!.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          _searchResult!.description!,
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      if (_searchResult!.pageCount != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '${_searchResult!.pageCount} pages',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      if (_searchResult!.isbn13 != null ||
+                          _searchResult!.isbn10 != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'ISBN: ${_searchResult!.isbn13 ?? _searchResult!.isbn10}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => _addBookToLibrary(_searchResult!),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add to Library'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            const Text(
+              'Or search by title or author:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _titleAuthorController,
+              decoration: const InputDecoration(
+                labelText: 'Title or Author',
+                hintText: 'Enter title or author to search',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (_) => _searchByTitleOrAuthor(),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _isSearching ? null : _searchByTitleOrAuthor,
+              icon: _isSearching
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.search),
+              label: Text(_isSearching ? 'Searching...' : 'Search'),
+            ),
+            if (_errorMessage != null && _searchResults.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            if (_searchResults.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'Search Results',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _searchResults.length,
+                itemBuilder: (context, index) {
+                  final book = _searchResults[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(book.title),
+                      subtitle: Text('by ${book.authors}'),
+                      trailing: const Icon(Icons.arrow_forward),
+                      onTap: () {
+                        // TODO: Show detailed view of the book
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

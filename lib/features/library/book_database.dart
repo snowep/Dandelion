@@ -146,4 +146,75 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> saveReadingRecord(ReadingRecordsCompanion record) =>
       into(readingRecords).insertOnConflictUpdate(record);
+
+  /// Get books filtered by search, status, genre, and sort.
+  /// Returns a list of [BookRow] that match the filters.
+  Future<List<BookRow>> getBooksFiltered({
+    String? search,
+    String? status,
+    String? genre,
+    String? sortBy,
+    bool ascending = true,
+  }) {
+    var query = select(books)..where((tbl) => tbl.archivedAt.isNull());
+
+    if (search != null && search.trim().isNotEmpty) {
+      final term = '%${search.trim()}%';
+      query.where(
+        (tbl) =>
+            tbl.title.like(term) |
+            tbl.author.like(term) |
+            tbl.isbn.like(term) |
+            tbl.genres.like(term) |
+            tbl.description.like(term),
+      );
+    }
+
+    if (status != null && status.trim().isNotEmpty) {
+      query.join([
+        innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id))
+      ]);
+      query.where((tbl) => readingRecords.status.equals(status));
+    }
+
+    if (genre != null && genre.trim().isNotEmpty) {
+      final lowerGenre = genre.trim().toLowerCase();
+      query.where((tbl) => tbl.genres.contains(lowerGenre));
+    }
+
+    // Sorting
+    switch (sortBy) {
+      case 'title':
+        query.orderBy([
+          (tbl) => OrderingTerm(
+            expression: tbl.title,
+            mode: ascending ? OrderingMode.asc : OrderingMode.desc,
+          ),
+        ]);
+        break;
+      case 'author':
+        query.orderBy([
+          (tbl) => OrderingTerm(
+            expression: tbl.author,
+            mode: ascending ? OrderingMode.asc : OrderingMode.desc,
+          ),
+        ]);
+        break;
+      case 'date':
+        query.orderBy([
+          (tbl) => OrderingTerm(
+            expression: tbl.updatedAt,
+            mode: ascending ? OrderingMode.asc : OrderingMode.desc,
+          ),
+        ]);
+        break;
+      default:
+        // default to title ascending
+        query.orderBy([
+          (tbl) => OrderingTerm(expression: tbl.title, mode: OrderingMode.asc),
+        ]);
+    }
+
+    return query.get();
+  }
 }
