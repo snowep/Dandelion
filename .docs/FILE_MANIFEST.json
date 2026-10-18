@@ -1,0 +1,91 @@
+{
+  "repo": "snowep/Dandelion",
+  "baseline_sha": "86e48560e8500221f4056c2ba92089f01f57a125",
+  "files": [
+    {
+      "path": "AUDIT_REPORT.md",
+      "bytes": 8419,
+      "sha256": "76450209a13ccc843a80470d86b62036927b27a1a4f5e620e674f44affc001fa"
+    },
+    {
+      "path": "CI_AND_RELEASE_GATES.md",
+      "bytes": 3251,
+      "sha256": "93197a414128acd72244ba61c7b221543079a4f3d984b140cd2eda66a8ba0faa"
+    },
+    {
+      "path": "EXECUTION_RULES.md",
+      "bytes": 2508,
+      "sha256": "e35af165a81ac10b1a07a1ba2d999e5e8d4f831cb51d60ac9d7a54576ece9e4b"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3118,
+      "sha256": "21093bc48f9fb5a5827f2e011811b57d566645d5460d07cc64cdac35a62f94fc"
+    },
+    {
+      "path": "RELEASE_CHECKLIST.md",
+      "bytes": 2522,
+      "sha256": "7c6bb8afd70e25f782a3833ee270fb85b175013ec4e24141b509abacf403b8af"
+    },
+    {
+      "path": "ROADMAP_TO_V1.0.0.md",
+      "bytes": 5287,
+      "sha256": "7f158d3d7ed4baa9fa0ca04ed40251ae6ea6a4388ecf3d500a69fb9d85730a5d"
+    },
+    {
+      "path": "VERSIONING_AND_TAG_POLICY.md",
+      "bytes": 2860,
+      "sha256": "ff317caacd35d3830f5ddc174d1aec78ca55b65f21123f7b02933d4ba3024d95"
+    },
+    {
+      "path": "updates/00-build-and-settings-repair.md",
+      "bytes": 2555,
+      "sha256": "b4692dcc3f8fa429455a1818a02fa64690ab2d6e6229448f40bf424f7549b051"
+    },
+    {
+      "path": "updates/01-database-migration-v4.md",
+      "bytes": 1820,
+      "sha256": "0b8d41d1f6fe1fa184fea20e3ae00b006753882d357e8471f6aaf5a63d07778a"
+    },
+    {
+      "path": "updates/02-backup-and-import-integrity.md",
+      "bytes": 2630,
+      "sha256": "09dfa0e77e16c8ac32de8521095b8cca7e1bbbd1b4f633f1f8b34518feb8ca3c"
+    },
+    {
+      "path": "updates/03-cross-platform-cover-storage.md",
+      "bytes": 2360,
+      "sha256": "b4593136bc3c5488ea3eb8405700e4ea3b93c87bb9e3d126a633d787093235cb"
+    },
+    {
+      "path": "updates/04-repository-query-and-model-correctness.md",
+      "bytes": 2495,
+      "sha256": "45d56221a50412ff6b82942f18db00ddf2a124161b1d2fcdd18b6ecbfd444814"
+    },
+    {
+      "path": "updates/05-catalog-lookup-and-library-flows.md",
+      "bytes": 2193,
+      "sha256": "9bca2f6e2c8d919bdb0aed11cca2289c925d186f7e9179389b9a358111c2f07a"
+    },
+    {
+      "path": "updates/06-recommendations-and-feedback.md",
+      "bytes": 2032,
+      "sha256": "b0b699e7442b5e0d04990812f7374e9cb2c8120aa71ac21b220481888d11001e"
+    },
+    {
+      "path": "updates/07-ux-accessibility-and-scope-sync.md",
+      "bytes": 2097,
+      "sha256": "239270c6d8f34d14d2490141df75c5ea5b5b0072f9e8430690fe4aec9f2129af"
+    },
+    {
+      "path": "updates/08-platform-stress-and-release-candidate.md",
+      "bytes": 2096,
+      "sha256": "a5203d16b5f9324cbe0ad888eb8a9280ae1241e7f295c48df2fb851540f1ff1e"
+    },
+    {
+      "path": "updates/09-v1-release-and-tag-decision.md",
+      "bytes": 2139,
+      "sha256": "051f416c6232306435a23f2082e162eb768d374da44ded651d6ee029a158a077"
+    }
+  ]
+}
