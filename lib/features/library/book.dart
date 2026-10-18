@@ -48,6 +48,42 @@ class Book {
   /// Thumbnail URL for the book cover (from external catalog, not stored locally)
   final String? thumbnailUrl;
 
+  /// Purchase price (for self-purchased books)
+  final double? purchasePrice;
+
+  /// Currency for purchase price
+  final String? purchaseCurrency;
+
+  /// Whether this book was borrowed from someone
+  final bool isBorrowed;
+
+  /// Lender name (when borrowed)
+  final String? lenderName;
+
+  /// Lender contact info (when borrowed)
+  final String? lenderContact;
+
+  /// Date when borrowed
+  final DateTime? borrowDate;
+
+  /// Expected return date (when borrowed)
+  final DateTime? expectedReturnDate;
+
+  /// Whether this book is lent to someone
+  final bool isLent;
+
+  /// Borrower name (when lent)
+  final String? borrowerName;
+
+  /// Borrower contact info (when lent)
+  final String? borrowerContact;
+
+  /// Date when lent out
+  final DateTime? lendDate;
+
+  /// Expected return date (when lent)
+  final DateTime? expectedLendReturnDate;
+
   /// When the book record was created
   final DateTime createdAt;
 
@@ -73,6 +109,18 @@ class Book {
     this.externalCatalogId = '',
     this.externalSourceUrl = '',
     this.thumbnailUrl,
+    this.purchasePrice,
+    this.purchaseCurrency,
+    this.isBorrowed = false,
+    this.lenderName,
+    this.lenderContact,
+    this.borrowDate,
+    this.expectedReturnDate,
+    this.isLent = false,
+    this.borrowerName,
+    this.borrowerContact,
+    this.lendDate,
+    this.expectedLendReturnDate,
     DateTime? createdAtParam,
     DateTime? updatedAtParam,
     this.archivedAt,
@@ -98,6 +146,18 @@ class Book {
     String? externalCatalogId,
     String? externalSourceUrl,
     String? thumbnailUrl,
+    double? purchasePrice,
+    String? purchaseCurrency,
+    bool? isBorrowed,
+    String? lenderName,
+    String? lenderContact,
+    DateTime? borrowDate,
+    DateTime? expectedReturnDate,
+    bool? isLent,
+    String? borrowerName,
+    String? borrowerContact,
+    DateTime? lendDate,
+    DateTime? expectedLendReturnDate,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? archivedAt,
@@ -117,6 +177,18 @@ class Book {
       externalCatalogId: externalCatalogId ?? this.externalCatalogId,
       externalSourceUrl: externalSourceUrl ?? this.externalSourceUrl,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      purchasePrice: purchasePrice ?? this.purchasePrice,
+      purchaseCurrency: purchaseCurrency ?? this.purchaseCurrency,
+      isBorrowed: isBorrowed ?? this.isBorrowed,
+      lenderName: lenderName ?? this.lenderName,
+      lenderContact: lenderContact ?? this.lenderContact,
+      borrowDate: borrowDate ?? this.borrowDate,
+      expectedReturnDate: expectedReturnDate ?? this.expectedReturnDate,
+      isLent: isLent ?? this.isLent,
+      borrowerName: borrowerName ?? this.borrowerName,
+      borrowerContact: borrowerContact ?? this.borrowerContact,
+      lendDate: lendDate ?? this.lendDate,
+      expectedLendReturnDate: expectedLendReturnDate ?? this.expectedLendReturnDate,
       createdAtParam: createdAt ?? this.createdAt,
       updatedAtParam: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,

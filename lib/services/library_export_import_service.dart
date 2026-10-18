@@ -1,109 +1,44 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../features/library/book.dart';
 import '../features/library/reading_record.dart';
 import '../features/library/book_repository.dart';
 import '../shared/services/cover_image_service.dart';
-import 'library_export_service.dart';
 
-class ExportService {
-  ExportService(this._repository);
-  final BookRepository _repository;
+class ExportData {
+  final int schemaVersion;
+  final DateTime exportDate;
+  final List<Map<String, dynamic>> books;
+  final List<Map<String, dynamic>> readingRecords;
+  final Map<String, String> coversBase64;
 
-  static const int currentSchemaVersion = 1;
+  ExportData({
+    required this.schemaVersion,
+    required this.exportDate,
+    required this.books,
+    required this.readingRecords,
+    required this.coversBase64,
+  });
 
-  Future<ExportData> export() async {
-    final books = await _repository.getAll();
-    final records = await _repository.listReadingRecords();
+  Map<String, dynamic> toJson() => {
+        'schemaVersion': schemaVersion,
+        'exportDate': exportDate.toIso8601String(),
+        'books': books,
+        'readingRecords': readingRecords,
+        'coversBase64': coversBase64,
+      };
 
-    final booksJson = books.map(_bookToJson).toList();
-    final recordsJson = records.map(_recordToJson).toList();
-
-    // Fetch cover images and encode them as Base64
-    final coversBase64 = <String, String>{};
-    for (final book in books) {
-      if (book.coverAssetKey != null && book.coverAssetKey!.isNotEmpty) {
-        try {
-          final bytes = await CoverImageService.loadImage(book.coverAssetKey!);
-          if (bytes != null) {
-            coversBase64[book.coverAssetKey!] = base64Encode(bytes);
-          }
-        } catch (e) {
-          // If we can't load a cover, we skip it but continue with export
-          // This ensures that one missing cover doesn't break the entire export
-        }
-      }
-    }
-
-    return ExportData(
-      schemaVersion: currentSchemaVersion,
-      exportDate: DateTime.now().toUtc(),
-      books: booksJson,
-      readingRecords: recordsJson,
-      coversBase64: coversBase64,
-    );
-  }
-
-  Map<String, dynamic> _bookToJson(Book b) => {
-    'id': b.id,
-    'title': b.title,
-    'authors': b.authors,
-    'description': b.description,
-    'genres': b.genres,
-    'isbn10': b.isbn10,
-    'isbn13': b.isbn13,
-    'publisher': b.publisher,
-    'publicationDate': b.publicationDate?.toIso8601String(),
-    'pageCount': b.pageCount,
-    'coverAssetKey': b.coverAssetKey,
-    'isInWishlist': b.isInWishlist,
-    'externalCatalogId': b.externalCatalogId,
-    'externalSourceUrl': b.externalSourceUrl,
-    'createdAt': b.createdAt.toIso8601String(),
-    'updatedAt': b.updatedAt.toIso8601String(),
-    'archivedAt': b.archivedAt?.toIso8601String(),
-  };
-
-  Map<String, dynamic> _recordToJson(ReadingRecord r) => {
-    'id': r.id,
-    'bookId': r.bookId,
-    'status': r.status.name,
-    'currentPage': r.currentPage,
-    'percentageOnlyProgress': r.percentageOnlyProgress,
-    'startDate': r.startDate?.toIso8601String(),
-    'finishDate': r.finishDate?.toIso8601String(),
-    'lastReadDate': r.lastReadDate.toIso8601String(),
-    'personalRating': r.personalRating,
-    'notes': r.notes,
-  };
-
-  Future<File> exportToZipFile({String? prefix}) async {
-    final data = await export();
-    final jsonStr = jsonEncode(data.toJson());
-    final bytes = utf8.encode(jsonStr);
-
-    final archive = Archive();
-    archive.addFile(ArchiveFile('library.json', bytes.length, bytes));
-
-    final dir = await _documentsDir();
-    final name =
-        '${prefix ?? 'dandelion_backup'}_${DateTime.now().toIso8601String().replaceAll(':', '-')}.zip';
-    final file = File('${dir.path}/$name');
-    final zipBytes = ZipEncoder().encode(archive);
-    await file.writeAsBytes(zipBytes);
-    return file;
-  }
-
-  Future<Directory> _documentsDir() async {
-    final docs = await getApplicationDocumentsDirectory();
-    final libDir = Directory('${docs.path}/Dandelion/exports');
-    if (!await libDir.exists()) await libDir.create(recursive: true);
-    return libDir;
-  }
+  static ExportData fromJson(Map<String, dynamic> json) => ExportData(
+        schemaVersion: json['schemaVersion'] as int,
+        exportDate: DateTime.parse(json['exportDate'] as String),
+        books: (json['books'] as List).cast<Map<String, dynamic>>(),
+        readingRecords: (json['readingRecords'] as List).cast<Map<String, dynamic>>(),
+        coversBase64: (json['coversBase64'] as Map).cast<String, String>(),
+      );
 }
 
 class ImportPreview {
@@ -144,29 +79,113 @@ class BookConflict {
 
 enum ConflictType { duplicateIsbn, duplicateTitle, missingRequired }
 
+class ExportService {
+  ExportService(this._repository);
+  final BookRepository _repository;
+
+  static const int currentSchemaVersion = 1;
+
+  Future<ExportData> export() async {
+    final books = await _repository.getAll();
+    final records = await _repository.listReadingRecords();
+
+    final booksJson = books.map(_bookToJson).toList();
+    final recordsJson = records.map(_recordToJson).toList();
+
+    final coversBase64 = <String, String>{};
+    for (final book in books) {
+      if (book.coverAssetKey != null && book.coverAssetKey!.isNotEmpty) {
+        try {
+          final bytes = await CoverImageService.loadImage(book.coverAssetKey!);
+          if (bytes != null) {
+            coversBase64[book.coverAssetKey!] = base64Encode(bytes);
+          }
+        } catch (e) {
+          // If we can't load a cover, we skip it but continue with export
+        }
+      }
+    }
+
+    return ExportData(
+      schemaVersion: currentSchemaVersion,
+      exportDate: DateTime.now().toUtc(),
+      books: booksJson,
+      readingRecords: recordsJson,
+      coversBase64: coversBase64,
+    );
+  }
+
+  Map<String, dynamic> _bookToJson(Book b) => {
+        'id': b.id,
+        'title': b.title,
+        'authors': b.authors,
+        'description': b.description,
+        'genres': b.genres,
+        'isbn10': b.isbn10,
+        'isbn13': b.isbn13,
+        'publisher': b.publisher,
+        'publicationDate': b.publicationDate?.toIso8601String(),
+        'pageCount': b.pageCount,
+        'coverAssetKey': b.coverAssetKey,
+        'isInWishlist': b.isInWishlist,
+        'externalCatalogId': b.externalCatalogId,
+        'externalSourceUrl': b.externalSourceUrl,
+        'createdAt': b.createdAt.toIso8601String(),
+        'updatedAt': b.updatedAt.toIso8601String(),
+        'archivedAt': b.archivedAt?.toIso8601String(),
+      };
+
+  Map<String, dynamic> _recordToJson(ReadingRecord r) => {
+        'id': r.id,
+        'bookId': r.bookId,
+        'status': r.status.name,
+        'currentPage': r.currentPage,
+        'percentageOnlyProgress': r.percentageOnlyProgress,
+        'startDate': r.startDate?.toIso8601String(),
+        'finishDate': r.finishDate?.toIso8601String(),
+        'lastReadDate': r.lastReadDate.toIso8601String(),
+        'personalRating': r.personalRating,
+        'notes': r.notes,
+      };
+
+  Future<void> exportToFile(File file) async {
+    final data = await export();
+    final bytes = utf8.encode(jsonEncode(data.toJson()));
+    final archive = Archive();
+    archive.addFile(ArchiveFile('library.json', bytes.length, bytes));
+    final zipData = ZipEncoder().encode(archive);
+    if (zipData != null) {
+      await file.writeAsBytes(zipData);
+    }
+  }
+}
+
 class ImportService {
   ImportService(this._repository);
   final BookRepository _repository;
 
   static const int supportedSchemaVersion = 1;
 
-  Future<ImportPreview> validateArchive(File file) async {
+  Future<ImportPreview> validateArchive(Uint8List archiveBytes) async {
     final errors = <String>[];
     final warnings = <String>[];
     final conflicts = <BookConflict>[];
 
     Map<String, dynamic> jsonMap;
     try {
-      final bytes = await file.readAsBytes();
-      if (file.path.toLowerCase().endsWith('.zip')) {
-        final archive = ZipDecoder().decodeBytes(bytes);
+      if (archiveBytes.length < 4 ||
+          archiveBytes[0] != 0x50 ||
+          archiveBytes[1] != 0x4B ||
+          archiveBytes[2] != 0x03 ||
+          archiveBytes[3] != 0x04) {
+        jsonMap = jsonDecode(utf8.decode(archiveBytes));
+      } else {
+        final archive = ZipDecoder().decodeBytes(archiveBytes);
         final libraryFile = archive.files.firstWhere(
           (f) => f.name == 'library.json',
           orElse: () => throw FormatException('library.json missing'),
         );
         jsonMap = jsonDecode(utf8.decode(libraryFile.content as List<int>));
-      } else {
-        jsonMap = jsonDecode(utf8.decode(bytes));
       }
     } catch (e) {
       return ImportPreview(
@@ -256,30 +275,35 @@ class ImportService {
   }
 
   Future<void> importArchive(
-    File file, {
+    Uint8List archiveBytes, {
     bool skipConflicts = true,
     bool overwrite = false,
   }) async {
-    final preview = await validateArchive(file);
+    final preview = await validateArchive(archiveBytes);
     if (!preview.isValid) {
       throw StateError(
         'Import validation failed: ${preview.errors.join('; ')}',
       );
     }
 
-    // Read and decode the archive
-    final bytes = await file.readAsBytes();
-    final archive = ZipDecoder().decodeBytes(bytes);
+    Map<String, dynamic> jsonMap;
+    if (archiveBytes.length < 4 ||
+        archiveBytes[0] != 0x50 ||
+        archiveBytes[1] != 0x4B ||
+        archiveBytes[2] != 0x03 ||
+        archiveBytes[3] != 0x04) {
+      jsonMap = jsonDecode(utf8.decode(archiveBytes));
+    } else {
+      final archive = ZipDecoder().decodeBytes(archiveBytes);
+      final libraryFile = archive.files.firstWhere(
+        (f) => f.name == 'library.json',
+        orElse: () => throw FormatException('library.json missing in archive'),
+      );
+      jsonMap = jsonDecode(utf8.decode(libraryFile.content as List<int>));
+    }
 
-    // Extract library.json
-    final libraryFile = archive.files.firstWhere(
-      (f) => f.name == 'library.json',
-      orElse: () => throw FormatException('library.json missing in archive'),
-    );
-    final jsonMap = jsonDecode(utf8.decode(libraryFile.content as List<int>));
     final exportData = ExportData.fromJson(jsonMap);
 
-    // Import books
     for (final bookJson in exportData.books) {
       final book = Book(
         id: bookJson['id'],
@@ -309,17 +333,14 @@ class ImportService {
             : null,
       );
 
-      // Check for conflicts
       final normalizedIsbn = _normalizeIsbn(book.isbn13 ?? book.isbn10);
       final hasIsbn = normalizedIsbn != null && normalizedIsbn.isNotEmpty;
 
-      // Check for existing book by ISBN
       Book? existingBook;
       if (hasIsbn) {
         existingBook = await _repository.getBookByIsbn(normalizedIsbn);
       }
 
-      // Check for existing book by title and author
       Book? titleMatch;
       if (existingBook == null) {
         final books = await _repository.listBooks(
@@ -334,17 +355,14 @@ class ImportService {
           overwrite && (existingBook != null || titleMatch != null);
 
       if (shouldSkip && !shouldOverwrite) {
-        // Skip this book
         continue;
       }
 
       if (existingBook != null && shouldOverwrite) {
-        // Update existing book
         await _repository.updateBook(
           book.copyWith(id: existingBook.id, updatedAt: DateTime.now()),
         );
       } else if (titleMatch != null && shouldOverwrite) {
-        // Update book by title match
         await _repository.updateBook(
           titleMatch.copyWith(
             title: book.title,
@@ -366,13 +384,11 @@ class ImportService {
           ),
         );
       } else {
-        // Insert new book
         final id = await _repository.createBook(
           book,
           initialStatus: ReadingStatus.wantToRead,
         );
 
-        // Create reading record if it exists in the import data
         final recordJson = exportData.readingRecords
             .where((r) => r['bookId'] == book.id)
             .firstOrNull;
@@ -402,12 +418,15 @@ class ImportService {
       }
     }
 
-    // Import cover images: we already have the coversBase64 map from exportData.
-    // For each cover, store the image using the original key.
     for (final entry in exportData.coversBase64.entries) {
       final key = entry.key;
       final bytes = base64Decode(entry.value);
       await CoverImageService.storeImage(bytes, key: key);
     }
+  }
+
+  Future<void> importFromFile(File file) async {
+    final bytes = await file.readAsBytes();
+    await importArchive(bytes);
   }
 }

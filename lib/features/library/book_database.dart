@@ -1,25 +1,7 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 part 'book_database.g.dart';
-
-class JsonListStringConverter implements TypeConverter<List<String>, String> {
-  const JsonListStringConverter();
-
-  @override
-  String toSql(List<String> value) => jsonEncode(value);
-
-  @override
-  List<String> fromSql(String fromDb) {
-    final decoded = jsonDecode(fromDb);
-    if (decoded is List) {
-      return decoded.map((e) => e.toString()).toList();
-    }
-    return [];
-  }
-}
 
 @DataClassName('BookRow')
 @TableIndex(
@@ -30,8 +12,7 @@ class JsonListStringConverter implements TypeConverter<List<String>, String> {
 class Books extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get title => text().withLength(min: 1, max: 512)();
-  TextColumn get authors =>
-      text().map(const JsonListStringConverter()).nullable()();
+  TextColumn get authors => text().nullable()();
   TextColumn get author => text().nullable()();
   TextColumn get description => text().nullable()();
   TextColumn get summary => text().nullable()();
@@ -47,6 +28,18 @@ class Books extends Table {
   BoolColumn get isInWishlist => boolean().withDefault(const Constant(false))();
   TextColumn get externalCatalogId => text().nullable()();
   TextColumn get externalSourceUrl => text().nullable()();
+  RealColumn get purchasePrice => real().nullable()();
+  TextColumn get purchaseCurrency => text().nullable()();
+  BoolColumn get isBorrowed => boolean().withDefault(const Constant(false))();
+  TextColumn get lenderName => text().nullable()();
+  TextColumn get lenderContact => text().nullable()();
+  DateTimeColumn get borrowDate => dateTime().nullable()();
+  DateTimeColumn get expectedReturnDate => dateTime().nullable()();
+  BoolColumn get isLent => boolean().withDefault(const Constant(false))();
+  TextColumn get borrowerName => text().nullable()();
+  TextColumn get borrowerContact => text().nullable()();
+  DateTimeColumn get lendDate => dateTime().nullable()();
+  DateTimeColumn get expectedLendReturnDate => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get archivedAt => dateTime().nullable()();
@@ -99,31 +92,37 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
-  Future<List<BookRow>> getAllBooks({bool includeArchived = false}) {
+  Future<List<BookRow>> getAllBooks({bool includeArchived = false, int? limit}) {
     final query = select(books)
-      ..orderBy([(book) => OrderingTerm.desc(book.updatedAt)])
-      ..limit(500);
+      ..orderBy([(book) => OrderingTerm.desc(book.updatedAt)]);
     if (!includeArchived) {
       query.where((book) => book.archivedAt.isNull());
+    }
+    if (limit != null) {
+      query.limit(limit);
     }
     return query.get();
   }
 
-  Future<List<BookRow>> searchBooks(String query) {
+  Future<List<BookRow>> searchBooks(String query, {int? limit}) {
     final term = '%${query.trim()}%';
-    return (select(books)
-          ..where(
-            (book) =>
-                book.archivedAt.isNull() &
-                (book.title.like(term) |
-                    book.author.like(term) |
-                    book.isbn.like(term) |
-                    book.genres.like(term) |
-                    book.description.like(term)),
-          )
-          ..orderBy([(book) => OrderingTerm.asc(book.title)])
-          ..limit(500))
-        .get();
+    var queryBuilder = select(books)
+      ..where(
+        (book) =>
+            book.archivedAt.isNull() &
+            (book.title.like(term) |
+                book.author.like(term) |
+                book.isbn.like(term) |
+                book.genres.like(term) |
+                book.description.like(term)),
+      )
+      ..orderBy([(book) => OrderingTerm.asc(book.title)]);
+
+    if (limit != null) {
+      queryBuilder.limit(limit);
+    }
+
+    return queryBuilder.get();
   }
 
   Future<BookRow?> getBookById(int id) =>
@@ -160,6 +159,8 @@ class AppDatabase extends _$AppDatabase {
     String? genre,
     String? sortBy,
     bool ascending = true,
+    int? limit,
+    int? offset,
   }) {
     var query = select(books)..where((tbl) => tbl.archivedAt.isNull());
 
@@ -218,6 +219,10 @@ class AppDatabase extends _$AppDatabase {
         query.orderBy([
           (tbl) => OrderingTerm(expression: tbl.title, mode: OrderingMode.asc),
         ]);
+    }
+
+    if (limit != null) {
+      query.limit(limit, offset: offset);
     }
 
     return query.get();

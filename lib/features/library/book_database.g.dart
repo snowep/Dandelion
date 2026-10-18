@@ -34,15 +34,17 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _authorsMeta = const VerificationMeta(
+    'authors',
+  );
   @override
-  late final GeneratedColumnWithTypeConverter<List<String>?, String> authors =
-      GeneratedColumn<String>(
-        'authors',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      ).withConverter<List<String>?>($BooksTable.$converterauthorsn);
+  late final GeneratedColumn<String> authors = GeneratedColumn<String>(
+    'authors',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _authorMeta = const VerificationMeta('author');
   @override
   late final GeneratedColumn<String> author = GeneratedColumn<String>(
@@ -209,6 +211,144 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _purchasePriceMeta = const VerificationMeta(
+    'purchasePrice',
+  );
+  @override
+  late final GeneratedColumn<double> purchasePrice = GeneratedColumn<double>(
+    'purchase_price',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _purchaseCurrencyMeta = const VerificationMeta(
+    'purchaseCurrency',
+  );
+  @override
+  late final GeneratedColumn<String> purchaseCurrency = GeneratedColumn<String>(
+    'purchase_currency',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isBorrowedMeta = const VerificationMeta(
+    'isBorrowed',
+  );
+  @override
+  late final GeneratedColumn<bool> isBorrowed = GeneratedColumn<bool>(
+    'is_borrowed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_borrowed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _lenderNameMeta = const VerificationMeta(
+    'lenderName',
+  );
+  @override
+  late final GeneratedColumn<String> lenderName = GeneratedColumn<String>(
+    'lender_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lenderContactMeta = const VerificationMeta(
+    'lenderContact',
+  );
+  @override
+  late final GeneratedColumn<String> lenderContact = GeneratedColumn<String>(
+    'lender_contact',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _borrowDateMeta = const VerificationMeta(
+    'borrowDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> borrowDate = GeneratedColumn<DateTime>(
+    'borrow_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _expectedReturnDateMeta =
+      const VerificationMeta('expectedReturnDate');
+  @override
+  late final GeneratedColumn<DateTime> expectedReturnDate =
+      GeneratedColumn<DateTime>(
+        'expected_return_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _isLentMeta = const VerificationMeta('isLent');
+  @override
+  late final GeneratedColumn<bool> isLent = GeneratedColumn<bool>(
+    'is_lent',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_lent" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _borrowerNameMeta = const VerificationMeta(
+    'borrowerName',
+  );
+  @override
+  late final GeneratedColumn<String> borrowerName = GeneratedColumn<String>(
+    'borrower_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _borrowerContactMeta = const VerificationMeta(
+    'borrowerContact',
+  );
+  @override
+  late final GeneratedColumn<String> borrowerContact = GeneratedColumn<String>(
+    'borrower_contact',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lendDateMeta = const VerificationMeta(
+    'lendDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lendDate = GeneratedColumn<DateTime>(
+    'lend_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _expectedLendReturnDateMeta =
+      const VerificationMeta('expectedLendReturnDate');
+  @override
+  late final GeneratedColumn<DateTime> expectedLendReturnDate =
+      GeneratedColumn<DateTime>(
+        'expected_lend_return_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -264,6 +404,18 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
     isInWishlist,
     externalCatalogId,
     externalSourceUrl,
+    purchasePrice,
+    purchaseCurrency,
+    isBorrowed,
+    lenderName,
+    lenderContact,
+    borrowDate,
+    expectedReturnDate,
+    isLent,
+    borrowerName,
+    borrowerContact,
+    lendDate,
+    expectedLendReturnDate,
     createdAt,
     updatedAt,
     archivedAt,
@@ -290,6 +442,12 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
       );
     } else if (isInserting) {
       context.missing(_titleMeta);
+    }
+    if (data.containsKey('authors')) {
+      context.handle(
+        _authorsMeta,
+        authors.isAcceptableOrUnknown(data['authors']!, _authorsMeta),
+      );
     }
     if (data.containsKey('author')) {
       context.handle(
@@ -405,6 +563,99 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         ),
       );
     }
+    if (data.containsKey('purchase_price')) {
+      context.handle(
+        _purchasePriceMeta,
+        purchasePrice.isAcceptableOrUnknown(
+          data['purchase_price']!,
+          _purchasePriceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('purchase_currency')) {
+      context.handle(
+        _purchaseCurrencyMeta,
+        purchaseCurrency.isAcceptableOrUnknown(
+          data['purchase_currency']!,
+          _purchaseCurrencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_borrowed')) {
+      context.handle(
+        _isBorrowedMeta,
+        isBorrowed.isAcceptableOrUnknown(data['is_borrowed']!, _isBorrowedMeta),
+      );
+    }
+    if (data.containsKey('lender_name')) {
+      context.handle(
+        _lenderNameMeta,
+        lenderName.isAcceptableOrUnknown(data['lender_name']!, _lenderNameMeta),
+      );
+    }
+    if (data.containsKey('lender_contact')) {
+      context.handle(
+        _lenderContactMeta,
+        lenderContact.isAcceptableOrUnknown(
+          data['lender_contact']!,
+          _lenderContactMeta,
+        ),
+      );
+    }
+    if (data.containsKey('borrow_date')) {
+      context.handle(
+        _borrowDateMeta,
+        borrowDate.isAcceptableOrUnknown(data['borrow_date']!, _borrowDateMeta),
+      );
+    }
+    if (data.containsKey('expected_return_date')) {
+      context.handle(
+        _expectedReturnDateMeta,
+        expectedReturnDate.isAcceptableOrUnknown(
+          data['expected_return_date']!,
+          _expectedReturnDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_lent')) {
+      context.handle(
+        _isLentMeta,
+        isLent.isAcceptableOrUnknown(data['is_lent']!, _isLentMeta),
+      );
+    }
+    if (data.containsKey('borrower_name')) {
+      context.handle(
+        _borrowerNameMeta,
+        borrowerName.isAcceptableOrUnknown(
+          data['borrower_name']!,
+          _borrowerNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('borrower_contact')) {
+      context.handle(
+        _borrowerContactMeta,
+        borrowerContact.isAcceptableOrUnknown(
+          data['borrower_contact']!,
+          _borrowerContactMeta,
+        ),
+      );
+    }
+    if (data.containsKey('lend_date')) {
+      context.handle(
+        _lendDateMeta,
+        lendDate.isAcceptableOrUnknown(data['lend_date']!, _lendDateMeta),
+      );
+    }
+    if (data.containsKey('expected_lend_return_date')) {
+      context.handle(
+        _expectedLendReturnDateMeta,
+        expectedLendReturnDate.isAcceptableOrUnknown(
+          data['expected_lend_return_date']!,
+          _expectedLendReturnDateMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -440,11 +691,9 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         DriftSqlType.string,
         data['${effectivePrefix}title'],
       )!,
-      authors: $BooksTable.$converterauthorsn.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}authors'],
-        ),
+      authors: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}authors'],
       ),
       author: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -506,6 +755,54 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
         DriftSqlType.string,
         data['${effectivePrefix}external_source_url'],
       ),
+      purchasePrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}purchase_price'],
+      ),
+      purchaseCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}purchase_currency'],
+      ),
+      isBorrowed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_borrowed'],
+      )!,
+      lenderName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lender_name'],
+      ),
+      lenderContact: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lender_contact'],
+      ),
+      borrowDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}borrow_date'],
+      ),
+      expectedReturnDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expected_return_date'],
+      ),
+      isLent: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_lent'],
+      )!,
+      borrowerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}borrower_name'],
+      ),
+      borrowerContact: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}borrower_contact'],
+      ),
+      lendDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}lend_date'],
+      ),
+      expectedLendReturnDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expected_lend_return_date'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -525,17 +822,12 @@ class $BooksTable extends Books with TableInfo<$BooksTable, BookRow> {
   $BooksTable createAlias(String alias) {
     return $BooksTable(attachedDatabase, alias);
   }
-
-  static TypeConverter<List<String>, String> $converterauthors =
-      const JsonListStringConverter();
-  static TypeConverter<List<String>?, String?> $converterauthorsn =
-      NullAwareTypeConverter.wrap($converterauthors);
 }
 
 class BookRow extends DataClass implements Insertable<BookRow> {
   final int id;
   final String title;
-  final List<String>? authors;
+  final String? authors;
   final String? author;
   final String? description;
   final String? summary;
@@ -551,6 +843,18 @@ class BookRow extends DataClass implements Insertable<BookRow> {
   final bool isInWishlist;
   final String? externalCatalogId;
   final String? externalSourceUrl;
+  final double? purchasePrice;
+  final String? purchaseCurrency;
+  final bool isBorrowed;
+  final String? lenderName;
+  final String? lenderContact;
+  final DateTime? borrowDate;
+  final DateTime? expectedReturnDate;
+  final bool isLent;
+  final String? borrowerName;
+  final String? borrowerContact;
+  final DateTime? lendDate;
+  final DateTime? expectedLendReturnDate;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? archivedAt;
@@ -573,6 +877,18 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     required this.isInWishlist,
     this.externalCatalogId,
     this.externalSourceUrl,
+    this.purchasePrice,
+    this.purchaseCurrency,
+    required this.isBorrowed,
+    this.lenderName,
+    this.lenderContact,
+    this.borrowDate,
+    this.expectedReturnDate,
+    required this.isLent,
+    this.borrowerName,
+    this.borrowerContact,
+    this.lendDate,
+    this.expectedLendReturnDate,
     required this.createdAt,
     required this.updatedAt,
     this.archivedAt,
@@ -583,9 +899,7 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     map['id'] = Variable<int>(id);
     map['title'] = Variable<String>(title);
     if (!nullToAbsent || authors != null) {
-      map['authors'] = Variable<String>(
-        $BooksTable.$converterauthorsn.toSql(authors),
-      );
+      map['authors'] = Variable<String>(authors);
     }
     if (!nullToAbsent || author != null) {
       map['author'] = Variable<String>(author);
@@ -629,6 +943,40 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     }
     if (!nullToAbsent || externalSourceUrl != null) {
       map['external_source_url'] = Variable<String>(externalSourceUrl);
+    }
+    if (!nullToAbsent || purchasePrice != null) {
+      map['purchase_price'] = Variable<double>(purchasePrice);
+    }
+    if (!nullToAbsent || purchaseCurrency != null) {
+      map['purchase_currency'] = Variable<String>(purchaseCurrency);
+    }
+    map['is_borrowed'] = Variable<bool>(isBorrowed);
+    if (!nullToAbsent || lenderName != null) {
+      map['lender_name'] = Variable<String>(lenderName);
+    }
+    if (!nullToAbsent || lenderContact != null) {
+      map['lender_contact'] = Variable<String>(lenderContact);
+    }
+    if (!nullToAbsent || borrowDate != null) {
+      map['borrow_date'] = Variable<DateTime>(borrowDate);
+    }
+    if (!nullToAbsent || expectedReturnDate != null) {
+      map['expected_return_date'] = Variable<DateTime>(expectedReturnDate);
+    }
+    map['is_lent'] = Variable<bool>(isLent);
+    if (!nullToAbsent || borrowerName != null) {
+      map['borrower_name'] = Variable<String>(borrowerName);
+    }
+    if (!nullToAbsent || borrowerContact != null) {
+      map['borrower_contact'] = Variable<String>(borrowerContact);
+    }
+    if (!nullToAbsent || lendDate != null) {
+      map['lend_date'] = Variable<DateTime>(lendDate);
+    }
+    if (!nullToAbsent || expectedLendReturnDate != null) {
+      map['expected_lend_return_date'] = Variable<DateTime>(
+        expectedLendReturnDate,
+      );
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -686,6 +1034,38 @@ class BookRow extends DataClass implements Insertable<BookRow> {
       externalSourceUrl: externalSourceUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(externalSourceUrl),
+      purchasePrice: purchasePrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(purchasePrice),
+      purchaseCurrency: purchaseCurrency == null && nullToAbsent
+          ? const Value.absent()
+          : Value(purchaseCurrency),
+      isBorrowed: Value(isBorrowed),
+      lenderName: lenderName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lenderName),
+      lenderContact: lenderContact == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lenderContact),
+      borrowDate: borrowDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(borrowDate),
+      expectedReturnDate: expectedReturnDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expectedReturnDate),
+      isLent: Value(isLent),
+      borrowerName: borrowerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(borrowerName),
+      borrowerContact: borrowerContact == null && nullToAbsent
+          ? const Value.absent()
+          : Value(borrowerContact),
+      lendDate: lendDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lendDate),
+      expectedLendReturnDate: expectedLendReturnDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expectedLendReturnDate),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       archivedAt: archivedAt == null && nullToAbsent
@@ -702,7 +1082,7 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     return BookRow(
       id: serializer.fromJson<int>(json['id']),
       title: serializer.fromJson<String>(json['title']),
-      authors: serializer.fromJson<List<String>?>(json['authors']),
+      authors: serializer.fromJson<String?>(json['authors']),
       author: serializer.fromJson<String?>(json['author']),
       description: serializer.fromJson<String?>(json['description']),
       summary: serializer.fromJson<String?>(json['summary']),
@@ -722,6 +1102,22 @@ class BookRow extends DataClass implements Insertable<BookRow> {
       externalSourceUrl: serializer.fromJson<String?>(
         json['externalSourceUrl'],
       ),
+      purchasePrice: serializer.fromJson<double?>(json['purchasePrice']),
+      purchaseCurrency: serializer.fromJson<String?>(json['purchaseCurrency']),
+      isBorrowed: serializer.fromJson<bool>(json['isBorrowed']),
+      lenderName: serializer.fromJson<String?>(json['lenderName']),
+      lenderContact: serializer.fromJson<String?>(json['lenderContact']),
+      borrowDate: serializer.fromJson<DateTime?>(json['borrowDate']),
+      expectedReturnDate: serializer.fromJson<DateTime?>(
+        json['expectedReturnDate'],
+      ),
+      isLent: serializer.fromJson<bool>(json['isLent']),
+      borrowerName: serializer.fromJson<String?>(json['borrowerName']),
+      borrowerContact: serializer.fromJson<String?>(json['borrowerContact']),
+      lendDate: serializer.fromJson<DateTime?>(json['lendDate']),
+      expectedLendReturnDate: serializer.fromJson<DateTime?>(
+        json['expectedLendReturnDate'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
@@ -733,7 +1129,7 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'title': serializer.toJson<String>(title),
-      'authors': serializer.toJson<List<String>?>(authors),
+      'authors': serializer.toJson<String?>(authors),
       'author': serializer.toJson<String?>(author),
       'description': serializer.toJson<String?>(description),
       'summary': serializer.toJson<String?>(summary),
@@ -749,6 +1145,20 @@ class BookRow extends DataClass implements Insertable<BookRow> {
       'isInWishlist': serializer.toJson<bool>(isInWishlist),
       'externalCatalogId': serializer.toJson<String?>(externalCatalogId),
       'externalSourceUrl': serializer.toJson<String?>(externalSourceUrl),
+      'purchasePrice': serializer.toJson<double?>(purchasePrice),
+      'purchaseCurrency': serializer.toJson<String?>(purchaseCurrency),
+      'isBorrowed': serializer.toJson<bool>(isBorrowed),
+      'lenderName': serializer.toJson<String?>(lenderName),
+      'lenderContact': serializer.toJson<String?>(lenderContact),
+      'borrowDate': serializer.toJson<DateTime?>(borrowDate),
+      'expectedReturnDate': serializer.toJson<DateTime?>(expectedReturnDate),
+      'isLent': serializer.toJson<bool>(isLent),
+      'borrowerName': serializer.toJson<String?>(borrowerName),
+      'borrowerContact': serializer.toJson<String?>(borrowerContact),
+      'lendDate': serializer.toJson<DateTime?>(lendDate),
+      'expectedLendReturnDate': serializer.toJson<DateTime?>(
+        expectedLendReturnDate,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'archivedAt': serializer.toJson<DateTime?>(archivedAt),
@@ -758,7 +1168,7 @@ class BookRow extends DataClass implements Insertable<BookRow> {
   BookRow copyWith({
     int? id,
     String? title,
-    Value<List<String>?> authors = const Value.absent(),
+    Value<String?> authors = const Value.absent(),
     Value<String?> author = const Value.absent(),
     Value<String?> description = const Value.absent(),
     Value<String?> summary = const Value.absent(),
@@ -774,6 +1184,18 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     bool? isInWishlist,
     Value<String?> externalCatalogId = const Value.absent(),
     Value<String?> externalSourceUrl = const Value.absent(),
+    Value<double?> purchasePrice = const Value.absent(),
+    Value<String?> purchaseCurrency = const Value.absent(),
+    bool? isBorrowed,
+    Value<String?> lenderName = const Value.absent(),
+    Value<String?> lenderContact = const Value.absent(),
+    Value<DateTime?> borrowDate = const Value.absent(),
+    Value<DateTime?> expectedReturnDate = const Value.absent(),
+    bool? isLent,
+    Value<String?> borrowerName = const Value.absent(),
+    Value<String?> borrowerContact = const Value.absent(),
+    Value<DateTime?> lendDate = const Value.absent(),
+    Value<DateTime?> expectedLendReturnDate = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> archivedAt = const Value.absent(),
@@ -808,6 +1230,30 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     externalSourceUrl: externalSourceUrl.present
         ? externalSourceUrl.value
         : this.externalSourceUrl,
+    purchasePrice: purchasePrice.present
+        ? purchasePrice.value
+        : this.purchasePrice,
+    purchaseCurrency: purchaseCurrency.present
+        ? purchaseCurrency.value
+        : this.purchaseCurrency,
+    isBorrowed: isBorrowed ?? this.isBorrowed,
+    lenderName: lenderName.present ? lenderName.value : this.lenderName,
+    lenderContact: lenderContact.present
+        ? lenderContact.value
+        : this.lenderContact,
+    borrowDate: borrowDate.present ? borrowDate.value : this.borrowDate,
+    expectedReturnDate: expectedReturnDate.present
+        ? expectedReturnDate.value
+        : this.expectedReturnDate,
+    isLent: isLent ?? this.isLent,
+    borrowerName: borrowerName.present ? borrowerName.value : this.borrowerName,
+    borrowerContact: borrowerContact.present
+        ? borrowerContact.value
+        : this.borrowerContact,
+    lendDate: lendDate.present ? lendDate.value : this.lendDate,
+    expectedLendReturnDate: expectedLendReturnDate.present
+        ? expectedLendReturnDate.value
+        : this.expectedLendReturnDate,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
@@ -848,6 +1294,38 @@ class BookRow extends DataClass implements Insertable<BookRow> {
       externalSourceUrl: data.externalSourceUrl.present
           ? data.externalSourceUrl.value
           : this.externalSourceUrl,
+      purchasePrice: data.purchasePrice.present
+          ? data.purchasePrice.value
+          : this.purchasePrice,
+      purchaseCurrency: data.purchaseCurrency.present
+          ? data.purchaseCurrency.value
+          : this.purchaseCurrency,
+      isBorrowed: data.isBorrowed.present
+          ? data.isBorrowed.value
+          : this.isBorrowed,
+      lenderName: data.lenderName.present
+          ? data.lenderName.value
+          : this.lenderName,
+      lenderContact: data.lenderContact.present
+          ? data.lenderContact.value
+          : this.lenderContact,
+      borrowDate: data.borrowDate.present
+          ? data.borrowDate.value
+          : this.borrowDate,
+      expectedReturnDate: data.expectedReturnDate.present
+          ? data.expectedReturnDate.value
+          : this.expectedReturnDate,
+      isLent: data.isLent.present ? data.isLent.value : this.isLent,
+      borrowerName: data.borrowerName.present
+          ? data.borrowerName.value
+          : this.borrowerName,
+      borrowerContact: data.borrowerContact.present
+          ? data.borrowerContact.value
+          : this.borrowerContact,
+      lendDate: data.lendDate.present ? data.lendDate.value : this.lendDate,
+      expectedLendReturnDate: data.expectedLendReturnDate.present
+          ? data.expectedLendReturnDate.value
+          : this.expectedLendReturnDate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       archivedAt: data.archivedAt.present
@@ -877,6 +1355,18 @@ class BookRow extends DataClass implements Insertable<BookRow> {
           ..write('isInWishlist: $isInWishlist, ')
           ..write('externalCatalogId: $externalCatalogId, ')
           ..write('externalSourceUrl: $externalSourceUrl, ')
+          ..write('purchasePrice: $purchasePrice, ')
+          ..write('purchaseCurrency: $purchaseCurrency, ')
+          ..write('isBorrowed: $isBorrowed, ')
+          ..write('lenderName: $lenderName, ')
+          ..write('lenderContact: $lenderContact, ')
+          ..write('borrowDate: $borrowDate, ')
+          ..write('expectedReturnDate: $expectedReturnDate, ')
+          ..write('isLent: $isLent, ')
+          ..write('borrowerName: $borrowerName, ')
+          ..write('borrowerContact: $borrowerContact, ')
+          ..write('lendDate: $lendDate, ')
+          ..write('expectedLendReturnDate: $expectedLendReturnDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt')
@@ -904,6 +1394,18 @@ class BookRow extends DataClass implements Insertable<BookRow> {
     isInWishlist,
     externalCatalogId,
     externalSourceUrl,
+    purchasePrice,
+    purchaseCurrency,
+    isBorrowed,
+    lenderName,
+    lenderContact,
+    borrowDate,
+    expectedReturnDate,
+    isLent,
+    borrowerName,
+    borrowerContact,
+    lendDate,
+    expectedLendReturnDate,
     createdAt,
     updatedAt,
     archivedAt,
@@ -930,6 +1432,18 @@ class BookRow extends DataClass implements Insertable<BookRow> {
           other.isInWishlist == this.isInWishlist &&
           other.externalCatalogId == this.externalCatalogId &&
           other.externalSourceUrl == this.externalSourceUrl &&
+          other.purchasePrice == this.purchasePrice &&
+          other.purchaseCurrency == this.purchaseCurrency &&
+          other.isBorrowed == this.isBorrowed &&
+          other.lenderName == this.lenderName &&
+          other.lenderContact == this.lenderContact &&
+          other.borrowDate == this.borrowDate &&
+          other.expectedReturnDate == this.expectedReturnDate &&
+          other.isLent == this.isLent &&
+          other.borrowerName == this.borrowerName &&
+          other.borrowerContact == this.borrowerContact &&
+          other.lendDate == this.lendDate &&
+          other.expectedLendReturnDate == this.expectedLendReturnDate &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.archivedAt == this.archivedAt);
@@ -938,7 +1452,7 @@ class BookRow extends DataClass implements Insertable<BookRow> {
 class BooksCompanion extends UpdateCompanion<BookRow> {
   final Value<int> id;
   final Value<String> title;
-  final Value<List<String>?> authors;
+  final Value<String?> authors;
   final Value<String?> author;
   final Value<String?> description;
   final Value<String?> summary;
@@ -954,6 +1468,18 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
   final Value<bool> isInWishlist;
   final Value<String?> externalCatalogId;
   final Value<String?> externalSourceUrl;
+  final Value<double?> purchasePrice;
+  final Value<String?> purchaseCurrency;
+  final Value<bool> isBorrowed;
+  final Value<String?> lenderName;
+  final Value<String?> lenderContact;
+  final Value<DateTime?> borrowDate;
+  final Value<DateTime?> expectedReturnDate;
+  final Value<bool> isLent;
+  final Value<String?> borrowerName;
+  final Value<String?> borrowerContact;
+  final Value<DateTime?> lendDate;
+  final Value<DateTime?> expectedLendReturnDate;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> archivedAt;
@@ -976,6 +1502,18 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     this.isInWishlist = const Value.absent(),
     this.externalCatalogId = const Value.absent(),
     this.externalSourceUrl = const Value.absent(),
+    this.purchasePrice = const Value.absent(),
+    this.purchaseCurrency = const Value.absent(),
+    this.isBorrowed = const Value.absent(),
+    this.lenderName = const Value.absent(),
+    this.lenderContact = const Value.absent(),
+    this.borrowDate = const Value.absent(),
+    this.expectedReturnDate = const Value.absent(),
+    this.isLent = const Value.absent(),
+    this.borrowerName = const Value.absent(),
+    this.borrowerContact = const Value.absent(),
+    this.lendDate = const Value.absent(),
+    this.expectedLendReturnDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archivedAt = const Value.absent(),
@@ -999,6 +1537,18 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     this.isInWishlist = const Value.absent(),
     this.externalCatalogId = const Value.absent(),
     this.externalSourceUrl = const Value.absent(),
+    this.purchasePrice = const Value.absent(),
+    this.purchaseCurrency = const Value.absent(),
+    this.isBorrowed = const Value.absent(),
+    this.lenderName = const Value.absent(),
+    this.lenderContact = const Value.absent(),
+    this.borrowDate = const Value.absent(),
+    this.expectedReturnDate = const Value.absent(),
+    this.isLent = const Value.absent(),
+    this.borrowerName = const Value.absent(),
+    this.borrowerContact = const Value.absent(),
+    this.lendDate = const Value.absent(),
+    this.expectedLendReturnDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archivedAt = const Value.absent(),
@@ -1022,6 +1572,18 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     Expression<bool>? isInWishlist,
     Expression<String>? externalCatalogId,
     Expression<String>? externalSourceUrl,
+    Expression<double>? purchasePrice,
+    Expression<String>? purchaseCurrency,
+    Expression<bool>? isBorrowed,
+    Expression<String>? lenderName,
+    Expression<String>? lenderContact,
+    Expression<DateTime>? borrowDate,
+    Expression<DateTime>? expectedReturnDate,
+    Expression<bool>? isLent,
+    Expression<String>? borrowerName,
+    Expression<String>? borrowerContact,
+    Expression<DateTime>? lendDate,
+    Expression<DateTime>? expectedLendReturnDate,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? archivedAt,
@@ -1045,6 +1607,20 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
       if (isInWishlist != null) 'is_in_wishlist': isInWishlist,
       if (externalCatalogId != null) 'external_catalog_id': externalCatalogId,
       if (externalSourceUrl != null) 'external_source_url': externalSourceUrl,
+      if (purchasePrice != null) 'purchase_price': purchasePrice,
+      if (purchaseCurrency != null) 'purchase_currency': purchaseCurrency,
+      if (isBorrowed != null) 'is_borrowed': isBorrowed,
+      if (lenderName != null) 'lender_name': lenderName,
+      if (lenderContact != null) 'lender_contact': lenderContact,
+      if (borrowDate != null) 'borrow_date': borrowDate,
+      if (expectedReturnDate != null)
+        'expected_return_date': expectedReturnDate,
+      if (isLent != null) 'is_lent': isLent,
+      if (borrowerName != null) 'borrower_name': borrowerName,
+      if (borrowerContact != null) 'borrower_contact': borrowerContact,
+      if (lendDate != null) 'lend_date': lendDate,
+      if (expectedLendReturnDate != null)
+        'expected_lend_return_date': expectedLendReturnDate,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (archivedAt != null) 'archived_at': archivedAt,
@@ -1054,7 +1630,7 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
   BooksCompanion copyWith({
     Value<int>? id,
     Value<String>? title,
-    Value<List<String>?>? authors,
+    Value<String?>? authors,
     Value<String?>? author,
     Value<String?>? description,
     Value<String?>? summary,
@@ -1070,6 +1646,18 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     Value<bool>? isInWishlist,
     Value<String?>? externalCatalogId,
     Value<String?>? externalSourceUrl,
+    Value<double?>? purchasePrice,
+    Value<String?>? purchaseCurrency,
+    Value<bool>? isBorrowed,
+    Value<String?>? lenderName,
+    Value<String?>? lenderContact,
+    Value<DateTime?>? borrowDate,
+    Value<DateTime?>? expectedReturnDate,
+    Value<bool>? isLent,
+    Value<String?>? borrowerName,
+    Value<String?>? borrowerContact,
+    Value<DateTime?>? lendDate,
+    Value<DateTime?>? expectedLendReturnDate,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? archivedAt,
@@ -1093,6 +1681,19 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
       isInWishlist: isInWishlist ?? this.isInWishlist,
       externalCatalogId: externalCatalogId ?? this.externalCatalogId,
       externalSourceUrl: externalSourceUrl ?? this.externalSourceUrl,
+      purchasePrice: purchasePrice ?? this.purchasePrice,
+      purchaseCurrency: purchaseCurrency ?? this.purchaseCurrency,
+      isBorrowed: isBorrowed ?? this.isBorrowed,
+      lenderName: lenderName ?? this.lenderName,
+      lenderContact: lenderContact ?? this.lenderContact,
+      borrowDate: borrowDate ?? this.borrowDate,
+      expectedReturnDate: expectedReturnDate ?? this.expectedReturnDate,
+      isLent: isLent ?? this.isLent,
+      borrowerName: borrowerName ?? this.borrowerName,
+      borrowerContact: borrowerContact ?? this.borrowerContact,
+      lendDate: lendDate ?? this.lendDate,
+      expectedLendReturnDate:
+          expectedLendReturnDate ?? this.expectedLendReturnDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
@@ -1109,9 +1710,7 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
       map['title'] = Variable<String>(title.value);
     }
     if (authors.present) {
-      map['authors'] = Variable<String>(
-        $BooksTable.$converterauthorsn.toSql(authors.value),
-      );
+      map['authors'] = Variable<String>(authors.value);
     }
     if (author.present) {
       map['author'] = Variable<String>(author.value);
@@ -1158,6 +1757,46 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
     if (externalSourceUrl.present) {
       map['external_source_url'] = Variable<String>(externalSourceUrl.value);
     }
+    if (purchasePrice.present) {
+      map['purchase_price'] = Variable<double>(purchasePrice.value);
+    }
+    if (purchaseCurrency.present) {
+      map['purchase_currency'] = Variable<String>(purchaseCurrency.value);
+    }
+    if (isBorrowed.present) {
+      map['is_borrowed'] = Variable<bool>(isBorrowed.value);
+    }
+    if (lenderName.present) {
+      map['lender_name'] = Variable<String>(lenderName.value);
+    }
+    if (lenderContact.present) {
+      map['lender_contact'] = Variable<String>(lenderContact.value);
+    }
+    if (borrowDate.present) {
+      map['borrow_date'] = Variable<DateTime>(borrowDate.value);
+    }
+    if (expectedReturnDate.present) {
+      map['expected_return_date'] = Variable<DateTime>(
+        expectedReturnDate.value,
+      );
+    }
+    if (isLent.present) {
+      map['is_lent'] = Variable<bool>(isLent.value);
+    }
+    if (borrowerName.present) {
+      map['borrower_name'] = Variable<String>(borrowerName.value);
+    }
+    if (borrowerContact.present) {
+      map['borrower_contact'] = Variable<String>(borrowerContact.value);
+    }
+    if (lendDate.present) {
+      map['lend_date'] = Variable<DateTime>(lendDate.value);
+    }
+    if (expectedLendReturnDate.present) {
+      map['expected_lend_return_date'] = Variable<DateTime>(
+        expectedLendReturnDate.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1191,6 +1830,18 @@ class BooksCompanion extends UpdateCompanion<BookRow> {
           ..write('isInWishlist: $isInWishlist, ')
           ..write('externalCatalogId: $externalCatalogId, ')
           ..write('externalSourceUrl: $externalSourceUrl, ')
+          ..write('purchasePrice: $purchasePrice, ')
+          ..write('purchaseCurrency: $purchaseCurrency, ')
+          ..write('isBorrowed: $isBorrowed, ')
+          ..write('lenderName: $lenderName, ')
+          ..write('lenderContact: $lenderContact, ')
+          ..write('borrowDate: $borrowDate, ')
+          ..write('expectedReturnDate: $expectedReturnDate, ')
+          ..write('isLent: $isLent, ')
+          ..write('borrowerName: $borrowerName, ')
+          ..write('borrowerContact: $borrowerContact, ')
+          ..write('lendDate: $lendDate, ')
+          ..write('expectedLendReturnDate: $expectedLendReturnDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt')
@@ -1861,7 +2512,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
   Value<int> id,
   required String title,
-  Value<List<String>?> authors,
+  Value<String?> authors,
   Value<String?> author,
   Value<String?> description,
   Value<String?> summary,
@@ -1877,6 +2528,18 @@ typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
   Value<bool> isInWishlist,
   Value<String?> externalCatalogId,
   Value<String?> externalSourceUrl,
+  Value<double?> purchasePrice,
+  Value<String?> purchaseCurrency,
+  Value<bool> isBorrowed,
+  Value<String?> lenderName,
+  Value<String?> lenderContact,
+  Value<DateTime?> borrowDate,
+  Value<DateTime?> expectedReturnDate,
+  Value<bool> isLent,
+  Value<String?> borrowerName,
+  Value<String?> borrowerContact,
+  Value<DateTime?> lendDate,
+  Value<DateTime?> expectedLendReturnDate,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> archivedAt,
@@ -1884,7 +2547,7 @@ typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
 typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<int> id,
   Value<String> title,
-  Value<List<String>?> authors,
+  Value<String?> authors,
   Value<String?> author,
   Value<String?> description,
   Value<String?> summary,
@@ -1900,6 +2563,18 @@ typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<bool> isInWishlist,
   Value<String?> externalCatalogId,
   Value<String?> externalSourceUrl,
+  Value<double?> purchasePrice,
+  Value<String?> purchaseCurrency,
+  Value<bool> isBorrowed,
+  Value<String?> lenderName,
+  Value<String?> lenderContact,
+  Value<DateTime?> borrowDate,
+  Value<DateTime?> expectedReturnDate,
+  Value<bool> isLent,
+  Value<String?> borrowerName,
+  Value<String?> borrowerContact,
+  Value<DateTime?> lendDate,
+  Value<DateTime?> expectedLendReturnDate,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> archivedAt,
@@ -1946,10 +2621,9 @@ class $$BooksTableFilterComposer extends Composer<_$AppDatabase, $BooksTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<List<String>?, List<String>, String>
-  get authors => $composableBuilder(
+  ColumnFilters<String> get authors => $composableBuilder(
     column: $table.authors,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
+    builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<String> get author => $composableBuilder(
@@ -2024,6 +2698,66 @@ class $$BooksTableFilterComposer extends Composer<_$AppDatabase, $BooksTable> {
 
   ColumnFilters<String> get externalSourceUrl => $composableBuilder(
     column: $table.externalSourceUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get purchaseCurrency => $composableBuilder(
+    column: $table.purchaseCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isBorrowed => $composableBuilder(
+    column: $table.isBorrowed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lenderName => $composableBuilder(
+    column: $table.lenderName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lenderContact => $composableBuilder(
+    column: $table.lenderContact,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get borrowDate => $composableBuilder(
+    column: $table.borrowDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expectedReturnDate => $composableBuilder(
+    column: $table.expectedReturnDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isLent => $composableBuilder(
+    column: $table.isLent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get borrowerName => $composableBuilder(
+    column: $table.borrowerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get borrowerContact => $composableBuilder(
+    column: $table.borrowerContact,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lendDate => $composableBuilder(
+    column: $table.lendDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expectedLendReturnDate => $composableBuilder(
+    column: $table.expectedLendReturnDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2167,6 +2901,66 @@ class $$BooksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get purchaseCurrency => $composableBuilder(
+    column: $table.purchaseCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isBorrowed => $composableBuilder(
+    column: $table.isBorrowed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lenderName => $composableBuilder(
+    column: $table.lenderName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lenderContact => $composableBuilder(
+    column: $table.lenderContact,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get borrowDate => $composableBuilder(
+    column: $table.borrowDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expectedReturnDate => $composableBuilder(
+    column: $table.expectedReturnDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isLent => $composableBuilder(
+    column: $table.isLent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get borrowerName => $composableBuilder(
+    column: $table.borrowerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get borrowerContact => $composableBuilder(
+    column: $table.borrowerContact,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lendDate => $composableBuilder(
+    column: $table.lendDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expectedLendReturnDate => $composableBuilder(
+    column: $table.expectedLendReturnDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -2198,7 +2992,7 @@ class $$BooksTableAnnotationComposer
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<List<String>?, String> get authors =>
+  GeneratedColumn<String> get authors =>
       $composableBuilder(column: $table.authors, builder: (column) => column);
 
   GeneratedColumn<String> get author =>
@@ -2259,6 +3053,62 @@ class $$BooksTableAnnotationComposer
 
   GeneratedColumn<String> get externalSourceUrl => $composableBuilder(
     column: $table.externalSourceUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get purchaseCurrency => $composableBuilder(
+    column: $table.purchaseCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isBorrowed => $composableBuilder(
+    column: $table.isBorrowed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lenderName => $composableBuilder(
+    column: $table.lenderName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lenderContact => $composableBuilder(
+    column: $table.lenderContact,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get borrowDate => $composableBuilder(
+    column: $table.borrowDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get expectedReturnDate => $composableBuilder(
+    column: $table.expectedReturnDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isLent =>
+      $composableBuilder(column: $table.isLent, builder: (column) => column);
+
+  GeneratedColumn<String> get borrowerName => $composableBuilder(
+    column: $table.borrowerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get borrowerContact => $composableBuilder(
+    column: $table.borrowerContact,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lendDate =>
+      $composableBuilder(column: $table.lendDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get expectedLendReturnDate => $composableBuilder(
+    column: $table.expectedLendReturnDate,
     builder: (column) => column,
   );
 
@@ -2329,7 +3179,7 @@ class $$BooksTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> title = const Value.absent(),
-                Value<List<String>?> authors = const Value.absent(),
+                Value<String?> authors = const Value.absent(),
                 Value<String?> author = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> summary = const Value.absent(),
@@ -2345,6 +3195,18 @@ class $$BooksTableTableManager
                 Value<bool> isInWishlist = const Value.absent(),
                 Value<String?> externalCatalogId = const Value.absent(),
                 Value<String?> externalSourceUrl = const Value.absent(),
+                Value<double?> purchasePrice = const Value.absent(),
+                Value<String?> purchaseCurrency = const Value.absent(),
+                Value<bool> isBorrowed = const Value.absent(),
+                Value<String?> lenderName = const Value.absent(),
+                Value<String?> lenderContact = const Value.absent(),
+                Value<DateTime?> borrowDate = const Value.absent(),
+                Value<DateTime?> expectedReturnDate = const Value.absent(),
+                Value<bool> isLent = const Value.absent(),
+                Value<String?> borrowerName = const Value.absent(),
+                Value<String?> borrowerContact = const Value.absent(),
+                Value<DateTime?> lendDate = const Value.absent(),
+                Value<DateTime?> expectedLendReturnDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> archivedAt = const Value.absent(),
@@ -2367,6 +3229,18 @@ class $$BooksTableTableManager
                 isInWishlist: isInWishlist,
                 externalCatalogId: externalCatalogId,
                 externalSourceUrl: externalSourceUrl,
+                purchasePrice: purchasePrice,
+                purchaseCurrency: purchaseCurrency,
+                isBorrowed: isBorrowed,
+                lenderName: lenderName,
+                lenderContact: lenderContact,
+                borrowDate: borrowDate,
+                expectedReturnDate: expectedReturnDate,
+                isLent: isLent,
+                borrowerName: borrowerName,
+                borrowerContact: borrowerContact,
+                lendDate: lendDate,
+                expectedLendReturnDate: expectedLendReturnDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
@@ -2375,7 +3249,7 @@ class $$BooksTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required String title,
-                Value<List<String>?> authors = const Value.absent(),
+                Value<String?> authors = const Value.absent(),
                 Value<String?> author = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> summary = const Value.absent(),
@@ -2391,6 +3265,18 @@ class $$BooksTableTableManager
                 Value<bool> isInWishlist = const Value.absent(),
                 Value<String?> externalCatalogId = const Value.absent(),
                 Value<String?> externalSourceUrl = const Value.absent(),
+                Value<double?> purchasePrice = const Value.absent(),
+                Value<String?> purchaseCurrency = const Value.absent(),
+                Value<bool> isBorrowed = const Value.absent(),
+                Value<String?> lenderName = const Value.absent(),
+                Value<String?> lenderContact = const Value.absent(),
+                Value<DateTime?> borrowDate = const Value.absent(),
+                Value<DateTime?> expectedReturnDate = const Value.absent(),
+                Value<bool> isLent = const Value.absent(),
+                Value<String?> borrowerName = const Value.absent(),
+                Value<String?> borrowerContact = const Value.absent(),
+                Value<DateTime?> lendDate = const Value.absent(),
+                Value<DateTime?> expectedLendReturnDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> archivedAt = const Value.absent(),
@@ -2413,6 +3299,18 @@ class $$BooksTableTableManager
                 isInWishlist: isInWishlist,
                 externalCatalogId: externalCatalogId,
                 externalSourceUrl: externalSourceUrl,
+                purchasePrice: purchasePrice,
+                purchaseCurrency: purchaseCurrency,
+                isBorrowed: isBorrowed,
+                lenderName: lenderName,
+                lenderContact: lenderContact,
+                borrowDate: borrowDate,
+                expectedReturnDate: expectedReturnDate,
+                isLent: isLent,
+                borrowerName: borrowerName,
+                borrowerContact: borrowerContact,
+                lendDate: lendDate,
+                expectedLendReturnDate: expectedLendReturnDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,

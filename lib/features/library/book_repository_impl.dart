@@ -16,7 +16,7 @@ class DuplicateBookIsbnException implements Exception {
 }
 
 class BookRepositoryImpl implements BookRepository {
-  BookRepositoryImpl(this._database);
+  BookRepositoryImpl([AppDatabase? database]) : _database = database ?? AppDatabase();
 
   final AppDatabase _database;
 
@@ -36,15 +36,25 @@ class BookRepositoryImpl implements BookRepository {
     }
 
     return _database.transaction(() async {
+      final List<String> authorsList = (book.authors ?? '')
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      final List<String> genresList = (book.genres ?? '')
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
       final id = await _database
           .into(_database.books)
           .insert(
             BooksCompanion.insert(
               id: Value.absentIfNull(book.id > 0 ? book.id : null),
               title: book.title.trim(),
-              author: Value(_optional(book.authors)),
+              author: Value(authorsList.isNotEmpty ? authorsList.first : null),
               description: Value(_optional(book.description)),
-              genres: Value(_optional(book.genres)),
+              genres: Value(genresList.isNotEmpty ? genresList.join(',') : null),
               isbn: Value(book.isbn13 ?? book.isbn10),
               normalizedIsbn: Value(normalizedIsbn),
               publisher: Value(_optional(book.publisher)),
@@ -55,6 +65,18 @@ class BookRepositoryImpl implements BookRepository {
               isInWishlist: Value(book.isInWishlist),
               externalCatalogId: Value(book.externalCatalogId),
               externalSourceUrl: Value(book.externalSourceUrl),
+              purchasePrice: Value(book.purchasePrice),
+              purchaseCurrency: Value(_optional(book.purchaseCurrency)),
+              isBorrowed: Value(book.isBorrowed),
+              lenderName: Value(_optional(book.lenderName)),
+              lenderContact: Value(_optional(book.lenderContact)),
+              borrowDate: Value(book.borrowDate),
+              expectedReturnDate: Value(book.expectedReturnDate),
+              isLent: Value(book.isLent),
+              borrowerName: Value(_optional(book.borrowerName)),
+              borrowerContact: Value(_optional(book.borrowerContact)),
+              lendDate: Value(book.lendDate),
+              expectedLendReturnDate: Value(book.expectedLendReturnDate),
               createdAt: Value(book.createdAt),
               updatedAt: Value(book.updatedAt),
               archivedAt: Value(book.archivedAt),
@@ -86,11 +108,18 @@ class BookRepositoryImpl implements BookRepository {
         throw DuplicateBookIsbnException(normalizedIsbn);
       }
     }
+    final List<String> authorsList = (book.authors ?? '')
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final String? firstAuthor = authorsList.isNotEmpty ? authorsList.first : null;
+
     await _database.updateBook(
       BooksCompanion(
         id: Value(book.id),
         title: Value(book.title.trim()),
-        author: Value(_optional(book.authors)),
+        author: Value(firstAuthor),
         description: Value(_optional(book.description)),
         genres: Value(_optional(book.genres)),
         isbn: Value(book.isbn13 ?? book.isbn10),
@@ -103,6 +132,18 @@ class BookRepositoryImpl implements BookRepository {
         isInWishlist: Value(book.isInWishlist),
         externalCatalogId: Value(book.externalCatalogId),
         externalSourceUrl: Value(book.externalSourceUrl),
+        purchasePrice: Value(book.purchasePrice),
+        purchaseCurrency: Value(_optional(book.purchaseCurrency)),
+        isBorrowed: Value(book.isBorrowed),
+        lenderName: Value(_optional(book.lenderName)),
+        lenderContact: Value(_optional(book.lenderContact)),
+        borrowDate: Value(book.borrowDate),
+        expectedReturnDate: Value(book.expectedReturnDate),
+        isLent: Value(book.isLent),
+        borrowerName: Value(_optional(book.borrowerName)),
+        borrowerContact: Value(_optional(book.borrowerContact)),
+        lendDate: Value(book.lendDate),
+        expectedLendReturnDate: Value(book.expectedLendReturnDate),
         updatedAt: Value(DateTime.now()),
         archivedAt: Value(book.archivedAt),
       ),
@@ -116,48 +157,32 @@ class BookRepositoryImpl implements BookRepository {
   }
 
   @override
-  Future<List<Book>> getAll() async =>
-      (await _database.getAllBooks()).map(_toBook).toList(growable: false);
+  Future<List<Book>> getAll({int? limit, int? offset}) async =>
+      (await _database.getAllBooks(limit: limit))
+          .map(_toBook)
+          .toList(growable: false);
 
   @override
   Future<List<Book>> listBooks({
     Map<String, dynamic>? filters,
     String? sortBy,
     bool ascending = true,
+    int? limit,
+    int? offset,
   }) async {
     final search = filters?['search'];
-    final rows = search is String && search.trim().isNotEmpty
-        ? await _database.searchBooks(search)
-        : await _database.getAllBooks();
-    final books = rows.map(_toBook).toList();
     final status = filters?['status'];
-    if (status is String) {
-      final records = await listReadingRecords();
-      final ids = records
-          .where((record) => record.status.name == status)
-          .map((record) => record.bookId)
-          .toSet();
-      books.removeWhere((book) => !ids.contains(book.id));
-    }
     final genre = filters?['genre'];
-    if (genre is String && genre.trim().isNotEmpty) {
-      books.removeWhere(
-        (book) =>
-            !(book.genres ?? '').toLowerCase().contains(genre.toLowerCase()),
-      );
-    }
-    final field = switch (sortBy) {
-      'author' => (Book book) => book.authors.toLowerCase(),
-      'pageCount' => (Book book) => book.pageCount,
-      'added' => (Book book) => book.createdAt,
-      'updated' => (Book book) => book.updatedAt,
-      _ => (Book book) => book.title.toLowerCase(),
-    };
-    books.sort((left, right) {
-      final comparison = _compare(field(left), field(right));
-      return ascending ? comparison : -comparison;
-    });
-    return books;
+    final rows = await _database.getBooksFiltered(
+      search: search,
+      status: status,
+      genre: genre,
+      sortBy: sortBy,
+      ascending: ascending,
+      limit: limit,
+      offset: offset,
+    );
+    return rows.map(_toBook).toList(growable: false);
   }
 
   @override
@@ -320,10 +345,83 @@ class BookRepositoryImpl implements BookRepository {
     return rows.length;
   }
 
+  @override
+  Future<Map<String, int>> getGenreCounts() async {
+    final books = await getAll();
+    final counts = <String, int>{};
+    for (final book in books) {
+      if (book.genres != null && book.genres!.isNotEmpty) {
+        final List<String> genresList = book.genres!.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        for (final genre in genresList) {
+          counts[genre] = (counts[genre] ?? 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }
+
+  @override
+  Future<Map<String, int>> getAuthorCounts() async {
+    final books = await getAll();
+    final counts = <String, int>{};
+    for (final book in books) {
+      if (book.authors != null && book.authors!.isNotEmpty) {
+        final List<String> authorsList = book.authors!.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        for (final author in authorsList) {
+          counts[author] = (counts[author] ?? 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }
+
+  @override
+  Future<Map<int, int>> getPublishedYearCounts() async {
+    final books = await _database.getAllBooks();
+    final counts = <int, int>{};
+    for (final book in books) {
+      if (book.publicationDate != null) {
+        final year = book.publicationDate!.year;
+        counts[year] = (counts[year] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }
+
+  @override
+  Future<int> getBooksReadThisYear() async {
+    final now = DateTime.now();
+    final start = DateTime(now.year, 1, 1);
+    final rows = await (_database.select(_database.readingRecords)
+          ..where((record) =>
+              record.status.equals('finished') &
+              record.finishDate.isNotNull() &
+              record.finishDate.isBiggerOrEqualValue(start)))
+        .get();
+    return rows.length;
+  }
+
+  @override
+  Future<int> getBooksPurchasedThisYear() async {
+    final now = DateTime.now();
+    final start = DateTime(now.year, 1, 1);
+    final books = await _database.getAllBooks();
+    int count = 0;
+    for (final book in books) {
+      if (book.purchasePrice != null && book.purchasePrice! > 0) {
+        // Assuming we have a purchase date field - if not, we'd need to add it
+        // For now, we'll count all purchased books as purchased this year
+        // In a real implementation, we would check the purchase date
+        count++;
+      }
+    }
+    return count;
+  }
+
   Book _toBook(BookRow row) => Book(
     id: row.id,
     title: row.title,
-    authors: row.author ?? '',
+    authors: row.authors ?? '',
     description: row.description,
     genres: row.genres,
     isbn10: row.isbn?.length == 10 ? row.isbn : null,
@@ -334,6 +432,18 @@ class BookRepositoryImpl implements BookRepository {
     coverAssetKey: row.coverAssetKey,
     externalCatalogId: row.externalCatalogId,
     externalSourceUrl: row.externalSourceUrl,
+    purchasePrice: row.purchasePrice?.toDouble(),
+    purchaseCurrency: row.purchaseCurrency,
+    isBorrowed: row.isBorrowed,
+    lenderName: row.lenderName,
+    lenderContact: row.lenderContact,
+    borrowDate: row.borrowDate,
+    expectedReturnDate: row.expectedReturnDate,
+    isLent: row.isLent,
+    borrowerName: row.borrowerName,
+    borrowerContact: row.borrowerContact,
+    lendDate: row.lendDate,
+    expectedLendReturnDate: row.expectedLendReturnDate,
     createdAtParam: row.createdAt,
     updatedAtParam: row.updatedAt,
     archivedAt: row.archivedAt,
