@@ -18,7 +18,8 @@ class DiscoverScreen extends StatefulWidget {
   State<DiscoverScreen> createState() => _DiscoverScreenState();
 }
 
-class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProviderStateMixin {
+class _DiscoverScreenState extends State<DiscoverScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Book> _libraryCandidates = [];
   List<Book> _catalogCandidates = [];
@@ -34,7 +35,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      if (_tabController.index == 1 && _catalogCandidates.isEmpty && _catalogError == null) {
+      if (_tabController.index == 1 &&
+          _catalogCandidates.isEmpty &&
+          _catalogError == null) {
         _loadCatalogCandidates();
       }
     });
@@ -61,7 +64,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
       final candidates = books.where((book) {
         final record = records.firstWhere(
           (r) => r.bookId == book.id,
-          orElse: () => ReadingRecord(bookId: book.id, status: ReadingStatus.wantToRead),
+          orElse: () =>
+              ReadingRecord(bookId: book.id, status: ReadingStatus.wantToRead),
         );
         return record.status != ReadingStatus.finished && !book.isInWishlist;
       }).toList();
@@ -75,7 +79,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
         };
       }).toList();
 
-      scoredCandidates.sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
+      scoredCandidates.sort(
+        (a, b) => (b['score'] as double).compareTo(a['score'] as double),
+      );
 
       final reasonsMap = <int, List<String>>{};
       for (final candidate in scoredCandidates) {
@@ -124,7 +130,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
         });
         return;
       }
-      final topGenre = genreCounts.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+      final topGenre = genreCounts.entries
+          .reduce((a, b) => a.value > b.value ? a : b)
+          .key;
       final query = 'books about $topGenre';
 
       final results = await _lookupService.searchByTitleOrAuthor(query);
@@ -162,19 +170,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
 
       await widget.repository.createBook(
         book.copyWith(coverAssetKey: coverAssetKey, isInWishlist: toWishlist),
-        initialStatus: toWishlist ? ReadingStatus.wantToRead : ReadingStatus.reading,
+        initialStatus: toWishlist
+            ? ReadingStatus.wantToRead
+            : ReadingStatus.reading,
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved to ${toWishlist ? 'wishlist' : 'library'}!')),
+          SnackBar(
+            content: Text('Saved to ${toWishlist ? 'wishlist' : 'library'}!'),
+          ),
         );
       }
 
       await _loadLibraryCandidates();
     } on Object catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save book: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Could not save book: $e')));
       }
     }
   }
@@ -206,7 +219,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
                       const SizedBox(height: 12),
                       const Text('No recommendations yet'),
                       const SizedBox(height: 8),
-                      const Text('Add books to your library to get recommendations.', textAlign: TextAlign.center),
+                      const Text(
+                        'Add books to your library to get recommendations.',
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
                 )
@@ -221,13 +237,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (book.authors.isNotEmpty) Text('by ${book.authors}'),
-                            if (book.genres != null && book.genres!.isNotEmpty) Text('Genres: ${book.genres}'),
-                            if (book.description != null && book.description!.isNotEmpty)
-                              Padding(padding: const EdgeInsets.only(top: 8), child: Text(book.description!)),
+                            if (book.authors.isNotEmpty)
+                              Text('by ${book.authors}'),
+                            if (book.genres != null && book.genres!.isNotEmpty)
+                              Text('Genres: ${book.genres}'),
+                            if (book.description != null &&
+                                book.description!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(book.description!),
+                              ),
                             const SizedBox(height: 12),
-                            const Text('Recommendation reasons:', style: TextStyle(fontWeight: FontWeight.bold)),
-                            ...(_recommendationReasons[book.id] ?? []).map((reason) => Text('• $reason')),
+                            const Text(
+                              'Recommendation reasons:',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            ...(_recommendationReasons[book.id] ?? []).map(
+                              (reason) => Text('• $reason'),
+                            ),
                           ],
                         ),
                         actions: [
@@ -254,11 +281,18 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 12),
                       Text('Could not load catalog: $_catalogError'),
                       const SizedBox(height: 8),
-                      ElevatedButton(onPressed: _loadCatalogCandidates, child: const Text('Retry')),
+                      ElevatedButton(
+                        onPressed: _loadCatalogCandidates,
+                        child: const Text('Retry'),
+                      ),
                     ],
                   ),
                 )
@@ -271,7 +305,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
                       const SizedBox(height: 12),
                       const Text('No catalog results'),
                       const SizedBox(height: 8),
-                      const Text('Try another search or check your internet connection.', textAlign: TextAlign.center),
+                      const Text(
+                        'Try another search or check your internet connection.',
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
                 )
@@ -281,30 +318,44 @@ class _DiscoverScreenState extends State<DiscoverScreen> with SingleTickerProvid
                     final book = _catalogCandidates[index];
                     return Card(
                       child: ListTile(
-                        leading: book.thumbnailUrl != null && book.thumbnailUrl!.isNotEmpty
+                        leading:
+                            book.thumbnailUrl != null &&
+                                book.thumbnailUrl!.isNotEmpty
                             ? Image.network(
                                 book.thumbnailUrl!,
                                 width: 44,
                                 height: 64,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => const CircleAvatar(
-                                  backgroundColor: Colors.grey,
-                                  child: Icon(Icons.menu_book, color: Colors.white),
-                                ),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const CircleAvatar(
+                                      backgroundColor: Colors.grey,
+                                      child: Icon(
+                                        Icons.menu_book,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                               )
                             : const CircleAvatar(
                                 backgroundColor: Colors.grey,
-                                child: Icon(Icons.menu_book, color: Colors.white),
+                                child: Icon(
+                                  Icons.menu_book,
+                                  color: Colors.white,
+                                ),
                               ),
                         title: Text(book.title),
-                        subtitle: Text(book.authors.isEmpty ? 'Unknown author' : book.authors),
+                        subtitle: Text(
+                          book.authors.isEmpty
+                              ? 'Unknown author'
+                              : book.authors,
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.favorite_border),
                               tooltip: 'Add to wishlist',
-                              onPressed: () => _saveCatalogBook(book, toWishlist: true),
+                              onPressed: () =>
+                                  _saveCatalogBook(book, toWishlist: true),
                             ),
                             IconButton(
                               icon: const Icon(Icons.add),

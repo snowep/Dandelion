@@ -52,6 +52,11 @@ class AppShell extends StatelessWidget {
                       selectedIcon: Icon(Icons.insights),
                       label: Text('Insights'),
                     ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.settings_outlined),
+                      selectedIcon: Icon(Icons.settings),
+                      label: Text('Settings'),
+                    ),
                   ],
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
@@ -87,6 +92,11 @@ class AppShell extends StatelessWidget {
                   icon: Icon(Icons.insights_outlined),
                   selectedIcon: Icon(Icons.insights),
                   label: 'Insights',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.settings_outlined),
+                  selectedIcon: Icon(Icons.settings),
+                  label: 'Settings',
                 ),
               ],
             )

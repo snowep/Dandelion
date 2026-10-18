@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'book_repository.dart';
-import 'book_database.dart';
 import 'book_repository_impl.dart';
 import 'book.dart';
 
 final bookRepositoryProvider = Provider<BookRepository>((ref) {
-  return BookRepositoryImpl(AppDatabase());
+  return BookRepositoryImpl();
 });
 
 final libraryNotifierProvider =
@@ -39,10 +38,10 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
     loadBooks();
   }
 
-  Future<void> loadBooks() async {
+  Future<void> loadBooks({int? limit, int? offset}) async {
     state = state.copyWith(loading: true, error: null);
     try {
-      final books = await _repository.listBooks();
+      final books = await _repository.listBooks(limit: limit, offset: offset);
       state = state.copyWith(books: books, loading: false);
     } on Object {
       state = state.copyWith(loading: false, error: 'Failed to load books');

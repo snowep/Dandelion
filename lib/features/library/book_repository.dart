@@ -8,11 +8,13 @@ abstract class BookRepository {
   });
   Future<void> updateBook(Book book);
   Future<Book?> getBookById(int id);
-  Future<List<Book>> getAll();
+  Future<List<Book>> getAll({int? limit, int? offset});
   Future<List<Book>> listBooks({
     Map<String, dynamic>? filters,
     String? sortBy,
     bool ascending = true,
+    int? limit,
+    int? offset,
   });
   Future<void> archiveBook(int id);
   Future<void> deleteBook(int id);
@@ -39,4 +41,10 @@ abstract class BookRepository {
   Future<double> getAverageRating();
   Future<int> getTotalPagesRead();
   Future<int> getBooksFinishedThisMonth();
+
+  Future<Map<String, int>> getGenreCounts();
+  Future<Map<String, int>> getAuthorCounts();
+  Future<Map<int, int>> getPublishedYearCounts();
+  Future<int> getBooksReadThisYear();
+  Future<int> getBooksPurchasedThisYear();
 }

@@ -81,12 +81,12 @@ class InsightsScreen extends ConsumerWidget {
                                         ),
                                       );
                                     }
-                                    final Uint8List? coverBytes =
-                                        snapshot.data;
+                                    final Uint8List? coverBytes = snapshot.data;
                                     return coverBytes != null
                                         ? ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(6),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
                                             child: Image.memory(
                                               coverBytes,
                                               width: 44,

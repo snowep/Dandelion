@@ -144,7 +144,9 @@ class _BookListScaffoldState extends State<BookListScaffold> {
             child: Row(
               children: [
                 PopupMenuButton<String>(
-                  child: Text('Sort: ${widget.sortBy} ${widget.sortAscending ? '↑' : '↓'}'),
+                  child: Text(
+                    'Sort: ${widget.sortBy} ${widget.sortAscending ? '↑' : '↓'}',
+                  ),
                   onSelected: (value) {
                     setState(() {
                       if (value == widget.sortBy) {
@@ -156,8 +158,14 @@ class _BookListScaffoldState extends State<BookListScaffold> {
                   itemBuilder: (context) => [
                     const PopupMenuItem(value: 'title', child: Text('Title')),
                     const PopupMenuItem(value: 'author', child: Text('Author')),
-                    const PopupMenuItem(value: 'added', child: Text('Date Added')),
-                    const PopupMenuItem(value: 'updated', child: Text('Last Updated')),
+                    const PopupMenuItem(
+                      value: 'added',
+                      child: Text('Date Added'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'updated',
+                      child: Text('Last Updated'),
+                    ),
                   ],
                 ),
                 const SizedBox(width: 8),
@@ -179,7 +187,10 @@ class _BookListScaffoldState extends State<BookListScaffold> {
                   SizedBox(height: 12),
                   Text('Your list is empty.', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
-                  Text('Add a book to get started.', style: TextStyle(color: Colors.grey)),
+                  Text(
+                    'Add a book to get started.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ),
@@ -197,11 +208,13 @@ class _BookListScaffoldState extends State<BookListScaffold> {
                     minVerticalPadding: 12,
                     leading: FutureBuilder<Uint8List?>(
                       future:
-                          book.coverAssetKey != null && book.coverAssetKey!.isNotEmpty
+                          book.coverAssetKey != null &&
+                              book.coverAssetKey!.isNotEmpty
                           ? CoverImageService.loadImage(book.coverAssetKey!)
                           : Future.value(null),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const CircleAvatar(
                             backgroundColor: Colors.grey,
                             child: Icon(Icons.menu_book, color: Colors.white),
@@ -220,16 +233,22 @@ class _BookListScaffoldState extends State<BookListScaffold> {
                                 ),
                               )
                             : CircleAvatar(
-                                backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer,
                                 child: Icon(
                                   Icons.menu_book,
-                                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSecondaryContainer,
                                 ),
                               );
                       },
                     ),
                     title: Text(book.title),
-                    subtitle: Text(book.authors.isEmpty ? 'Unknown author' : book.authors),
+                    subtitle: Text(
+                      book.authors.isEmpty ? 'Unknown author' : book.authors,
+                    ),
                     onTap: () => widget.onBookTap(book),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -237,10 +256,14 @@ class _BookListScaffoldState extends State<BookListScaffold> {
                         if (widget.onWishlistToggle != null)
                           IconButton(
                             icon: Icon(
-                              book.isInWishlist ? Icons.favorite : Icons.favorite_border,
+                              book.isInWishlist
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
                               color: book.isInWishlist ? Colors.red : null,
                             ),
-                            tooltip: book.isInWishlist ? 'Remove from wishlist' : 'Add to wishlist',
+                            tooltip: book.isInWishlist
+                                ? 'Remove from wishlist'
+                                : 'Add to wishlist',
                             onPressed: () => widget.onWishlistToggle!(book.id),
                           ),
                         if (widget.onBookEdit != null)

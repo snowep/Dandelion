@@ -7,6 +7,7 @@ import 'package:dandelion/features/library/library_screen.dart';
 import 'package:dandelion/features/wishlist/wishlist_screen.dart';
 import 'package:dandelion/features/discover/discover_screen.dart';
 import 'package:dandelion/features/insights/insights_screen.dart';
+import 'package:dandelion/features/settings/settings_screen.dart';
 
 final GoRouter appRouter = createAppRouter();
 
@@ -20,6 +21,7 @@ GoRouter createAppRouter() => GoRouter(
           '/wishlist' => 2,
           '/discover' => 3,
           '/insights' => 4,
+          '/settings' => 5,
           _ => 0,
         };
 
@@ -42,6 +44,9 @@ GoRouter createAppRouter() => GoRouter(
               case 4:
                 context.go('/insights');
                 break;
+              case 5:
+                context.go('/settings');
+                break;
             }
           },
           child: child,
@@ -52,30 +57,31 @@ GoRouter createAppRouter() => GoRouter(
         GoRoute(
           path: '/library',
           builder: (context, state) => Consumer(
-            builder: (context, ref, _) => LibraryScreen(
-              repository: ref.read(bookRepositoryProvider),
-            ),
+            builder: (context, ref, _) =>
+                LibraryScreen(repository: ref.read(bookRepositoryProvider)),
           ),
         ),
         GoRoute(
           path: '/wishlist',
           builder: (context, state) => Consumer(
-            builder: (context, ref, _) => WishlistScreen(
-              repository: ref.read(bookRepositoryProvider),
-            ),
+            builder: (context, ref, _) =>
+                WishlistScreen(repository: ref.read(bookRepositoryProvider)),
           ),
         ),
         GoRoute(
           path: '/discover',
           builder: (context, state) => Consumer(
-            builder: (context, ref, _) => DiscoverScreen(
-              repository: ref.read(bookRepositoryProvider),
-            ),
+            builder: (context, ref, _) =>
+                DiscoverScreen(repository: ref.read(bookRepositoryProvider)),
           ),
         ),
         GoRoute(
           path: '/insights',
           builder: (context, state) => const InsightsScreen(),
+        ),
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     ),

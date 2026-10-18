@@ -37,9 +37,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
       });
     } on Object catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not load wishlist: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not load wishlist: $e')));
     }
   }
 

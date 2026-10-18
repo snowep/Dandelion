@@ -64,11 +64,7 @@ class HomeScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: Colors.red,
-                  ),
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 12),
                   Text(
                     'Could not load your dashboard: $error',
@@ -175,12 +171,10 @@ class HomeScreen extends ConsumerWidget {
                                     ),
                                   );
                                 }
-                                final Uint8List? coverBytes =
-                                    snapshot.data;
+                                final Uint8List? coverBytes = snapshot.data;
                                 return coverBytes != null
                                     ? ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(6),
                                         child: Image.memory(
                                           coverBytes,
                                           width: 48,
@@ -195,8 +189,9 @@ class HomeScreen extends ConsumerWidget {
                                           color: Theme.of(context)
                                               .colorScheme
                                               .secondaryContainer,
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.menu_book,
