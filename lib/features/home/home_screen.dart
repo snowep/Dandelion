@@ -140,7 +140,7 @@ class HomeScreen extends ConsumerWidget {
                   style: TextStyle(color: Colors.grey),
                 )
               : SizedBox(
-                  height: 102,
+                  height: 108,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: books.length,
@@ -149,6 +149,7 @@ class HomeScreen extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(right: 12),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             FutureBuilder<Uint8List?>(
@@ -163,8 +164,8 @@ class HomeScreen extends ConsumerWidget {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
                                   return const SizedBox(
-                                    width: 50,
-                                    height: 75,
+                                    width: 48,
+                                    height: 70,
                                     child: CircleAvatar(
                                       backgroundColor: Colors.grey,
                                       child: Icon(
@@ -182,8 +183,8 @@ class HomeScreen extends ConsumerWidget {
                                             BorderRadius.circular(6),
                                         child: Image.memory(
                                           coverBytes,
-                                          width: 50,
-                                          height: 75,
+                                          width: 48,
+                                          height: 70,
                                           fit: BoxFit.cover,
                                         ),
                                       )
