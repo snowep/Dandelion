@@ -36,16 +36,10 @@ class BookRepositoryImpl implements BookRepository {
     }
 
     return _database.transaction(() async {
-      final List<String> authorsList = (book.authors ?? '')
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-      final List<String> genresList = (book.genres ?? '')
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
+      final List<String> authorsList = book.authors.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      final List<String> genresList = book.genres != null
+          ? book.genres!.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+          : <String>[];
       final id = await _database
           .into(_database.books)
           .insert(
@@ -108,11 +102,7 @@ class BookRepositoryImpl implements BookRepository {
         throw DuplicateBookIsbnException(normalizedIsbn);
       }
     }
-    final List<String> authorsList = (book.authors ?? '')
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
+    final List<String> authorsList = book.authors?.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList() ?? <String>[];
     final String? firstAuthor = authorsList.isNotEmpty ? authorsList.first : null;
 
     await _database.updateBook(

@@ -77,7 +77,7 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -88,6 +88,20 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await migrator.addColumn(books, books.isInWishlist);
+      }
+      if (from < 4) {
+        await migrator.addColumn(books, books.purchasePrice);
+        await migrator.addColumn(books, books.purchaseCurrency);
+        await migrator.addColumn(books, books.isBorrowed);
+        await migrator.addColumn(books, books.lenderName);
+        await migrator.addColumn(books, books.lenderContact);
+        await migrator.addColumn(books, books.borrowDate);
+        await migrator.addColumn(books, books.expectedReturnDate);
+        await migrator.addColumn(books, books.isLent);
+        await migrator.addColumn(books, books.borrowerName);
+        await migrator.addColumn(books, books.borrowerContact);
+        await migrator.addColumn(books, books.lendDate);
+        await migrator.addColumn(books, books.expectedLendReturnDate);
       }
     },
   );

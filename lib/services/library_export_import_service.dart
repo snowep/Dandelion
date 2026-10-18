@@ -83,7 +83,7 @@ class ExportService {
   ExportService(this._repository);
   final BookRepository _repository;
 
-  static const int currentSchemaVersion = 1;
+  static const int currentSchemaVersion = 2;
 
   Future<ExportData> export() async {
     final books = await _repository.getAll();
@@ -130,6 +130,18 @@ class ExportService {
         'isInWishlist': b.isInWishlist,
         'externalCatalogId': b.externalCatalogId,
         'externalSourceUrl': b.externalSourceUrl,
+        'purchasePrice': b.purchasePrice,
+        'purchaseCurrency': b.purchaseCurrency,
+        'isBorrowed': b.isBorrowed,
+        'lenderName': b.lenderName,
+        'lenderContact': b.lenderContact,
+        'borrowDate': b.borrowDate?.toIso8601String(),
+        'expectedReturnDate': b.expectedReturnDate?.toIso8601String(),
+        'isLent': b.isLent,
+        'borrowerName': b.borrowerName,
+        'borrowerContact': b.borrowerContact,
+        'lendDate': b.lendDate?.toIso8601String(),
+        'expectedLendReturnDate': b.expectedLendReturnDate?.toIso8601String(),
         'createdAt': b.createdAt.toIso8601String(),
         'updatedAt': b.updatedAt.toIso8601String(),
         'archivedAt': b.archivedAt?.toIso8601String(),
@@ -164,7 +176,7 @@ class ImportService {
   ImportService(this._repository);
   final BookRepository _repository;
 
-  static const int supportedSchemaVersion = 1;
+  static const int supportedSchemaVersion = 2;
 
   Future<ImportPreview> validateArchive(Uint8List archiveBytes) async {
     final errors = <String>[];
@@ -322,6 +334,28 @@ class ImportService {
         isInWishlistParam: bookJson['isInWishlist'] ?? false,
         externalCatalogId: bookJson['externalCatalogId'],
         externalSourceUrl: bookJson['externalSourceUrl'],
+        purchasePrice: bookJson['purchasePrice'] != null
+            ? (bookJson['purchasePrice'] as num).toDouble()
+            : null,
+        purchaseCurrency: bookJson['purchaseCurrency'],
+        isBorrowed: bookJson['isBorrowed'] ?? false,
+        lenderName: bookJson['lenderName'],
+        lenderContact: bookJson['lenderContact'],
+        borrowDate: bookJson['borrowDate'] != null
+            ? DateTime.parse(bookJson['borrowDate'] as String)
+            : null,
+        expectedReturnDate: bookJson['expectedReturnDate'] != null
+            ? DateTime.parse(bookJson['expectedReturnDate'] as String)
+            : null,
+        isLent: bookJson['isLent'] ?? false,
+        borrowerName: bookJson['borrowerName'],
+        borrowerContact: bookJson['borrowerContact'],
+        lendDate: bookJson['lendDate'] != null
+            ? DateTime.parse(bookJson['lendDate'] as String)
+            : null,
+        expectedLendReturnDate: bookJson['expectedLendReturnDate'] != null
+            ? DateTime.parse(bookJson['expectedLendReturnDate'] as String)
+            : null,
         createdAtParam: bookJson['createdAt'] != null
             ? DateTime.parse(bookJson['createdAt'] as String)
             : DateTime.now(),

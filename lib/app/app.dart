@@ -11,15 +11,13 @@ class DandelionApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    return ProviderScope(
-      child: MaterialApp.router(
-        title: 'Dandelion',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: themeMode,
-        debugShowCheckedModeBanner: false,
-        routerConfig: appRouter,
-      ),
+    return MaterialApp.router(
+      title: 'Dandelion',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      debugShowCheckedModeBanner: false,
+      routerConfig: appRouter,
     );
   }
 }
