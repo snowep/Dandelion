@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:dandelion/features/library/book.dart';
 
@@ -16,7 +17,7 @@ class GoogleBooksLookupService {
   static const Duration _cacheDuration = Duration(hours: 1);
 
   GoogleBooksLookupService({http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
+    : _httpClient = httpClient ?? http.Client();
 
   /// Looks up book metadata by ISBN-10 or ISBN-13.
   ///
@@ -26,8 +27,9 @@ class GoogleBooksLookupService {
     if (isbn.isEmpty) return null;
 
     // Normalize ISBN (remove hyphens, spaces)
-    final normalizedIsbn =
-        isbn.replaceAll(RegExp(r'[^0-9Xx]'), '').toUpperCase();
+    final normalizedIsbn = isbn
+        .replaceAll(RegExp(r'[^0-9Xx]'), '')
+        .toUpperCase();
 
     // Validate ISBN length
     if (normalizedIsbn.length != 10 && normalizedIsbn.length != 13) {
@@ -77,8 +79,10 @@ class GoogleBooksLookupService {
   /// Searches for books by title or author.
   ///
   /// Returns a list of [Book] objects matching the query.
-  Future<List<Book>> searchByTitleOrAuthor(String query,
-      {int limit = 10}) async {
+  Future<List<Book>> searchByTitleOrAuthor(
+    String query, {
+    int limit = 10,
+  }) async {
     if (query.isEmpty) return [];
 
     final cacheKey = '$query-$limit';
@@ -93,7 +97,8 @@ class GoogleBooksLookupService {
 
     try {
       final uri = Uri.parse(
-          '$_baseUrl?q=${Uri.encodeComponent(query)}&maxResults=$limit');
+        '$_baseUrl?q=${Uri.encodeComponent(query)}&maxResults=$limit',
+      );
       final response = await _httpClient.get(uri);
 
       if (response.statusCode == 200) {
@@ -133,11 +138,7 @@ class GoogleBooksLookupService {
     final publisher = volumeInfo['publisher'] as String?;
     final publishedDate = volumeInfo['publishedDate'] as String?;
     final pageCount = volumeInfo['pageCount'] as int?;
-    final printType = volumeInfo['printType'] as String?;
     final categories = volumeInfo['categories'] as List<dynamic>?;
-    final maturityRating = volumeInfo['maturityRating'] as String?;
-    final allowAnonLogging = volumeInfo['allowAnonLogging'] as bool?;
-    final contentVersion = volumeInfo['contentVersion'] as String?;
 
     // Industry identifiers
     final identifiers = volumeInfo['industryIdentifiers'] as List<dynamic>?;
@@ -171,7 +172,8 @@ class GoogleBooksLookupService {
     // Image links
     final imageLinks = volumeInfo['imageLinks'] as Map<String, dynamic>?;
     final thumbnailUrl = imageLinks?['thumbnail'] as String?;
-    final smallThumbnailUrl = imageLinks?['smallThumbnail'] as String?;
+
+    // Remove unused variables: printType, maturityRating, allowAnonLogging, contentVersion, smallThumbnailUrl
 
     return Book(
       id: 0, // Will be set when saved to database

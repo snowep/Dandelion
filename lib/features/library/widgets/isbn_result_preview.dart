@@ -3,10 +3,7 @@ import 'package:dandelion/features/library/book.dart';
 
 /// Widget to display book details from ISBN lookup result
 class IsbnResultPreview extends StatelessWidget {
-  const IsbnResultPreview({
-    super.key,
-    required this.book,
-  });
+  const IsbnResultPreview({super.key, required this.book});
 
   final Book book;
 
@@ -18,17 +15,13 @@ class IsbnResultPreview extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              book.title,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text(book.title, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               'by ${book.authors}',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            if (book.description != null &&
-                book.description!.isNotEmpty) ...[
+            if (book.description != null && book.description!.isNotEmpty) ...[
               const SizedBox(height: 12),
               const Text(
                 'Description:',
@@ -53,13 +46,9 @@ class IsbnResultPreview extends StatelessWidget {
                 spacing: 8,
                 children: [
                   if (book.isbn10 != null)
-                    Chip(
-                      label: Text('ISBN-10: ${book.isbn10}'),
-                    ),
+                    Chip(label: Text('ISBN-10: ${book.isbn10}')),
                   if (book.isbn13 != null)
-                    Chip(
-                      label: Text('ISBN-13: ${book.isbn13}'),
-                    ),
+                    Chip(label: Text('ISBN-13: ${book.isbn13}')),
                 ],
               ),
             ],

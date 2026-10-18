@@ -96,9 +96,8 @@ class _IsbnLookupDialogState extends State<IsbnLookupDialog> {
               else if (_error != null)
                 Text(
                   _error!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.error),
                   textAlign: TextAlign.center,
                 )
               else if (_result != null) ...[
@@ -140,7 +139,7 @@ class _IsbnLookupDialogState extends State<IsbnLookupDialog> {
             FilledButton(
               onPressed: () => Navigator.of(context).pop(_result),
               child: const Text('Use this book'),
-            )
+            ),
         ],
       ],
     );

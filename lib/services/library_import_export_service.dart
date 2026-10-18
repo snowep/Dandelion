@@ -1,10 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:drift/drift.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'package:dandelion/features/library/book.dart';
 import 'package:dandelion/features/library/book_database.dart';
@@ -47,7 +44,9 @@ class LibraryImportExportService {
       schemaVersion: 1,
       exportDate: DateTime.now(),
       books: books.map((e) => _bookToMap(e)).toList(),
-      readingRecords: readingRecords.map((e) => _readingRecordToMap(e)).toList(),
+      readingRecords: readingRecords
+          .map((e) => _readingRecordToMap(e))
+          .toList(),
       coversBase64: coversBase64,
     );
 
@@ -56,8 +55,9 @@ class LibraryImportExportService {
 
     // Create ZIP archive in memory
     final archive = Archive();
-    archive.addFile(ArchiveFile('library.json', jsonString.length,
-        jsonString.codeUnits));
+    archive.addFile(
+      ArchiveFile('library.json', jsonString.length, jsonString.codeUnits),
+    );
     final zipData = ZipEncoder().encode(archive);
 
     return zipData;
@@ -67,18 +67,19 @@ class LibraryImportExportService {
   /// [zipBytes] is the ZIP archive bytes.
   /// [clearExisting] must be true to proceed; otherwise, throws an exception.
   /// This function deletes all existing books and reading records before importing.
-  Future<void> importLibrary(List<int> zipBytes, {required bool clearExisting}) async {
+  Future<void> importLibrary(
+    List<int> zipBytes, {
+    required bool clearExisting,
+  }) async {
     if (!clearExisting) {
       throw ArgumentError(
-          'Import requires clearExisting to be true to prevent accidental data loss.');
+        'Import requires clearExisting to be true to prevent accidental data loss.',
+      );
     }
 
     // Extract the ZIP archive
     final archive = ZipDecoder().decodeBytes(zipBytes);
     final libraryFile = archive.where((f) => f.name == 'library.json').first;
-    if (libraryFile == null) {
-      throw FormatException('ZIP archive does not contain library.json');
-    }
     final jsonString = String.fromCharCodes(libraryFile.content);
     final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
 
@@ -86,7 +87,8 @@ class LibraryImportExportService {
     final exportData = ExportData.fromJson(jsonMap);
     if (exportData.schemaVersion != 1) {
       throw UnsupportedError(
-          'Unsupported schema version: ${exportData.schemaVersion}');
+        'Unsupported schema version: ${exportData.schemaVersion}',
+      );
     }
 
     // Delete all existing data
@@ -101,28 +103,30 @@ class LibraryImportExportService {
       final book = _bookFromMap(bookMap);
       // Insert book with the exported id if possible, otherwise let DB generate.
       // We try to insert with the exported id.
-      final id = await _database.into(_database.books).insert(
-        BooksCompanion(
-          id: book.id > 0 ? Value(book.id) : Value.absent(),
-          title: Value(book.title.trim()),
-          author: Value(_optional(book.authors)),
-          description: Value(_optional(book.description)),
-          genres: Value(_optional(book.genres)),
-          isbn: Value(book.isbn13 ?? book.isbn10),
-          normalizedIsbn: Value(_normalizeIsbn(book.isbn13 ?? book.isbn10)),
-          publisher: Value(_optional(book.publisher)),
-          publicationDate: Value(book.publicationDate),
-          publishedYear: Value(book.publicationDate?.year),
-          pageCount: Value(book.pageCount),
-          coverAssetKey: Value(book.coverAssetKey),
-          isInWishlist: Value(book.isInWishlist),
-          externalCatalogId: Value(book.externalCatalogId),
-          externalSourceUrl: Value(book.externalSourceUrl),
-          createdAt: Value(book.createdAt),
-          updatedAt: Value(book.updatedAt),
-          archivedAt: Value(book.archivedAt),
-        ),
-      );
+      final id = await _database
+          .into(_database.books)
+          .insert(
+            BooksCompanion(
+              id: book.id > 0 ? Value(book.id) : Value.absent(),
+              title: Value(book.title.trim()),
+              author: Value(_optional(book.authors)),
+              description: Value(_optional(book.description)),
+              genres: Value(_optional(book.genres)),
+              isbn: Value(book.isbn13 ?? book.isbn10),
+              normalizedIsbn: Value(_normalizeIsbn(book.isbn13 ?? book.isbn10)),
+              publisher: Value(_optional(book.publisher)),
+              publicationDate: Value(book.publicationDate),
+              publishedYear: Value(book.publicationDate?.year),
+              pageCount: Value(book.pageCount),
+              coverAssetKey: Value(book.coverAssetKey),
+              isInWishlist: Value(book.isInWishlist),
+              externalCatalogId: Value(book.externalCatalogId),
+              externalSourceUrl: Value(book.externalSourceUrl),
+              createdAt: Value(book.createdAt),
+              updatedAt: Value(book.updatedAt),
+              archivedAt: Value(book.archivedAt),
+            ),
+          );
       bookIdMap[book.id] = id;
     }
 
@@ -133,24 +137,28 @@ class LibraryImportExportService {
       final newBookId = bookIdMap[bookId];
       if (newBookId == null) {
         throw StateError(
-            'Book ID $bookId not found in imported books (possible data corruption)');
+          'Book ID $bookId not found in imported books (possible data corruption)',
+        );
       }
-      await _database.into(_database.readingRecords).insert(
-        ReadingRecordsCompanion.insert(
-          bookId: newBookId,
-                    status: Value(record.status.name),
-                    currentPage: Value(record.currentPage),
-                    progressPercent: Value(
-                        record.percentageOnlyProgress == null
-                            ? null
-                            : (record.percentageOnlyProgress! * 100).round()),
-                    startDate: Value(record.startDate),
-                    finishDate: Value(record.finishDate),
-                    lastReadDate: Value(record.lastReadDate),
-                    personalRating: Value(record.personalRating),
-                    notes: Value(record.notes),
-                  ),
-      );
+      await _database
+          .into(_database.readingRecords)
+          .insert(
+            ReadingRecordsCompanion.insert(
+              bookId: newBookId,
+              status: Value(record.status.name),
+              currentPage: Value(record.currentPage),
+              progressPercent: Value(
+                record.percentageOnlyProgress == null
+                    ? null
+                    : (record.percentageOnlyProgress! * 100).round(),
+              ),
+              startDate: Value(record.startDate),
+              finishDate: Value(record.finishDate),
+              lastReadDate: Value(record.lastReadDate),
+              personalRating: Value(record.personalRating),
+              notes: Value(record.notes),
+            ),
+          );
     }
 
     // Import cover images: we already have the coversBase64 map from exportData.
@@ -177,13 +185,13 @@ class LibraryImportExportService {
           : null,
       pageCount: map['pageCount'],
       coverAssetKey: map['coverAssetKey'],
-      isInWishlist: map['isInWishlist'] as bool,
+      isInWishlistParam: map['isInWishlist'] as bool,
       externalCatalogId: map['externalCatalogId'],
       externalSourceUrl: map['externalSourceUrl'],
-      createdAt: map['createdAt'] != null
+      createdAtParam: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
-      updatedAt: map['updatedAt'] != null
+      updatedAtParam: map['updatedAt'] != null
           ? DateTime.parse(map['updatedAt'])
           : DateTime.now(),
       archivedAt: map['archivedAt'] != null
@@ -246,13 +254,12 @@ class LibraryImportExportService {
       'bookId': record.bookId,
       'status': record.status.name,
       'currentPage': record.currentPage,
-      'progressPercent':
-          record.percentageOnlyProgress != null
-              ? (record.percentageOnlyProgress! * 100).round()
-              : null,
+      'progressPercent': record.percentageOnlyProgress != null
+          ? (record.percentageOnlyProgress! * 100).round()
+          : null,
       'startDate': record.startDate?.toIso8601String(),
       'finishDate': record.finishDate?.toIso8601String(),
-      'lastReadDate': record.lastReadDate?.toIso8601String(),
+      'lastReadDate': record.lastReadDate.toIso8601String(),
       'personalRating': record.personalRating,
       'notes': record.notes,
     };

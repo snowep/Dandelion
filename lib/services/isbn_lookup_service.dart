@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:dandelion/features/library/book.dart';
 
@@ -8,7 +9,7 @@ class IsbnLookupService {
   final http.Client _httpClient;
 
   IsbnLookupService({http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
+    : _httpClient = httpClient ?? http.Client();
 
   /// Looks up book metadata by ISBN-10 or ISBN-13.
   ///
@@ -18,8 +19,9 @@ class IsbnLookupService {
     if (isbn.isEmpty) return null;
 
     // Normalize ISBN (remove hyphens, spaces)
-    final normalizedIsbn =
-        isbn.replaceAll(RegExp(r'[^0-9Xx]'), '').toUpperCase();
+    final normalizedIsbn = isbn
+        .replaceAll(RegExp(r'[^0-9Xx]'), '')
+        .toUpperCase();
 
     // Validate ISBN length
     if (normalizedIsbn.length != 10 && normalizedIsbn.length != 13) {
@@ -55,13 +57,16 @@ class IsbnLookupService {
   /// Searches for books by title or author.
   ///
   /// Returns a list of [Book] objects matching the query.
-  Future<List<Book>> searchByTitleOrAuthor(String query,
-      {int limit = 10}) async {
+  Future<List<Book>> searchByTitleOrAuthor(
+    String query, {
+    int limit = 10,
+  }) async {
     if (query.isEmpty) return [];
 
     try {
       final uri = Uri.parse(
-          '$_baseUrl/search.json?q=${Uri.encodeComponent(query)}&limit=$limit');
+        '$_baseUrl/search.json?q=${Uri.encodeComponent(query)}&limit=$limit',
+      );
       final response = await _httpClient.get(uri);
 
       if (response.statusCode == 200) {
@@ -88,9 +93,9 @@ class IsbnLookupService {
     final title = json['title'] ?? 'Unknown Title';
     final authors = json['authors'] != null
         ? (json['authors'] as List)
-            .map((author) => author['name'] as String? ?? 'Unknown Author')
-            .toList()
-            .join(', ')
+              .map((author) => author['name'] as String? ?? 'Unknown Author')
+              .toList()
+              .join(', ')
         : 'Unknown Author';
     final description = json['description'];
     final String? descriptionStr;
@@ -105,12 +110,12 @@ class IsbnLookupService {
     final int? pageCount = json['number_of_pages'];
     final String? isbn10 =
         json['isbn_10'] != null && (json['isbn_10'] as List).isNotEmpty
-            ? (json['isbn_10'] as List)[0]
-            : null;
+        ? (json['isbn_10'] as List)[0]
+        : null;
     final String? isbn13 =
         json['isbn_13'] != null && (json['isbn_13'] as List).isNotEmpty
-            ? (json['isbn_13'] as List)[0]
-            : null;
+        ? (json['isbn_13'] as List)[0]
+        : null;
 
     return Book(
       id: 0, // Will be set when saved to database
@@ -120,7 +125,8 @@ class IsbnLookupService {
       // genres: Not available from basic ISBN lookup, would need additional call
       isbn10: isbn10,
       isbn13: isbn13,
-      publisher: json['publishers'] != null && (json['publishers'] as List).isNotEmpty
+      publisher:
+          json['publishers'] != null && (json['publishers'] as List).isNotEmpty
           ? (json['publishers'] as List)[0]['name'] as String?
           : null,
       publicationDate: _parseDate(publishDate),
@@ -135,23 +141,27 @@ class IsbnLookupService {
     final title = json['title'] ?? 'Unknown Title';
     final authors = json['author_name'] != null
         ? (json['author_name'] as List)
-            .map((author) => author.toString())
-            .join(', ')
+              .map((author) => author.toString())
+              .join(', ')
         : 'Unknown Author';
     final String? isbn10 =
         json['isbn'] != null && (json['isbn'] as List).isNotEmpty
-            ? (json['isbn'] as List)
-                .firstWhere((isbn) => isbn.toString().length == 10,
-                    orElse: () => '')
-                .toString()
-            : null;
+        ? (json['isbn'] as List)
+              .firstWhere(
+                (isbn) => isbn.toString().length == 10,
+                orElse: () => '',
+              )
+              .toString()
+        : null;
     final String? isbn13 =
         json['isbn'] != null && (json['isbn'] as List).isNotEmpty
-            ? (json['isbn'] as List)
-                .firstWhere((isbn) => isbn.toString().length == 13,
-                    orElse: () => '')
-                .toString()
-            : null;
+        ? (json['isbn'] as List)
+              .firstWhere(
+                (isbn) => isbn.toString().length == 13,
+                orElse: () => '',
+              )
+              .toString()
+        : null;
 
     return Book(
       id: 0,

@@ -5,12 +5,9 @@ import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../features/library/book.dart';
-import '../features/library/book_database.dart';
 import '../features/library/book_repository.dart';
 import '../features/library/reading_record.dart';
 import '../shared/services/cover_image_service.dart';
-
-const int _schemaVersion = 1;
 
 class ExportData {
   final int schemaVersion;
@@ -28,12 +25,12 @@ class ExportData {
   });
 
   Map<String, dynamic> toJson() => {
-        'schemaVersion': schemaVersion,
-        'exportDate': exportDate.toIso8601String(),
-        'books': books,
-        'readingRecords': readingRecords,
-        'covers': coversBase64,
-      };
+    'schemaVersion': schemaVersion,
+    'exportDate': exportDate.toIso8601String(),
+    'books': books,
+    'readingRecords': readingRecords,
+    'covers': coversBase64,
+  };
 
   static ExportData fromJson(Map<String, dynamic> json) {
     final covers = (json['covers'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -42,7 +39,8 @@ class ExportData {
       schemaVersion: json['schemaVersion'] as int,
       exportDate: DateTime.parse(json['exportDate'] as String),
       books: (json['books'] as List).cast<Map<String, dynamic>>(),
-      readingRecords: (json['readingRecords'] as List).cast<Map<String, dynamic>>(),
+      readingRecords: (json['readingRecords'] as List)
+          .cast<Map<String, dynamic>>(),
       coversBase64: coversBase64,
     );
   }
@@ -74,7 +72,9 @@ class ExportService {
       schemaVersion: 1,
       exportDate: DateTime.now(),
       books: books.map((e) => _bookToMap(e)).toList(),
-      readingRecords: readingRecords.map((e) => _readingRecordToMap(e)).toList(),
+      readingRecords: readingRecords
+          .map((e) => _readingRecordToMap(e))
+          .toList(),
       coversBase64: coversBase64,
     );
 
@@ -83,8 +83,9 @@ class ExportService {
 
     // Create ZIP archive in memory
     final archive = Archive();
-    archive.addFile(ArchiveFile('library.json', jsonString.length,
-        jsonString.codeUnits));
+    archive.addFile(
+      ArchiveFile('library.json', jsonString.length, jsonString.codeUnits),
+    );
     final zipData = ZipEncoder().encode(archive);
 
     return zipData;
@@ -118,13 +119,12 @@ class ExportService {
       'bookId': record.bookId,
       'status': record.status.name,
       'currentPage': record.currentPage,
-      'progressPercent':
-          record.percentageOnlyProgress != null
-              ? (record.percentageOnlyProgress! * 100).round()
-              : null,
+      'progressPercent': record.percentageOnlyProgress != null
+          ? (record.percentageOnlyProgress! * 100).round()
+          : null,
       'startDate': record.startDate?.toIso8601String(),
       'finishDate': record.finishDate?.toIso8601String(),
-      'lastReadDate': record.lastReadDate?.toIso8601String(),
+      'lastReadDate': record.lastReadDate.toIso8601String(),
       'personalRating': record.personalRating,
       'notes': record.notes,
     };

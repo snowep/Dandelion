@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../book.dart';
 
 class BookCard extends StatelessWidget {
@@ -30,16 +31,12 @@ class BookCard extends StatelessWidget {
                     .secondaryContainer,
                 child: Icon(
                   Icons.menu_book,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSecondaryContainer,
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
                 ),
               )
             : null, // TODO: cover image
         title: Text(book.title),
-        subtitle: Text(
-          book.authors.isEmpty ? 'Unknown author' : book.authors,
-        ),
+        subtitle: Text(book.authors.isEmpty ? 'Unknown author' : book.authors),
         onTap: () {}, // TODO: progress editor
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -49,8 +46,9 @@ class BookCard extends StatelessWidget {
                 book.isInWishlist ? Icons.favorite : Icons.favorite_border,
                 color: book.isInWishlist ? Colors.red : null,
               ),
-              tooltip:
-                  book.isInWishlist ? 'Remove from wishlist' : 'Add to wishlist',
+              tooltip: book.isInWishlist
+                  ? 'Remove from wishlist'
+                  : 'Add to wishlist',
               onPressed: onToggleWishlist,
             ),
             PopupMenuButton<String>(

@@ -69,16 +69,15 @@ class DashboardMetrics {
           mapEquals(other.genreCounts, genreCounts);
 
   @override
-  int get hashCode =>
-      Object.hash(
-        totalBooks,
-        wishlistCount,
-        currentlyReading,
-        averageRating,
-        totalPagesRead,
-        booksFinishedThisMonth,
-        Object.hashAll([...readingStatusCounts.keys, ...genreCounts.keys]),
-      );
+  int get hashCode => Object.hash(
+    totalBooks,
+    wishlistCount,
+    currentlyReading,
+    averageRating,
+    totalPagesRead,
+    booksFinishedThisMonth,
+    Object.hashAll([...readingStatusCounts.keys, ...genreCounts.keys]),
+  );
 
   @override
   String toString() =>

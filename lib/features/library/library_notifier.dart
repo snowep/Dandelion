@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'book_repository.dart';
 import 'book_database.dart';
 import 'book_repository_impl.dart';
@@ -8,27 +9,20 @@ final bookRepositoryProvider = Provider<BookRepository>((ref) {
   return BookRepositoryImpl(AppDatabase());
 });
 
-final libraryNotifierProvider = StateNotifierProvider<LibraryNotifier, LibraryState>((ref) {
-  final repository = ref.read(bookRepositoryProvider);
-  return LibraryNotifier(repository);
-});
+final libraryNotifierProvider =
+    StateNotifierProvider<LibraryNotifier, LibraryState>((ref) {
+      final repository = ref.read(bookRepositoryProvider);
+      return LibraryNotifier(repository);
+    });
 
 class LibraryState {
   final List<Book> books;
   final bool loading;
   final String? error;
 
-  const LibraryState({
-    required this.books,
-    required this.loading,
-    this.error,
-  });
+  const LibraryState({required this.books, required this.loading, this.error});
 
-  LibraryState copyWith({
-    List<Book>? books,
-    bool? loading,
-    String? error,
-  }) {
+  LibraryState copyWith({List<Book>? books, bool? loading, String? error}) {
     return LibraryState(
       books: books ?? this.books,
       loading: loading ?? this.loading,
@@ -40,10 +34,8 @@ class LibraryState {
 class LibraryNotifier extends StateNotifier<LibraryState> {
   final BookRepository _repository;
 
-  LibraryNotifier(this._repository) : super(const LibraryState(
-    books: [],
-    loading: true,
-  )) {
+  LibraryNotifier(this._repository)
+    : super(const LibraryState(books: [], loading: true)) {
     loadBooks();
   }
 

@@ -1,19 +1,16 @@
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dandelion/app/app_shell.dart';
 import 'package:dandelion/features/home/home_screen.dart';
-import 'package:dandelion/features/library/book_database.dart';
-import 'package:dandelion/features/library/book_repository.dart';
-import 'package:dandelion/features/library/book_repository_impl.dart';
+import 'package:dandelion/features/library/library_notifier.dart';
 import 'package:dandelion/features/library/library_screen.dart';
 import 'package:dandelion/features/wishlist/wishlist_screen.dart';
 import 'package:dandelion/features/discover/discover_screen.dart';
 import 'package:dandelion/features/insights/insights_screen.dart';
 
-final BookRepository _bookRepository = BookRepositoryImpl(AppDatabase());
+final GoRouter appRouter = createAppRouter();
 
-final GoRouter appRouter = createAppRouter(_bookRepository);
-
-GoRouter createAppRouter(BookRepository repository) => GoRouter(
+GoRouter createAppRouter() => GoRouter(
   initialLocation: '/',
   routes: [
     ShellRoute(
@@ -54,15 +51,27 @@ GoRouter createAppRouter(BookRepository repository) => GoRouter(
         GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
         GoRoute(
           path: '/library',
-          builder: (context, state) => LibraryScreen(repository: repository),
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) => LibraryScreen(
+              repository: ref.read(bookRepositoryProvider),
+            ),
+          ),
         ),
         GoRoute(
           path: '/wishlist',
-          builder: (context, state) => const WishlistScreen(),
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) => WishlistScreen(
+              repository: ref.read(bookRepositoryProvider),
+            ),
+          ),
         ),
         GoRoute(
           path: '/discover',
-          builder: (context, state) => const DiscoverScreen(),
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) => DiscoverScreen(
+              repository: ref.read(bookRepositoryProvider),
+            ),
+          ),
         ),
         GoRoute(
           path: '/insights',

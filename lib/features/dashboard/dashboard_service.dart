@@ -39,8 +39,7 @@ class DashboardService {
     required DateTime now,
   }) {
     final activeBooks = books.where((b) => b.archivedAt == null).toList();
-    final wishlistCount =
-        activeBooks.where((b) => b.isInWishlist).length;
+    final wishlistCount = activeBooks.where((b) => b.isInWishlist).length;
 
     final statusCounts = <String, int>{};
     for (final record in records) {
@@ -54,23 +53,29 @@ class DashboardService {
     final averageRating = ratedRecords.isEmpty
         ? 0.0
         : ratedRecords.fold<double>(
-                0.0, (sum, r) => sum + (r.personalRating ?? 0.0)) /
-            ratedRecords.length;
+                0.0,
+                (sum, r) => sum + (r.personalRating ?? 0.0),
+              ) /
+              ratedRecords.length;
 
     final totalPagesRead = records
-        .where((r) =>
-            r.status == ReadingStatus.reading ||
-            r.status == ReadingStatus.finished)
+        .where(
+          (r) =>
+              r.status == ReadingStatus.reading ||
+              r.status == ReadingStatus.finished,
+        )
         .fold<int>(0, (sum, r) => sum + (r.currentPage ?? 0));
 
     final monthStart = DateTime(now.year, now.month, 1);
     final nextMonthStart = DateTime(now.year, now.month + 1, 1);
     final booksFinishedThisMonth = records
-        .where((r) =>
-            r.status == ReadingStatus.finished &&
-            r.finishDate != null &&
-            !r.finishDate!.isBefore(monthStart) &&
-            r.finishDate!.isBefore(nextMonthStart))
+        .where(
+          (r) =>
+              r.status == ReadingStatus.finished &&
+              r.finishDate != null &&
+              !r.finishDate!.isBefore(monthStart) &&
+              r.finishDate!.isBefore(nextMonthStart),
+        )
         .length;
 
     final genreCounts = <String, int>{};

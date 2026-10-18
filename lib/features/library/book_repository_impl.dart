@@ -334,10 +334,10 @@ class BookRepositoryImpl implements BookRepository {
     coverAssetKey: row.coverAssetKey,
     externalCatalogId: row.externalCatalogId,
     externalSourceUrl: row.externalSourceUrl,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    createdAtParam: row.createdAt,
+    updatedAtParam: row.updatedAt,
     archivedAt: row.archivedAt,
-    isInWishlist: row.isInWishlist,
+    isInWishlistParam: row.isInWishlist,
   );
 
   ReadingRecordsCompanion _toCompanion(ReadingRecord record) =>

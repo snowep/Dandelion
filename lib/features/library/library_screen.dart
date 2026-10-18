@@ -8,8 +8,6 @@ import 'book_repository.dart';
 import 'reading_record.dart';
 import '../../shared/services/cover_image_service.dart';
 
-import 'package:dandelion/features/library/widgets/isbn_lookup_dialog.dart';
-
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key, required this.repository});
 
@@ -20,6 +18,7 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
+  _LibraryScreenState();
   List<Book> _books = const [];
   Map<int, Uint8List> _covers = const {};
   bool _loading = true;
@@ -43,7 +42,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     super.dispose();
   }
 
-  Future<void> _loadBooks() async {
+  Future<bool> _loadBooks() async {
+    if (!mounted) return false;
     setState(() {
       _loading = true;
       _error = null;
@@ -65,22 +65,26 @@ class _LibraryScreenState extends State<LibraryScreen> {
         final bytes = await CoverImageService.loadImage(key);
         if (bytes != null) covers[book.id] = bytes;
       }
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _books = books;
         _covers = covers;
         _loading = false;
       });
+      return true;
     } on Object catch (error) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _error = error.toString();
         _loading = false;
       });
+      return false;
     }
   }
 
-  Future<void> _showBookEditor({Book? book}) async {
+  Future<bool> _showBookEditor({Book? book}) async {
+    if (!mounted) return false;
+    if (!mounted) return false;
     final titleController = TextEditingController(text: book?.title ?? '');
     final authorsController = TextEditingController(text: book?.authors ?? '');
     final pageCountController = TextEditingController(
@@ -241,20 +245,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     pageCountController.dispose();
     descriptionController.dispose();
     if (saved == true) await _loadBooks();
-  }
-
-  Future<void> _showIsbnLookupDialog() async {
-    final Book? result = await showDialog<Book>(
-      context: context,
-      builder: (context) => const IsbnLookupDialog(),
-    );
-    if (result != null && mounted) {
-      await widget.repository.createBook(
-        result,
-        initialStatus: ReadingStatus.wantToRead,
-      );
-      await _loadBooks();
-    }
+    return saved ?? false;
   }
 
   Future<void> _showProgressEditor(Book book) async {

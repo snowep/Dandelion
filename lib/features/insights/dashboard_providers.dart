@@ -13,8 +13,7 @@ final dashboardServiceProvider = Provider<DashboardService>((ref) {
 
 /// Full dashboard metrics snapshot. Re-computed whenever the library state
 /// changes (any [LibraryState] update triggers a refresh).
-final dashboardMetricsProvider =
-    FutureProvider<DashboardMetrics>((ref) {
+final dashboardMetricsProvider = FutureProvider<DashboardMetrics>((ref) {
   ref.watch(libraryNotifierProvider);
   return ref.read(dashboardServiceProvider).getMetrics();
 });
@@ -32,8 +31,9 @@ final wishlistCountProvider = FutureProvider<int>((ref) async {
 });
 
 /// Count of reading records per status name.
-final readingStatusCountsProvider =
-    FutureProvider<Map<String, int>>((ref) async {
+final readingStatusCountsProvider = FutureProvider<Map<String, int>>((
+  ref,
+) async {
   final metrics = await ref.watch(dashboardMetricsProvider.future);
   return metrics.readingStatusCounts;
 });
@@ -51,34 +51,33 @@ final totalPagesReadProvider = FutureProvider<int>((ref) async {
 });
 
 /// Books finished (finish date set) within the current calendar month.
-final booksFinishedThisMonthProvider =
-    FutureProvider<int>((ref) async {
+final booksFinishedThisMonthProvider = FutureProvider<int>((ref) async {
   final metrics = await ref.watch(dashboardMetricsProvider.future);
   return metrics.booksFinishedThisMonth;
 });
 
 /// Top genres by active book count, descending. Parameterized by the number
 /// of genres to surface.
-final topGenresProvider = FutureProvider
-    .family<List<MapEntry<String, int>>, int>((ref, limit) async {
-  final metrics = await ref.watch(dashboardMetricsProvider.future);
-  final entries = metrics.genreCounts.entries.toList(growable: false)
-    ..sort((a, b) => b.value.compareTo(a.value));
-  return entries.take(limit).toList(growable: false);
-});
+final topGenresProvider =
+    FutureProvider.family<List<MapEntry<String, int>>, int>((ref, limit) async {
+      final metrics = await ref.watch(dashboardMetricsProvider.future);
+      final entries = metrics.genreCounts.entries.toList(growable: false)
+        ..sort((a, b) => b.value.compareTo(a.value));
+      return entries.take(limit).toList(growable: false);
+    });
 
 /// Books currently being read, newest activity first — a lightweight
 /// "continue reading" insight list for the dashboard.
-final currentlyReadingBooksProvider =
-    FutureProvider<List<Book>>((ref) async {
+final currentlyReadingBooksProvider = FutureProvider<List<Book>>((ref) async {
   final metrics = await ref.watch(dashboardMetricsProvider.future);
   if (metrics.currentlyReading == 0) return const [];
   final repository = ref.read(bookRepositoryProvider);
   final records = await repository.listReadingRecords();
-  final readingRecords = records
-      .where((r) => r.status == ReadingStatus.reading)
-      .toList(growable: false)
-    ..sort((a, b) => b.lastReadDate.compareTo(a.lastReadDate));
+  final readingRecords =
+      records
+          .where((r) => r.status == ReadingStatus.reading)
+          .toList(growable: false)
+        ..sort((a, b) => b.lastReadDate.compareTo(a.lastReadDate));
   if (readingRecords.isEmpty) return const [];
   final books = await repository.getAll();
   final byId = {for (final b in books) b.id: b};
@@ -86,4 +85,18 @@ final currentlyReadingBooksProvider =
       .map((r) => byId[r.bookId])
       .whereType<Book>()
       .toList(growable: false);
+});
+
+/// Recently updated books (non-archived), sorted by most recently updated first.
+/// Limited to 5 for the home screen, but the parameter allows flexibility.
+final recentlyUpdatedBooksProvider = FutureProvider.family<List<Book>, int>((
+  ref,
+  limit,
+) async {
+  final repository = ref.read(bookRepositoryProvider);
+  // We get all active books and sort by updatedAt descending.
+  final books = await repository.getAll();
+  final activeBooks = books.where((book) => book.archivedAt == null).toList();
+  activeBooks.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  return activeBooks.take(limit).toList(growable: false);
 });

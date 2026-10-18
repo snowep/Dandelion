@@ -41,6 +41,7 @@ class Book {
 
   /// External catalog ID source (e.g. Open Library ID)
   final String? externalCatalogId;
+
   /// Source URL for external catalog metadata
   final String? externalSourceUrl;
 
@@ -61,25 +62,24 @@ class Book {
     required this.id,
     required this.title,
     required this.authors,
-    this.description,
-    this.genres,
-    this.isbn10,
-    this.isbn13,
-    this.publisher,
+    this.description = '',
+    this.genres = '',
+    this.isbn10 = '',
+    this.isbn13 = '',
+    this.publisher = '',
     this.publicationDate,
     this.pageCount,
     this.coverAssetKey,
-    this.externalCatalogId,
-    this.externalSourceUrl,
-    String? thumbnailUrl,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    this.externalCatalogId = '',
+    this.externalSourceUrl = '',
+    this.thumbnailUrl,
+    DateTime? createdAtParam,
+    DateTime? updatedAtParam,
     this.archivedAt,
-    bool? isInWishlist,
-  }) : createdAt = createdAt ?? DateTime.now(),
-       updatedAt = updatedAt ?? DateTime.now(),
-       this.thumbnailUrl = thumbnailUrl,
-       isInWishlist = isInWishlist ?? false;
+    bool? isInWishlistParam,
+  }) : createdAt = createdAtParam ?? DateTime.now(),
+       updatedAt = updatedAtParam ?? DateTime.now(),
+       isInWishlist = isInWishlistParam ?? false;
 
   /// Copy with modified fields - used for updates and archiving
   Book copyWith({
@@ -117,10 +117,10 @@ class Book {
       externalCatalogId: externalCatalogId ?? this.externalCatalogId,
       externalSourceUrl: externalSourceUrl ?? this.externalSourceUrl,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      createdAtParam: createdAt ?? this.createdAt,
+      updatedAtParam: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
-      isInWishlist: isInWishlist ?? this.isInWishlist,
+      isInWishlistParam: isInWishlist ?? this.isInWishlist,
     );
   }
 
