@@ -106,7 +106,10 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
-  Future<List<BookRow>> getAllBooks({bool includeArchived = false, int? limit}) {
+  Future<List<BookRow>> getAllBooks({
+    bool includeArchived = false,
+    int? limit,
+  }) {
     final query = select(books)
       ..orderBy([(book) => OrderingTerm.desc(book.updatedAt)]);
     if (!includeArchived) {

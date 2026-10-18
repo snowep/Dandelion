@@ -188,7 +188,8 @@ class Book {
       borrowerName: borrowerName ?? this.borrowerName,
       borrowerContact: borrowerContact ?? this.borrowerContact,
       lendDate: lendDate ?? this.lendDate,
-      expectedLendReturnDate: expectedLendReturnDate ?? this.expectedLendReturnDate,
+      expectedLendReturnDate:
+          expectedLendReturnDate ?? this.expectedLendReturnDate,
       createdAtParam: createdAt ?? this.createdAt,
       updatedAtParam: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,

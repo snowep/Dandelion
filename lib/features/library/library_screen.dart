@@ -110,13 +110,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
       text: book?.purchaseCurrency ?? '',
     );
     var isBorrowedController = book?.isBorrowed ?? false;
-    final lenderNameController = TextEditingController(text: book?.lenderName ?? '');
-    final lenderContactController = TextEditingController(text: book?.lenderContact ?? '');
+    final lenderNameController = TextEditingController(
+      text: book?.lenderName ?? '',
+    );
+    final lenderContactController = TextEditingController(
+      text: book?.lenderContact ?? '',
+    );
     var borrowDateController = book?.borrowDate;
     var expectedReturnDateController = book?.expectedReturnDate;
     var isLentController = book?.isLent ?? false;
-    final borrowerNameController = TextEditingController(text: book?.borrowerName ?? '');
-    final borrowerContactController = TextEditingController(text: book?.borrowerContact ?? '');
+    final borrowerNameController = TextEditingController(
+      text: book?.borrowerName ?? '',
+    );
+    final borrowerContactController = TextEditingController(
+      text: book?.borrowerContact ?? '',
+    );
     var lendDateController = book?.lendDate;
     var expectedLendReturnDateController = book?.expectedLendReturnDate;
     var selectedStatus = book == null
@@ -174,7 +182,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     Expanded(
                       child: TextField(
                         controller: purchaseCurrencyController,
-                        decoration: const InputDecoration(labelText: 'Currency'),
+                        decoration: const InputDecoration(
+                          labelText: 'Currency',
+                        ),
                       ),
                     ),
                   ],
@@ -192,7 +202,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
                 TextField(
                   decoration: const InputDecoration(labelText: 'Publisher'),
-                  controller: TextEditingController(text: book?.publisher ?? ''),
+                  controller: TextEditingController(
+                    text: book?.publisher ?? '',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
@@ -237,20 +249,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   },
                 ),
                 const SizedBox(height: 8),
-                const Text('Lending/Borrowing Tracking', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Lending/Borrowing Tracking',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 SwitchListTile(
                   title: const Text('Borrowed from someone'),
                   value: isBorrowedController,
-                  onChanged: (value) => setDialogState(() => isBorrowedController = value),
+                  onChanged: (value) =>
+                      setDialogState(() => isBorrowedController = value),
                 ),
                 if (isBorrowedController) ...[
                   TextField(
                     controller: lenderNameController,
-                    decoration: const InputDecoration(labelText: "Lender's Name"),
+                    decoration: const InputDecoration(
+                      labelText: "Lender's Name",
+                    ),
                   ),
                   TextField(
                     controller: lenderContactController,
-                    decoration: const InputDecoration(labelText: "Lender's Contact"),
+                    decoration: const InputDecoration(
+                      labelText: "Lender's Contact",
+                    ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.calendar_today),
@@ -278,12 +298,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       onPressed: () async {
                         final date = await showDatePicker(
                           context: dialogContext,
-                          initialDate: expectedReturnDateController ?? DateTime.now().add(const Duration(days: 14)),
+                          initialDate:
+                              expectedReturnDateController ??
+                              DateTime.now().add(const Duration(days: 14)),
                           firstDate: DateTime(2000),
                           lastDate: DateTime(2030),
                         );
                         if (date != null && dialogContext.mounted) {
-                          setDialogState(() => expectedReturnDateController = date);
+                          setDialogState(
+                            () => expectedReturnDateController = date,
+                          );
                         }
                       },
                     ),
@@ -292,16 +316,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 SwitchListTile(
                   title: const Text('Lent to someone'),
                   value: isLentController,
-                  onChanged: (value) => setDialogState(() => isLentController = value),
+                  onChanged: (value) =>
+                      setDialogState(() => isLentController = value),
                 ),
                 if (isLentController) ...[
                   TextField(
                     controller: borrowerNameController,
-                    decoration: const InputDecoration(labelText: "Borrower's Name"),
+                    decoration: const InputDecoration(
+                      labelText: "Borrower's Name",
+                    ),
                   ),
                   TextField(
                     controller: borrowerContactController,
-                    decoration: const InputDecoration(labelText: "Borrower's Contact"),
+                    decoration: const InputDecoration(
+                      labelText: "Borrower's Contact",
+                    ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.calendar_today),
@@ -329,12 +358,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       onPressed: () async {
                         final date = await showDatePicker(
                           context: dialogContext,
-                          initialDate: expectedLendReturnDateController ?? DateTime.now().add(const Duration(days: 14)),
+                          initialDate:
+                              expectedLendReturnDateController ??
+                              DateTime.now().add(const Duration(days: 14)),
                           firstDate: DateTime(2000),
                           lastDate: DateTime(2030),
                         );
                         if (date != null && dialogContext.mounted) {
-                          setDialogState(() => expectedLendReturnDateController = date);
+                          setDialogState(
+                            () => expectedLendReturnDateController = date,
+                          );
                         }
                       },
                     ),
@@ -394,28 +427,35 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           isbn13: _isbn13Controller.text.trim().isEmpty
                               ? null
                               : _isbn13Controller.text.trim(),
-                          purchasePrice: double.tryParse(purchasePriceController.text),
-                          purchaseCurrency: purchaseCurrencyController.text.trim().isEmpty
+                          purchasePrice: double.tryParse(
+                            purchasePriceController.text,
+                          ),
+                          purchaseCurrency:
+                              purchaseCurrencyController.text.trim().isEmpty
                               ? null
                               : purchaseCurrencyController.text.trim(),
                           isBorrowed: isBorrowedController,
                           lenderName: lenderNameController.text.trim().isEmpty
                               ? null
                               : lenderNameController.text.trim(),
-                          lenderContact: lenderContactController.text.trim().isEmpty
+                          lenderContact:
+                              lenderContactController.text.trim().isEmpty
                               ? null
                               : lenderContactController.text.trim(),
                           borrowDate: borrowDateController,
                           expectedReturnDate: expectedReturnDateController,
                           isLent: isLentController,
-                          borrowerName: borrowerNameController.text.trim().isEmpty
+                          borrowerName:
+                              borrowerNameController.text.trim().isEmpty
                               ? null
                               : borrowerNameController.text.trim(),
-                          borrowerContact: borrowerContactController.text.trim().isEmpty
+                          borrowerContact:
+                              borrowerContactController.text.trim().isEmpty
                               ? null
                               : borrowerContactController.text.trim(),
                           lendDate: lendDateController,
-                          expectedLendReturnDate: expectedLendReturnDateController,
+                          expectedLendReturnDate:
+                              expectedLendReturnDateController,
                         )
                       : book.copyWith(
                           title: title,
@@ -432,28 +472,35 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           isbn13: _isbn13Controller.text.trim().isEmpty
                               ? null
                               : _isbn13Controller.text.trim(),
-                          purchasePrice: double.tryParse(purchasePriceController.text),
-                          purchaseCurrency: purchaseCurrencyController.text.trim().isEmpty
+                          purchasePrice: double.tryParse(
+                            purchasePriceController.text,
+                          ),
+                          purchaseCurrency:
+                              purchaseCurrencyController.text.trim().isEmpty
                               ? null
                               : purchaseCurrencyController.text.trim(),
                           isBorrowed: isBorrowedController,
                           lenderName: lenderNameController.text.trim().isEmpty
                               ? null
                               : lenderNameController.text.trim(),
-                          lenderContact: lenderContactController.text.trim().isEmpty
+                          lenderContact:
+                              lenderContactController.text.trim().isEmpty
                               ? null
                               : lenderContactController.text.trim(),
                           borrowDate: borrowDateController,
                           expectedReturnDate: expectedReturnDateController,
                           isLent: isLentController,
-                          borrowerName: borrowerNameController.text.trim().isEmpty
+                          borrowerName:
+                              borrowerNameController.text.trim().isEmpty
                               ? null
                               : borrowerNameController.text.trim(),
-                          borrowerContact: borrowerContactController.text.trim().isEmpty
+                          borrowerContact:
+                              borrowerContactController.text.trim().isEmpty
                               ? null
                               : borrowerContactController.text.trim(),
                           lendDate: lendDateController,
-                          expectedLendReturnDate: expectedLendReturnDateController,
+                          expectedLendReturnDate:
+                              expectedLendReturnDateController,
                           updatedAt: DateTime.now(),
                         );
                   if (book == null) {

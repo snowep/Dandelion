@@ -16,7 +16,8 @@ class DuplicateBookIsbnException implements Exception {
 }
 
 class BookRepositoryImpl implements BookRepository {
-  BookRepositoryImpl([AppDatabase? database]) : _database = database ?? AppDatabase();
+  BookRepositoryImpl([AppDatabase? database])
+    : _database = database ?? AppDatabase();
 
   final AppDatabase _database;
 
@@ -36,9 +37,17 @@ class BookRepositoryImpl implements BookRepository {
     }
 
     return _database.transaction(() async {
-      final List<String> authorsList = book.authors.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      final List<String> authorsList = book.authors
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
       final List<String> genresList = book.genres != null
-          ? book.genres!.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+          ? book.genres!
+                .split(',')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList()
           : <String>[];
       final id = await _database
           .into(_database.books)
@@ -48,7 +57,9 @@ class BookRepositoryImpl implements BookRepository {
               title: book.title.trim(),
               author: Value(authorsList.isNotEmpty ? authorsList.first : null),
               description: Value(_optional(book.description)),
-              genres: Value(genresList.isNotEmpty ? genresList.join(',') : null),
+              genres: Value(
+                genresList.isNotEmpty ? genresList.join(',') : null,
+              ),
               isbn: Value(book.isbn13 ?? book.isbn10),
               normalizedIsbn: Value(normalizedIsbn),
               publisher: Value(_optional(book.publisher)),
@@ -102,8 +113,14 @@ class BookRepositoryImpl implements BookRepository {
         throw DuplicateBookIsbnException(normalizedIsbn);
       }
     }
-    final List<String> authorsList = book.authors?.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList() ?? <String>[];
-    final String? firstAuthor = authorsList.isNotEmpty ? authorsList.first : null;
+    final List<String> authorsList = book.authors
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final String? firstAuthor = authorsList.isNotEmpty
+        ? authorsList.first
+        : null;
 
     await _database.updateBook(
       BooksCompanion(
@@ -341,7 +358,11 @@ class BookRepositoryImpl implements BookRepository {
     final counts = <String, int>{};
     for (final book in books) {
       if (book.genres != null && book.genres!.isNotEmpty) {
-        final List<String> genresList = book.genres!.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        final List<String> genresList = book.genres!
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
         for (final genre in genresList) {
           counts[genre] = (counts[genre] ?? 0) + 1;
         }
@@ -355,11 +376,13 @@ class BookRepositoryImpl implements BookRepository {
     final books = await getAll();
     final counts = <String, int>{};
     for (final book in books) {
-      if (book.authors != null && book.authors!.isNotEmpty) {
-        final List<String> authorsList = book.authors!.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-        for (final author in authorsList) {
-          counts[author] = (counts[author] ?? 0) + 1;
-        }
+      final List<String> authorsList = book.authors
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      for (final author in authorsList) {
+        counts[author] = (counts[author] ?? 0) + 1;
       }
     }
     return counts;
@@ -382,23 +405,24 @@ class BookRepositoryImpl implements BookRepository {
   Future<int> getBooksReadThisYear() async {
     final now = DateTime.now();
     final start = DateTime(now.year, 1, 1);
-    final rows = await (_database.select(_database.readingRecords)
-          ..where((record) =>
-              record.status.equals('finished') &
-              record.finishDate.isNotNull() &
-              record.finishDate.isBiggerOrEqualValue(start)))
-        .get();
+    final rows =
+        await (_database.select(_database.readingRecords)..where(
+              (record) =>
+                  record.status.equals('finished') &
+                  record.finishDate.isNotNull() &
+                  record.finishDate.isBiggerOrEqualValue(start),
+            ))
+            .get();
     return rows.length;
   }
 
   @override
   Future<int> getBooksPurchasedThisYear() async {
-    final now = DateTime.now();
-    final start = DateTime(now.year, 1, 1);
     final books = await _database.getAllBooks();
     int count = 0;
     for (final book in books) {
-      if (book.purchasePrice != null && book.purchasePrice! > 0) {
+      final purchasePrice = book.purchasePrice;
+      if (purchasePrice != null && purchasePrice > 0) {
         // Assuming we have a purchase date field - if not, we'd need to add it
         // For now, we'll count all purchased books as purchased this year
         // In a real implementation, we would check the purchase date

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_theme.dart';
 import 'app_router.dart';
+
 import 'package:dandelion/features/settings/theme_notifier.dart';
 
 class DandelionApp extends ConsumerWidget {

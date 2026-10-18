@@ -25,20 +25,21 @@ class ExportData {
   });
 
   Map<String, dynamic> toJson() => {
-        'schemaVersion': schemaVersion,
-        'exportDate': exportDate.toIso8601String(),
-        'books': books,
-        'readingRecords': readingRecords,
-        'coversBase64': coversBase64,
-      };
+    'schemaVersion': schemaVersion,
+    'exportDate': exportDate.toIso8601String(),
+    'books': books,
+    'readingRecords': readingRecords,
+    'coversBase64': coversBase64,
+  };
 
   static ExportData fromJson(Map<String, dynamic> json) => ExportData(
-        schemaVersion: json['schemaVersion'] as int,
-        exportDate: DateTime.parse(json['exportDate'] as String),
-        books: (json['books'] as List).cast<Map<String, dynamic>>(),
-        readingRecords: (json['readingRecords'] as List).cast<Map<String, dynamic>>(),
-        coversBase64: (json['coversBase64'] as Map).cast<String, String>(),
-      );
+    schemaVersion: json['schemaVersion'] as int,
+    exportDate: DateTime.parse(json['exportDate'] as String),
+    books: (json['books'] as List).cast<Map<String, dynamic>>(),
+    readingRecords: (json['readingRecords'] as List)
+        .cast<Map<String, dynamic>>(),
+    coversBase64: (json['coversBase64'] as Map).cast<String, String>(),
+  );
 }
 
 class ImportPreview {
@@ -116,49 +117,49 @@ class ExportService {
   }
 
   Map<String, dynamic> _bookToJson(Book b) => {
-        'id': b.id,
-        'title': b.title,
-        'authors': b.authors,
-        'description': b.description,
-        'genres': b.genres,
-        'isbn10': b.isbn10,
-        'isbn13': b.isbn13,
-        'publisher': b.publisher,
-        'publicationDate': b.publicationDate?.toIso8601String(),
-        'pageCount': b.pageCount,
-        'coverAssetKey': b.coverAssetKey,
-        'isInWishlist': b.isInWishlist,
-        'externalCatalogId': b.externalCatalogId,
-        'externalSourceUrl': b.externalSourceUrl,
-        'purchasePrice': b.purchasePrice,
-        'purchaseCurrency': b.purchaseCurrency,
-        'isBorrowed': b.isBorrowed,
-        'lenderName': b.lenderName,
-        'lenderContact': b.lenderContact,
-        'borrowDate': b.borrowDate?.toIso8601String(),
-        'expectedReturnDate': b.expectedReturnDate?.toIso8601String(),
-        'isLent': b.isLent,
-        'borrowerName': b.borrowerName,
-        'borrowerContact': b.borrowerContact,
-        'lendDate': b.lendDate?.toIso8601String(),
-        'expectedLendReturnDate': b.expectedLendReturnDate?.toIso8601String(),
-        'createdAt': b.createdAt.toIso8601String(),
-        'updatedAt': b.updatedAt.toIso8601String(),
-        'archivedAt': b.archivedAt?.toIso8601String(),
-      };
+    'id': b.id,
+    'title': b.title,
+    'authors': b.authors,
+    'description': b.description,
+    'genres': b.genres,
+    'isbn10': b.isbn10,
+    'isbn13': b.isbn13,
+    'publisher': b.publisher,
+    'publicationDate': b.publicationDate?.toIso8601String(),
+    'pageCount': b.pageCount,
+    'coverAssetKey': b.coverAssetKey,
+    'isInWishlist': b.isInWishlist,
+    'externalCatalogId': b.externalCatalogId,
+    'externalSourceUrl': b.externalSourceUrl,
+    'purchasePrice': b.purchasePrice,
+    'purchaseCurrency': b.purchaseCurrency,
+    'isBorrowed': b.isBorrowed,
+    'lenderName': b.lenderName,
+    'lenderContact': b.lenderContact,
+    'borrowDate': b.borrowDate?.toIso8601String(),
+    'expectedReturnDate': b.expectedReturnDate?.toIso8601String(),
+    'isLent': b.isLent,
+    'borrowerName': b.borrowerName,
+    'borrowerContact': b.borrowerContact,
+    'lendDate': b.lendDate?.toIso8601String(),
+    'expectedLendReturnDate': b.expectedLendReturnDate?.toIso8601String(),
+    'createdAt': b.createdAt.toIso8601String(),
+    'updatedAt': b.updatedAt.toIso8601String(),
+    'archivedAt': b.archivedAt?.toIso8601String(),
+  };
 
   Map<String, dynamic> _recordToJson(ReadingRecord r) => {
-        'id': r.id,
-        'bookId': r.bookId,
-        'status': r.status.name,
-        'currentPage': r.currentPage,
-        'percentageOnlyProgress': r.percentageOnlyProgress,
-        'startDate': r.startDate?.toIso8601String(),
-        'finishDate': r.finishDate?.toIso8601String(),
-        'lastReadDate': r.lastReadDate.toIso8601String(),
-        'personalRating': r.personalRating,
-        'notes': r.notes,
-      };
+    'id': r.id,
+    'bookId': r.bookId,
+    'status': r.status.name,
+    'currentPage': r.currentPage,
+    'percentageOnlyProgress': r.percentageOnlyProgress,
+    'startDate': r.startDate?.toIso8601String(),
+    'finishDate': r.finishDate?.toIso8601String(),
+    'lastReadDate': r.lastReadDate.toIso8601String(),
+    'personalRating': r.personalRating,
+    'notes': r.notes,
+  };
 
   Future<void> exportToFile(File file) async {
     final data = await export();
