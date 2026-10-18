@@ -81,7 +81,8 @@ class CoverImageService {
   static Future<Uint8List?> loadImage(String key) async {
     try {
       // Validate key format to prevent path traversal.
-      if (!key.startsWith('covers/cover_') || !key.endsWith('.png')) {
+      if (key.contains('..') ||
+          !RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\.png$').hasMatch(key)) {
         return null;
       }
 
@@ -105,7 +106,8 @@ class CoverImageService {
   static Future<bool> storeImage(Uint8List bytes, {required String key}) async {
     try {
       // Validate key format to prevent path traversal
-      if (!key.startsWith('covers/cover_') || !key.endsWith('.png')) {
+      if (key.contains('..') ||
+          !RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\.png$').hasMatch(key)) {
         return false;
       }
 
@@ -154,7 +156,8 @@ class CoverImageService {
   static Future<bool> deleteImage(String key) async {
     try {
       // Validate key format to prevent path traversal
-      if (!key.startsWith('covers/cover_') || !key.endsWith('.png')) {
+      if (key.contains('..') ||
+          !RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\.png$').hasMatch(key)) {
         return false;
       }
 

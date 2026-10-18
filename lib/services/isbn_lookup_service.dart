@@ -30,7 +30,9 @@ class IsbnLookupService {
 
     try {
       final uri = Uri.parse('$_baseUrl/isbn/$normalizedIsbn.json');
-      final response = await _httpClient.get(uri);
+      final response = await _httpClient
+          .get(uri)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -67,7 +69,9 @@ class IsbnLookupService {
       final uri = Uri.parse(
         '$_baseUrl/search.json?q=${Uri.encodeComponent(query)}&limit=$limit',
       );
-      final response = await _httpClient.get(uri);
+      final response = await _httpClient
+          .get(uri)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);

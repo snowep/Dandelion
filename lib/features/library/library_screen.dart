@@ -59,11 +59,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ascending: _sortAscending,
       );
       final covers = <int, Uint8List>{};
+      final futures = <Future<Uint8List?>>[];
+      final ids = <int>[];
       for (final book in books) {
         final key = book.coverAssetKey;
         if (key == null) continue;
-        final bytes = await CoverImageService.loadImage(key);
-        if (bytes != null) covers[book.id] = bytes;
+        futures.add(CoverImageService.loadImage(key));
+        ids.add(book.id);
+      }
+      final results = await Future.wait(futures);
+      for (var i = 0; i < results.length; i++) {
+        final bytes = results[i];
+        if (bytes != null) covers[ids[i]] = bytes;
       }
       if (!mounted) return false;
       setState(() {

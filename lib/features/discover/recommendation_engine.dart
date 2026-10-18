@@ -1,4 +1,5 @@
 import 'package:dandelion/features/library/book.dart';
+import 'package:dandelion/features/library/reading_record.dart';
 
 /// A simple recommendation engine for the Discover screen.
 ///
