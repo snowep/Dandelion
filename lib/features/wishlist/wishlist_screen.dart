@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:dandelion/features/library/book.dart';
 import 'package:dandelion/features/library/book_repository.dart';
 import 'package:dandelion/features/library/reading_record.dart';
+import 'package:dandelion/shared/services/cover_image_service.dart';
 import 'package:dandelion/shared/widgets/book_list_scaffold.dart';
-import 'package:dandelion/shared/widgets/primary_button.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key, required this.repository});
@@ -16,9 +16,6 @@ class WishlistScreen extends StatefulWidget {
 
 class _WishlistScreenState extends State<WishlistScreen> {
   List<Book> _wishlistBooks = const [];
-  bool _loading = true;
-  String? _error;
-  final String _query = '';
   final String _sortBy = 'title';
   final bool _sortAscending = true;
 
@@ -28,17 +25,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
     _loadWishlist();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   Future<void> _loadWishlist() async {
     if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
     try {
       final books = await widget.repository.getBooksByWishlist(
         isInWishlist: true,
@@ -46,21 +34,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
       if (!mounted) return;
       setState(() {
         _wishlistBooks = books;
-        _loading = false;
       });
     } on Object catch (e) {
       if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not load wishlist: $e')),
+      );
     }
   }
 
-  Future<void> _showBookEditor({Book? book}) async {
-    if (!mounted) return;
-    // We'll reuse the same editor as in LibraryScreen for consistency.
-    // For brevity, we'll use a simple dialog; in a real app, we might share the editor widget.
+  Future<bool> _showBookEditor({Book? book}) async {
+    if (!mounted) return false;
     final titleController = TextEditingController(text: book?.title ?? '');
     final authorsController = TextEditingController(text: book?.authors ?? '');
     final pageCountController = TextEditingController(
@@ -224,30 +208,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
     return saved ?? false;
   }
 
-  Future<void> _moveToReading(Book book) async {
-    final record = await widget.repository.getReadingRecordForBook(book.id);
-    if (record != null) {
-      await widget.repository.updateReadingRecord(
-        record.copyWith(
-          status: ReadingStatus.reading,
-          lastReadDate: DateTime.now(),
-        ),
-      );
-    } else {
-      await widget.repository.createReadingRecord(
-        ReadingRecord(
-          bookId: book.id,
-          status: ReadingStatus.reading,
-          lastReadDate: DateTime.now(),
-        ),
-      );
-    }
-    await widget.repository.updateBook(
-      book.copyWith(isInWishlist: false, updatedAt: DateTime.now()),
-    );
-    await _loadWishlist();
-  }
-
   Future<void> _moveToWantToRead(Book book) async {
     final record = await widget.repository.getReadingRecordForBook(book.id);
     if (record != null) {
@@ -330,9 +290,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
           }
         },
         onWishlistToggle: (id) async {
-          // In wishlist screen, toggling wishlist means removing from wishlist.
-          // We'll move it to Want to Read by default (or show a dialog?).
-          // For simplicity, we'll move to Want to Read.
           final book = _wishlistBooks.firstWhere((b) => b.id == id);
           await _moveToWantToRead(book);
         },

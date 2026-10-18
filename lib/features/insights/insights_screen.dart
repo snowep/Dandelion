@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dandelion/features/dashboard/dashboard_models.dart';
 import 'package:dandelion/features/library/book.dart';
-import 'package:dandelion/shared/widgets/book_list_scaffold.dart';
+import 'package:dandelion/features/insights/dashboard_providers.dart';
+import 'package:dandelion/shared/services/cover_image_service.dart';
 
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
@@ -14,7 +17,7 @@ class InsightsScreen extends ConsumerWidget {
     );
     final AsyncValue<List<MapEntry<String, int>>> topGenresAsync = ref.watch(
       topGenresProvider(5),
-    ); // Top 5 genres
+    );
     final AsyncValue<List<Book>> currentlyReadingAsync = ref.watch(
       currentlyReadingBooksProvider,
     );
@@ -27,14 +30,16 @@ class InsightsScreen extends ConsumerWidget {
             // Summary cards
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              sliver: SliverToBoxAdapter(_buildSummaryCards(context, metrics)),
+              sliver: SliverToBoxAdapter(
+                child: _buildSummaryCards(context, metrics),
+              ),
             ),
             // Currently reading
             if (metrics.currentlyReading > 0)
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 sliver: SliverToBoxAdapter(
-                  const Text(
+                  child: const Text(
                     'Currently Reading',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -43,14 +48,14 @@ class InsightsScreen extends ConsumerWidget {
             else
               const SliverPadding(
                 padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(SizedBox.shrink()),
+                sliver: SliverToBoxAdapter(child: SizedBox.shrink()),
               ),
             if (metrics.currentlyReading > 0)
               currentlyReadingAsync.when(
                 data: (books) => SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: books.isEmpty
-                      ? const SliverToBoxAdapter(SizedBox.shrink())
+                      ? const SliverToBoxAdapter(child: SizedBox.shrink())
                       : SliverList.builder(
                           itemCount: books.length,
                           itemBuilder: (context, index) {
@@ -76,12 +81,12 @@ class InsightsScreen extends ConsumerWidget {
                                         ),
                                       );
                                     }
-                                    final Uint8List? coverBytes = snapshot.data;
+                                    final Uint8List? coverBytes =
+                                        snapshot.data;
                                     return coverBytes != null
                                         ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
                                             child: Image.memory(
                                               coverBytes,
                                               width: 44,
@@ -118,13 +123,13 @@ class InsightsScreen extends ConsumerWidget {
                 loading: () => const SliverPadding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverToBoxAdapter(
-                    Center(child: CircularProgressIndicator()),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
                 error: (error, stack) => SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverToBoxAdapter(
-                    Center(child: Text('Error: $error')),
+                    child: Center(child: Text('Error: $error')),
                   ),
                 ),
               ),
@@ -133,7 +138,7 @@ class InsightsScreen extends ConsumerWidget {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 sliver: SliverToBoxAdapter(
-                  const Text(
+                  child: const Text(
                     'Top Genres',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -142,14 +147,14 @@ class InsightsScreen extends ConsumerWidget {
             else
               const SliverPadding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                sliver: SliverToBoxAdapter(SizedBox.shrink()),
+                sliver: SliverToBoxAdapter(child: SizedBox.shrink()),
               ),
             if (metrics.genreCounts.isNotEmpty)
               topGenresAsync.when(
                 data: (topGenres) => SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: topGenres.isEmpty
-                      ? const SliverToBoxAdapter(SizedBox.shrink())
+                      ? const SliverToBoxAdapter(child: SizedBox.shrink())
                       : SliverList.builder(
                           itemCount: topGenres.length,
                           itemBuilder: (context, index) {
@@ -165,13 +170,13 @@ class InsightsScreen extends ConsumerWidget {
                 loading: () => const SliverPadding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverToBoxAdapter(
-                    Center(child: CircularProgressIndicator()),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
                 error: (error, stack) => SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverToBoxAdapter(
-                    Center(child: Text('Error: $error')),
+                    child: Center(child: Text('Error: $error')),
                   ),
                 ),
               ),

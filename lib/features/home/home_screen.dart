@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dandelion/features/dashboard/dashboard_models.dart';
 import 'package:dandelion/features/library/book.dart';
+import 'package:dandelion/features/insights/dashboard_providers.dart';
+import 'package:dandelion/shared/services/cover_image_service.dart';
 import 'package:dandelion/shared/widgets/primary_button.dart';
 import 'package:dandelion/shared/widgets/sliver_app_bar_widget.dart';
 
@@ -16,14 +20,14 @@ class HomeScreen extends ConsumerWidget {
     );
     final AsyncValue<List<Book>> recentlyUpdatedAsync = ref.watch(
       recentlyUpdatedBooksProvider(5),
-    ); // Limit to 5 recently updated books
+    );
 
     return CustomScrollView(
       slivers: [
         const SliverAppBarWidget(title: 'Dandelion Home'),
         metricsAsync.when(
           data: (metrics) => SliverToBoxAdapter(
-            Padding(
+            child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,42 +42,44 @@ class HomeScreen extends ConsumerWidget {
                   _buildSummaryCards(context, metrics),
                   const SizedBox(height: 24),
                   _buildRecentlyUpdatedSection(context, recentlyUpdatedAsync),
-                  const SizedBox(height: 24),
-                  PrimaryButton(
-                    text: 'Get Started',
-                    onPressed: () {
-                      context.go('/library');
-                    },
-                    semanticLabel: 'Get started button',
-                  ),
+                  if (metrics.totalBooks == 0) ...[
+                    const SizedBox(height: 24),
+                    PrimaryButton(
+                      text: 'Get Started',
+                      onPressed: () {
+                        context.go('/library');
+                      },
+                      semanticLabel: 'Get started button',
+                    ),
+                  ],
                 ],
               ),
             ),
-            loading: () => const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, stack) => SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Could not load your dashboard: $error',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () => ref.refresh(dashboardMetricsProvider),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+          ),
+          loading: () => const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, stack) => SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Could not load your dashboard: $error',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () => ref.refresh(dashboardMetricsProvider),
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -134,7 +140,7 @@ class HomeScreen extends ConsumerWidget {
                   style: TextStyle(color: Colors.grey),
                 )
               : SizedBox(
-                  height: 80,
+                  height: 102,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: books.length,
@@ -157,8 +163,8 @@ class HomeScreen extends ConsumerWidget {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
                                   return const SizedBox(
-                                    width: 60,
-                                    height: 90,
+                                    width: 50,
+                                    height: 75,
                                     child: CircleAvatar(
                                       backgroundColor: Colors.grey,
                                       child: Icon(
@@ -168,43 +174,44 @@ class HomeScreen extends ConsumerWidget {
                                     ),
                                   );
                                 }
-                                final Uint8List? coverBytes = snapshot.data;
+                                final Uint8List? coverBytes =
+                                    snapshot.data;
                                 return coverBytes != null
                                     ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius:
+                                            BorderRadius.circular(6),
                                         child: Image.memory(
                                           coverBytes,
-                                          width: 60,
-                                          height: 90,
+                                          width: 50,
+                                          height: 75,
                                           fit: BoxFit.cover,
                                         ),
                                       )
                                     : Container(
-                                        width: 60,
-                                        height: 90,
+                                        width: 50,
+                                        height: 75,
                                         decoration: BoxDecoration(
                                           color: Theme.of(context)
                                               .colorScheme
                                               .secondaryContainer,
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
                                         ),
                                         child: const Icon(
                                           Icons.menu_book,
-                                          size: 36,
+                                          size: 28,
                                           color: Colors.white,
                                         ),
                                       );
                               },
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 4),
                             Text(
                               book.title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -215,7 +222,7 @@ class HomeScreen extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 9,
                                 color: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -228,51 +235,22 @@ class HomeScreen extends ConsumerWidget {
                     },
                   ),
                 ),
-          loading: () => const SizedBox(
-            height: 80,
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          error: (error, stack) => SizedBox(
-            height: 80,
-            child: Center(
-              child: Text(
-                'Error loading books: $error',
-                textAlign: TextAlign.center,
-              ),
+          loading: () => const SliverFillRemaining(
+            child: SizedBox(
+              height: 110,
+              child: Center(child: CircularProgressIndicator()),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCards(BuildContext context, DashboardMetrics metrics) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildCard(
-            context,
-            'Total Books',
-            '${metrics.totalBooks}',
-            Icons.menu_book,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildCard(
-            context,
-            'Currently Reading',
-            '${metrics.currentlyReading}',
-            Icons.library_books,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildCard(
-            context,
-            'Wishlist',
-            '${metrics.wishlistCount}',
-            Icons.favorite_border,
+          error: (error, stack) => SliverFillRemaining(
+            child: SizedBox(
+              height: 110,
+              child: Center(
+                child: Text(
+                  'Error loading books: $error',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
           ),
         ),
       ],
