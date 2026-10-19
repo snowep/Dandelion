@@ -28,6 +28,7 @@ abstract class BookRepository {
     bool ascending = true,
   });
   Future<Book?> getBookByIsbn(String isbn);
+  Future<Book?> getBookByTitleAndAuthor(String title, String author);
   Future<void> createReadingRecord(ReadingRecord record);
   Future<void> updateReadingRecord(ReadingRecord record);
   Future<ReadingRecord?> getReadingRecordForBook(int bookId);

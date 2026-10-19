@@ -258,6 +258,24 @@ class BookRepositoryImpl implements BookRepository {
   }
 
   @override
+  Future<Book?> getBookByTitleAndAuthor(String title, String author) async {
+    if (title.trim().isEmpty || author.trim().isEmpty) return null;
+
+    final normalizedTitle = title.trim();
+    final normalizedAuthor = author.trim();
+
+    final rows =
+        await (_database.select(_database.books)..where(
+              (book) =>
+                  book.title.equals(normalizedTitle) &
+                  book.author.equals(normalizedAuthor),
+            ))
+            .get();
+
+    return rows.isNotEmpty ? _toBook(rows.first) : null;
+  }
+
+  @override
   Future<void> createReadingRecord(ReadingRecord record) async {
     await _validateProgress(record);
     if (await _database.getReadingRecordForBook(record.bookId) != null) {
