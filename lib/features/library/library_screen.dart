@@ -649,16 +649,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Library'),
-        actions: [
-          IconButton(
-            tooltip: 'Add book manually',
-            onPressed: () => _showBookEditor(),
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Library')),
       body: CustomScrollView(
         slivers: [
           SliverPadding(
