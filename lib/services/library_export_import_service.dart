@@ -208,6 +208,22 @@ class ImportService {
       );
     }
 
+    // Validate top-level structure
+    if (!jsonMap.containsKey('schemaVersion') ||
+        !jsonMap.containsKey('exportDate') ||
+        !jsonMap.containsKey('books') ||
+        !jsonMap.containsKey('readingRecords')) {
+      return ImportPreview(
+        isValid: false,
+        schemaVersion: -1,
+        booksCount: 0,
+        readingRecordsCount: 0,
+        errors: [
+          'Invalid archive structure: missing required top-level fields',
+        ],
+      );
+    }
+
     final schemaVersion = jsonMap['schemaVersion'] as int? ?? -1;
     if (schemaVersion != supportedSchemaVersion) {
       errors.add(
@@ -228,51 +244,470 @@ class ImportService {
     final booksList = (jsonMap['books'] as List?) ?? [];
     final recordsList = (jsonMap['readingRecords'] as List?) ?? [];
 
-    for (final b in booksList) {
-      if ((b as Map)['title'] == null ||
-          (b['title'] as String).trim().isEmpty) {
-        conflicts.add(
-          BookConflict(title: 'Untitled', type: ConflictType.missingRequired),
+    // Validate books structure and collect data for duplicate detection
+    final List<Map<String, dynamic>> validBooks = [];
+    final Set<String> incomingIsbns = <String>{};
+    final Set<String> incomingTitleAuthors = <String>{};
+
+    for (int i = 0; i < booksList.length; i++) {
+      final b = booksList[i];
+      if (b == null || !(b is Map<String, dynamic>)) {
+        errors.add('Book at index $i is not a valid object');
+        continue;
+      }
+
+      final title = b['title'] as String?;
+      if (title == null || title.trim().isEmpty) {
+        errors.add('Book at index $i missing required title');
+        continue;
+      }
+
+      final authors = b['authors'] as String?;
+      if (authors == null || authors.trim().isEmpty) {
+        errors.add('Book at index $i missing required authors');
+        continue;
+      }
+
+      // Validate optional fields with type checking
+      final description = b['description'];
+      if (description != null && !(description is String)) {
+        warnings.add('Book at index $i description is not a string');
+      }
+
+      final genres = b['genres'];
+      if (genres != null && !(genres is String)) {
+        warnings.add('Book at index $i genres is not a string');
+      }
+
+      final isbn10 = b['isbn10'];
+      final isbn13 = b['isbn13'];
+      final normalizedIsbn10 = _normalizeIsbn(isbn10 as String?);
+      final normalizedIsbn13 = _normalizeIsbn(isbn13 as String?);
+      final normalizedIsbn = normalizedIsbn10 ?? normalizedIsbn13;
+
+      final publisher = b['publisher'];
+      if (publisher != null && publisher is! String) {
+        warnings.add('Book at index $i publisher is not a string');
+      }
+
+      final publicationDateStr = b['publicationDate'] as String?;
+      DateTime? publicationDate;
+      if (publicationDateStr != null) {
+        try {
+          publicationDate = DateTime.parse(publicationDateStr);
+        } catch (_) {
+          warnings.add(
+            'Book at index $i publicationDate is not a valid ISO date',
+          );
+        }
+      }
+
+      final pageCount = b['pageCount'];
+      if (pageCount != null && (pageCount is! int || pageCount <= 0)) {
+        warnings.add('Book at index $i pageCount is not a positive integer');
+      }
+
+      final coverAssetKey = b['coverAssetKey'];
+      if (coverAssetKey != null && coverAssetKey is! String) {
+        warnings.add('Book at index $i coverAssetKey is not a string');
+      }
+
+      final isInWishlist = b['isInWishlist'];
+      if (isInWishlist != null && isInWishlist is! bool) {
+        warnings.add('Book at index $i isInWishlist is not a boolean');
+      }
+
+      final externalCatalogId = b['externalCatalogId'];
+      if (externalCatalogId != null && externalCatalogId is! String) {
+        warnings.add('Book at index $i externalCatalogId is not a string');
+      }
+
+      final externalSourceUrl = b['externalSourceUrl'];
+      if (externalSourceUrl != null && externalSourceUrl is! String) {
+        warnings.add('Book at index $i externalSourceUrl is not a string');
+      }
+
+      final purchasePrice = b['purchasePrice'];
+      if (purchasePrice != null &&
+          (purchasePrice is! num || purchasePrice < 0)) {
+        warnings.add(
+          'Book at index $i purchasePrice is not a non-negative number',
         );
-        errors.add('Book missing required title');
+      }
+
+      final purchaseCurrency = b['purchaseCurrency'];
+      if (purchaseCurrency != null && purchaseCurrency is! String) {
+        warnings.add('Book at index $i purchaseCurrency is not a string');
+      }
+
+      final isBorrowed = b['isBorrowed'];
+      if (isBorrowed != null && isBorrowed is! bool) {
+        warnings.add('Book at index $i isBorrowed is not a boolean');
+      }
+
+      final lenderName = b['lenderName'];
+      if (lenderName != null && lenderName is! String) {
+        warnings.add('Book at index $i lenderName is not a string');
+      }
+
+      final lenderContact = b['lenderContact'];
+      if (lenderContact != null && lenderContact is! String) {
+        warnings.add('Book at index $i lenderContact is not a string');
+      }
+
+      final borrowDateStr = b['borrowDate'] as String?;
+      DateTime? borrowDate;
+      if (borrowDateStr != null) {
+        try {
+          borrowDate = DateTime.parse(borrowDateStr);
+        } catch (_) {
+          warnings.add('Book at index $i borrowDate is not a valid ISO date');
+        }
+      }
+
+      final expectedReturnDateStr = b['expectedReturnDate'] as String?;
+      DateTime? expectedReturnDate;
+      if (expectedReturnDateStr != null) {
+        try {
+          expectedReturnDate = DateTime.parse(expectedReturnDateStr);
+        } catch (_) {
+          warnings.add(
+            'Book at index $i expectedReturnDate is not a valid ISO date',
+          );
+        }
+      }
+
+      final isLent = b['isLent'];
+      if (isLent != null && isLent is! bool) {
+        warnings.add('Book at index $i isLent is not a boolean');
+      }
+
+      final borrowerName = b['borrowerName'];
+      if (borrowerName != null && borrowerName is! String) {
+        warnings.add('Book at index $i borrowerName is not a string');
+      }
+
+      final borrowerContact = b['borrowerContact'];
+      if (borrowerContact != null && borrowerContact is! String) {
+        warnings.add('Book at index $i borrowerContact is not a string');
+      }
+
+      final lendDateStr = b['lendDate'] as String?;
+      DateTime? lendDate;
+      if (lendDateStr != null) {
+        try {
+          lendDate = DateTime.parse(lendDateStr);
+        } catch (_) {
+          warnings.add('Book at index $i lendDate is not a valid ISO date');
+        }
+      }
+
+      final expectedLendReturnDateStr = b['expectedLendReturnDate'] as String?;
+      DateTime? expectedLendReturnDate;
+      if (expectedLendReturnDateStr != null) {
+        try {
+          expectedLendReturnDate = DateTime.parse(expectedLendReturnDateStr);
+        } catch (_) {
+          warnings.add(
+            'Book at index $i expectedLendReturnDate is not a valid ISO date',
+          );
+        }
+      }
+
+      final createdAtStr = b['createdAt'] as String?;
+      DateTime? createdAt;
+      if (createdAtStr != null) {
+        try {
+          createdAt = DateTime.parse(createdAtStr);
+        } catch (_) {
+          warnings.add('Book at index $i createdAt is not a valid ISO date');
+        }
+      } else {
+        createdAt = DateTime.now();
+      }
+
+      final updatedAtStr = b['updatedAt'] as String?;
+      DateTime? updatedAt;
+      if (updatedAtStr != null) {
+        try {
+          updatedAt = DateTime.parse(updatedAtStr);
+        } catch (_) {
+          warnings.add('Book at index $i updatedAt is not a valid ISO date');
+        }
+      } else {
+        updatedAt = DateTime.now();
+      }
+
+      final archivedAtStr = b['archivedAt'] as String?;
+      DateTime? archivedAt;
+      if (archivedAtStr != null) {
+        try {
+          archivedAt = DateTime.parse(archivedAtStr);
+        } catch (_) {
+          warnings.add('Book at index $i archivedAt is not a valid ISO date');
+        }
+      }
+
+      // Check for duplicate ISBN in incoming books
+      if (normalizedIsbn != null && normalizedIsbn.isNotEmpty) {
+        if (incomingIsbns.contains(normalizedIsbn)) {
+          warnings.add(
+            'Duplicate ISBN "${normalizedIsbn}" found in incoming books at index $i',
+          );
+        } else {
+          incomingIsbns.add(normalizedIsbn);
+        }
+      }
+
+      // Check for duplicate title+author in incoming books
+      final titleKey =
+          '${title.trim().toLowerCase()}|${authors.trim().toLowerCase()}';
+      if (incomingTitleAuthors.contains(titleKey)) {
+        warnings.add(
+          'Duplicate title+author combination found in incoming books at index $i',
+        );
+      } else {
+        incomingTitleAuthors.add(titleKey);
+      }
+
+      // Add to valid books for further processing
+      validBooks.add({
+        'id': b['id'] ?? 0,
+        'title': title.trim(),
+        'authors': authors.trim(),
+        'description': description ?? '',
+        'genres': genres ?? '',
+        'isbn10': isbn10 as String?,
+        'isbn13': isbn13 as String?,
+        'normalizedIsbn': normalizedIsbn,
+        'publisher': publisher ?? '',
+        'publicationDate': publicationDate,
+        'pageCount': pageCount is int ? pageCount : 0,
+        'coverAssetKey': coverAssetKey ?? '',
+        'isInWishlist': isInWishlist ?? false,
+        'externalCatalogId': externalCatalogId ?? '',
+        'externalSourceUrl': externalSourceUrl ?? '',
+        'purchasePrice': purchasePrice is num ? purchasePrice.toDouble() : null,
+        'purchaseCurrency': purchaseCurrency as String?,
+        'isBorrowed': isBorrowed ?? false,
+        'lenderName': lenderName as String?,
+        'lenderContact': lenderContact as String?,
+        'borrowDate': borrowDate,
+        'expectedReturnDate': expectedReturnDate,
+        'isLent': isLent ?? false,
+        'borrowerName': borrowerName as String?,
+        'borrowerContact': borrowerContact as String?,
+        'lendDate': lendDate,
+        'expectedLendReturnDate': expectedLendReturnDate,
+        'createdAt': createdAt,
+        'updatedAt': updatedAt,
+        'archivedAt': archivedAt,
+      });
+    }
+
+    // Validate reading records structure
+    final List<Map<String, dynamic>> validRecords = [];
+    final Set<int> incomingRecordIds = <int>{};
+    final Set<int> incomingBookIdsFromRecords = <int>{};
+
+    for (int i = 0; i < recordsList.length; i++) {
+      final r = recordsList[i];
+      if (r == null || !(r is Map<String, dynamic>)) {
+        errors.add('Reading record at index $i is not a valid object');
+        continue;
+      }
+
+      final id = r['id'] as int?;
+      if (id == null || id < 0) {
+        errors.add('Reading record at index $i missing or invalid id');
+        continue;
+      }
+
+      if (incomingRecordIds.contains(id)) {
+        errors.add('Duplicate reading record id $id found in incoming records');
+        continue;
+      }
+      incomingRecordIds.add(id);
+
+      final bookId = r['bookId'] as int?;
+      if (bookId == null || bookId < 0) {
+        errors.add('Reading record at index $i missing or invalid bookId');
+        continue;
+      }
+      incomingBookIdsFromRecords.add(bookId);
+
+      final status = r['status'] as String?;
+      if (status == null ||
+          !ReadingStatus.values.map((e) => e.name).contains(status)) {
+        errors.add('Reading record at index $i missing or invalid status');
+        continue;
+      }
+
+      final currentPage = r['currentPage'];
+      if (currentPage != null && (currentPage is! int || currentPage < 0)) {
+        warnings.add(
+          'Reading record at index $i currentPage is not a non-negative integer',
+        );
+      }
+
+      final progressPercent = r['progressPercent'];
+      if (progressPercent != null &&
+          (progressPercent is! int ||
+              progressPercent < 0 ||
+              progressPercent > 100)) {
+        warnings.add(
+          'Reading record at index $i progressPercent is not between 0 and 100',
+        );
+      }
+
+      final startDateStr = r['startDate'] as String?;
+      DateTime? startDate;
+      if (startDateStr != null) {
+        try {
+          startDate = DateTime.parse(startDateStr);
+        } catch (_) {
+          warnings.add(
+            'Reading record at index $i startDate is not a valid ISO date',
+          );
+        }
+      }
+
+      final finishDateStr = r['finishDate'] as String?;
+      DateTime? finishDate;
+      if (finishDateStr != null) {
+        try {
+          finishDate = DateTime.parse(finishDateStr);
+        } catch (_) {
+          warnings.add(
+            'Reading record at index $i finishDate is not a valid ISO date',
+          );
+        }
+      }
+
+      final lastReadDateStr = r['lastReadDate'] as String?;
+      DateTime? lastReadDate;
+      if (lastReadDateStr != null) {
+        try {
+          lastReadDate = DateTime.parse(lastReadDateStr);
+        } catch (_) {
+          warnings.add(
+            'Reading record at index $i lastReadDate is not a valid ISO date',
+          );
+        }
+      }
+
+      final personalRating = r['personalRating'];
+      if (personalRating != null &&
+          (personalRating is! num ||
+              personalRating < 0 ||
+              personalRating > 5)) {
+        warnings.add(
+          'Reading record at index $i personalRating is not between 0 and 5',
+        );
+      }
+
+      final notes = r['notes'];
+      if (notes != null && notes is! String) {
+        warnings.add('Reading record at index $i notes is not a string');
+      }
+
+      validRecords.add({
+        'id': id,
+        'bookId': bookId,
+        'status': status ?? ReadingStatus.wantToRead.name,
+        'currentPage': currentPage is int ? currentPage : 0,
+        'progressPercent': progressPercent is int ? progressPercent : null,
+        'startDate': startDate,
+        'finishDate': finishDate,
+        'lastReadDate': lastReadDate ?? DateTime.now(),
+        'personalRating': personalRating is num
+            ? personalRating.toDouble()
+            : null,
+        'notes': notes ?? '',
+      });
+    }
+
+    // Check for references from reading records to non-existent books
+    final validBookIdsFromBooks = <int>{};
+    for (final book in validBooks) {
+      final id = book['id'] as int;
+      if (id > 0) {
+        validBookIdsFromBooks.add(id);
       }
     }
 
-    final existingBooks = await _repository.getAll();
-    final existingIsbns = existingBooks
-        .map(
-          (b) => (b.isbn13 ?? b.isbn10) != null
-              ? _normalizeIsbn(b.isbn13 ?? b.isbn10)
-              : null,
-        )
-        .whereType<String>()
-        .toSet();
+    for (final bookId in incomingBookIdsFromRecords) {
+      if (bookId > 0 && !validBookIdsFromBooks.contains(bookId)) {
+        errors.add('Reading record references non-existent book id $bookId');
+      }
+    }
 
-    for (final b in booksList) {
-      final m = b as Map;
-      final isbn = _normalizeIsbn(
-        (m['isbn13'] as String?) ?? (m['isbn10'] as String?),
+    // Check if any validation errors occurred
+    if (errors.isNotEmpty) {
+      return ImportPreview(
+        isValid: false,
+        schemaVersion: schemaVersion,
+        exportDate: exportDate,
+        booksCount: validBooks.length,
+        readingRecordsCount: validRecords.length,
+        errors: errors,
+        warnings: warnings,
+        conflicts: <BookConflict>[],
       );
-      final title = (m['title'] as String?) ?? '';
-      if (isbn != null && existingIsbns.contains(isbn)) {
+    }
+
+    // Fetch existing books for conflict detection
+    final existingBooks = await _repository.getAll();
+    final existingIsbns = <String>{};
+    final existingTitleAuthors = <String>{};
+
+    for (final book in existingBooks) {
+      final isbn = _normalizeIsbn(book.isbn13 ?? book.isbn10);
+      if (isbn != null && isbn.isNotEmpty) {
+        existingIsbns.add(isbn);
+      }
+      final titleKey =
+          '${book.title.trim().toLowerCase()}|${book.authors.trim().toLowerCase()}';
+      existingTitleAuthors.add(titleKey);
+    }
+
+    // Detect conflicts with existing books
+
+    for (final book in validBooks) {
+      final title = book['title'] as String;
+      final author = book['authors'] as String;
+      final normalizedIsbn = book['normalizedIsbn'] as String?;
+
+      Book? existingBook;
+
+      // Check ISBN match first (highest precedence)
+      if (normalizedIsbn != null && normalizedIsbn.isNotEmpty) {
+        existingBook = await _repository.getBookByIsbn(normalizedIsbn);
+      }
+
+      // Check exact title+author match second
+      if (existingBook == null && title.isNotEmpty && author.isNotEmpty) {
+        existingBook = await _repository.getBookByTitleAndAuthor(title, author);
+      }
+
+      if (existingBook != null) {
         conflicts.add(
           BookConflict(
             title: title,
-            existingIsbn: isbn,
-            importIsbn: isbn,
+            existingIsbn: existingBook.isbn13 ?? existingBook.isbn10,
+            importIsbn: normalizedIsbn,
             type: ConflictType.duplicateIsbn,
           ),
         );
-        warnings.add('Duplicate ISBN detected for "$title" ($isbn)');
       }
     }
 
     return ImportPreview(
-      isValid: errors.isEmpty,
+      isValid: errors.isEmpty && conflicts.isEmpty,
       schemaVersion: schemaVersion,
       exportDate: exportDate,
-      booksCount: booksList.length,
-      readingRecordsCount: recordsList.length,
+      booksCount: validBooks.length,
+      readingRecordsCount: validRecords.length,
       errors: errors,
       warnings: warnings,
       conflicts: conflicts,
@@ -366,26 +801,25 @@ class ImportService {
             : null,
       );
 
-      final normalizedIsbn = _normalizeIsbn(book.isbn13 ?? book.isbn10);
-      final hasIsbn = normalizedIsbn != null && normalizedIsbn.isNotEmpty;
+      final normalizedIsbn = _normalizeIsbn(
+        (bookJson['isbn13'] as String?) ?? (bookJson['isbn10'] as String?),
+      );
+      final title = (bookJson['title'] as String?) ?? '';
+      final author = (bookJson['authors'] as String?) ?? '';
 
       Book? existingBook;
-      if (hasIsbn) {
+
+      // Matching precedence: ISBN -> exact title+author -> create new
+      if (normalizedIsbn != null && normalizedIsbn.isNotEmpty) {
         existingBook = await _repository.getBookByIsbn(normalizedIsbn);
       }
 
-      Book? titleMatch;
-      if (existingBook == null) {
-        final books = await _repository.listBooks(
-          filters: {'title': book.title, 'authors': book.authors},
-        );
-        titleMatch = books.isNotEmpty ? books.first : null;
+      if (existingBook == null && title.isNotEmpty && author.isNotEmpty) {
+        existingBook = await _repository.getBookByTitleAndAuthor(title, author);
       }
 
-      final shouldSkip =
-          skipConflicts && (existingBook != null || titleMatch != null);
-      final shouldOverwrite =
-          overwrite && (existingBook != null || titleMatch != null);
+      final shouldSkip = skipConflicts && existingBook != null;
+      final shouldOverwrite = overwrite && existingBook != null;
 
       if (shouldSkip && !shouldOverwrite) {
         continue;
@@ -394,27 +828,6 @@ class ImportService {
       if (existingBook != null && shouldOverwrite) {
         await _repository.updateBook(
           book.copyWith(id: existingBook.id, updatedAt: DateTime.now()),
-        );
-      } else if (titleMatch != null && shouldOverwrite) {
-        await _repository.updateBook(
-          titleMatch.copyWith(
-            title: book.title,
-            authors: book.authors,
-            description: book.description,
-            genres: book.genres,
-            isbn10: book.isbn10,
-            isbn13: book.isbn13,
-            publisher: book.publisher,
-            publicationDate: book.publicationDate,
-            pageCount: book.pageCount,
-            coverAssetKey: book.coverAssetKey,
-            isInWishlist: book.isInWishlist,
-            externalCatalogId: book.externalCatalogId,
-            externalSourceUrl: book.externalSourceUrl,
-            createdAt: book.createdAt,
-            updatedAt: DateTime.now(),
-            archivedAt: book.archivedAt,
-          ),
         );
       } else {
         final id = await _repository.createBook(

@@ -58,6 +58,10 @@ class MockBookRepository implements BookRepository {
   Future<Book?> getBookByIsbn(String isbn) => Future.value(null);
 
   @override
+  Future<Book?> getBookByTitleAndAuthor(String title, String author) =>
+      Future.value(null);
+
+  @override
   Future<void> createReadingRecord(ReadingRecord record) => Future.value();
 
   @override
