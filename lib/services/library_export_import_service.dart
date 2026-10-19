@@ -822,6 +822,32 @@ class ImportService {
       final shouldOverwrite = overwrite && existingBook != null;
 
       if (shouldSkip && !shouldOverwrite) {
+        // Update existing reading record to match imported data rather than skipping
+        if (existingBook != null) {
+          final recordJson = exportData.readingRecords
+              .where((r) => r['bookId'] == existingBook!.id)
+              .firstOrNull;
+          if (recordJson != null) {
+            await _repository.updateReadingRecord(ReadingRecord(
+              bookId: existingBook.id,
+              status: ReadingStatus.values.firstWhere(
+                (s) => s.name == recordJson['status'],
+                orElse: () => ReadingStatus.wantToRead,
+              ),
+              currentPage: recordJson['currentPage'],
+              percentageOnlyProgress: recordJson['percentageOnlyProgress'],
+              startDate: recordJson['startDate'] != null
+                  ? DateTime.parse(recordJson['startDate'] as String)
+                  : null,
+              finishDate: recordJson['finishDate'] != null
+                  ? DateTime.parse(recordJson['finishDate'] as String)
+                  : null,
+              lastReadDate: DateTime.parse(recordJson['lastReadDate'] as String),
+              personalRating: recordJson['personalRating'],
+              notes: recordJson['notes'],
+            ));
+          }
+        }
         continue;
       }
 

@@ -65,8 +65,8 @@ class CoverImageService {
       // Encode thumbnail as PNG.
       final thumbnailBytes = Uint8List.fromList(img.encodePng(thumbnail));
 
-      // Generate a unique key for storage (in covers/ subdirectory).
-      final key = 'covers/cover_${const Uuid().v4()}.png';
+      // Generate a unique key for storage.
+      final key = 'cover_${const Uuid().v4()}.png';
 
       if (kIsWeb) {
         // For now, we'll just return the key without actual web storage
