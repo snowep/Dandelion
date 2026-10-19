@@ -251,7 +251,7 @@ class ImportService {
 
     for (int i = 0; i < booksList.length; i++) {
       final b = booksList[i];
-      if (b == null || !(b is Map<String, dynamic>)) {
+      if (b == null || b is! Map<String, dynamic>) {
         errors.add('Book at index $i is not a valid object');
         continue;
       }
@@ -270,12 +270,12 @@ class ImportService {
 
       // Validate optional fields with type checking
       final description = b['description'];
-      if (description != null && !(description is String)) {
+      if (description != null && description is! String) {
         warnings.add('Book at index $i description is not a string');
       }
 
       final genres = b['genres'];
-      if (genres != null && !(genres is String)) {
+      if (genres != null && genres is! String) {
         warnings.add('Book at index $i genres is not a string');
       }
 
@@ -452,7 +452,7 @@ class ImportService {
       if (normalizedIsbn != null && normalizedIsbn.isNotEmpty) {
         if (incomingIsbns.contains(normalizedIsbn)) {
           warnings.add(
-            'Duplicate ISBN "${normalizedIsbn}" found in incoming books at index $i',
+            'Duplicate ISBN "$normalizedIsbn" found in incoming books at index $i',
           );
         } else {
           incomingIsbns.add(normalizedIsbn);
@@ -477,8 +477,8 @@ class ImportService {
         'authors': authors.trim(),
         'description': description ?? '',
         'genres': genres ?? '',
-        'isbn10': isbn10 as String?,
-        'isbn13': isbn13 as String?,
+        'isbn10': isbn10,
+        'isbn13': isbn13,
         'normalizedIsbn': normalizedIsbn,
         'publisher': publisher ?? '',
         'publicationDate': publicationDate,
@@ -512,7 +512,7 @@ class ImportService {
 
     for (int i = 0; i < recordsList.length; i++) {
       final r = recordsList[i];
-      if (r == null || !(r is Map<String, dynamic>)) {
+      if (r == null || r is! Map<String, dynamic>) {
         errors.add('Reading record at index $i is not a valid object');
         continue;
       }
@@ -614,7 +614,7 @@ class ImportService {
       validRecords.add({
         'id': id,
         'bookId': bookId,
-        'status': status ?? ReadingStatus.wantToRead.name,
+        'status': status,
         'currentPage': currentPage is int ? currentPage : 0,
         'progressPercent': progressPercent is int ? progressPercent : null,
         'startDate': startDate,
