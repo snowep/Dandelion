@@ -651,13 +651,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Library'),
-        actions: [
-          IconButton(
-            tooltip: 'Add book manually',
-            onPressed: () => _showBookEditor(),
-            icon: const Icon(Icons.add),
-          ),
-        ],
       ),
       body: CustomScrollView(
         slivers: [
