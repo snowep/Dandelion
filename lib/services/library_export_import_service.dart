@@ -823,10 +823,9 @@ class ImportService {
 
       if (shouldSkip && !shouldOverwrite) {
         // Update existing reading record to match imported data rather than skipping
-        if (existingBook != null) {
-          final recordJson = exportData.readingRecords
-              .where((r) => r['bookId'] == existingBook!.id)
-              .firstOrNull;
+        final recordJson = exportData.readingRecords
+            .where((r) => r['bookId'] == existingBook.id)
+            .firstOrNull;
           if (recordJson != null) {
             await _repository.updateReadingRecord(ReadingRecord(
               bookId: existingBook.id,

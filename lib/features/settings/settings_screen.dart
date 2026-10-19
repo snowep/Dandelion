@@ -135,13 +135,13 @@ class _ExportImportSectionState extends ConsumerState<_ExportImportSection> {
       _message = null;
     });
     try {
-      final List<PlatformFile>? result = await FilePicker.pickFiles(
+      final List<PlatformFile> result = await FilePicker.pickFiles(
         dialogTitle: 'Import Library',
         type: FileType.custom,
         allowedExtensions: ['zip'],
       );
 
-      if (result == null || result.isEmpty) {
+      if (result.isEmpty) {
         setState(() {
           _importing = false;
           _message = 'Import cancelled';
