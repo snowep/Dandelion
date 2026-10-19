@@ -167,9 +167,7 @@ class ExportService {
     final archive = Archive();
     archive.addFile(ArchiveFile('library.json', bytes.length, bytes));
     final zipData = ZipEncoder().encode(archive);
-    if (zipData != null) {
-      await file.writeAsBytes(zipData);
-    }
+    await file.writeAsBytes(zipData);
   }
 }
 

@@ -540,12 +540,4 @@ class BookRepositoryImpl implements BookRepository {
 
   static String? _optional(String? value) =>
       value == null || value.trim().isEmpty ? null : value.trim();
-
-  static int _compare(Object? left, Object? right) {
-    if (left == null) return right == null ? 0 : -1;
-    if (right == null) return 1;
-    if (left is int && right is int) return left.compareTo(right);
-    if (left is DateTime && right is DateTime) return left.compareTo(right);
-    return left.toString().compareTo(right.toString());
-  }
 }

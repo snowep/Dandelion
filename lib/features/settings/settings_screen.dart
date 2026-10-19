@@ -16,10 +16,27 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.brightness_6),
             title: const Text('Theme Mode'),
-            trailing: Switch(
-              value: themeMode == ThemeMode.dark,
-              onChanged: (_) {
-                ref.read(themeModeProvider.notifier).toggleBrightness();
+            subtitle: Text(
+              themeMode == ThemeMode.system
+                  ? 'System'
+                  : themeMode == ThemeMode.light
+                  ? 'Light'
+                  : 'Dark',
+            ),
+            trailing: DropdownButton<ThemeMode>(
+              value: themeMode,
+              items: const [
+                DropdownMenuItem(
+                  value: ThemeMode.system,
+                  child: Text('System'),
+                ),
+                DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
+                DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
+              ],
+              onChanged: (mode) {
+                if (mode != null) {
+                  ref.read(themeModeProvider.notifier).setThemeMode(mode);
+                }
               },
             ),
           ),

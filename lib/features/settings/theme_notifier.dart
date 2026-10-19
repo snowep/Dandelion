@@ -5,7 +5,13 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   ThemeModeNotifier() : super(ThemeMode.system);
 
   void toggleBrightness() {
-    state = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    if (state == ThemeMode.light) {
+      state = ThemeMode.dark;
+    } else if (state == ThemeMode.dark) {
+      state = ThemeMode.light;
+    } else {
+      state = ThemeMode.light;
+    }
   }
 
   void setThemeMode(ThemeMode mode) {

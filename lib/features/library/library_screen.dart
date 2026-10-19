@@ -127,15 +127,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
     var lendDateController = book?.lendDate;
     var expectedLendReturnDateController = book?.expectedLendReturnDate;
-    var selectedStatus = book == null
-        ? ReadingStatus.wantToRead
-        : (await widget.repository.getReadingRecordForBook(book.id))?.status ??
-              ReadingStatus.wantToRead;
+    var selectedStatus = ReadingStatus.wantToRead;
+    if (book != null) {
+      final record = await widget.repository.getReadingRecordForBook(book.id);
+      if (mounted) {
+        selectedStatus = record?.status ?? ReadingStatus.wantToRead;
+      }
+    }
     var coverAssetKey = book?.coverAssetKey;
-
-    final dialogContext = context;
+    if (!mounted) return false;
     final saved = await showDialog<bool>(
-      context: dialogContext,
+      context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(book == null ? 'Add book manually' : 'Edit book'),

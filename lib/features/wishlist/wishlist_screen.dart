@@ -52,12 +52,16 @@ class _WishlistScreenState extends State<WishlistScreen> {
     final descriptionController = TextEditingController(
       text: book?.description ?? '',
     );
-    var selectedStatus = book == null
-        ? ReadingStatus.wantToRead
-        : (await widget.repository.getReadingRecordForBook(book.id))?.status ??
-              ReadingStatus.wantToRead;
+    var selectedStatus = ReadingStatus.wantToRead;
+    if (book != null) {
+      final record = await widget.repository.getReadingRecordForBook(book.id);
+      if (mounted) {
+        selectedStatus = record?.status ?? ReadingStatus.wantToRead;
+      }
+    }
     var coverAssetKey = book?.coverAssetKey;
 
+    if (!mounted) return false;
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
