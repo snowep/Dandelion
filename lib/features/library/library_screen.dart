@@ -649,9 +649,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Library'),
-      ),
+      appBar: AppBar(title: const Text('Library')),
       body: CustomScrollView(
         slivers: [
           SliverPadding(
