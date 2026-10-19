@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:dandelion/services/google_books_lookup_service.dart';
 
 import 'book.dart';
 import 'book_repository.dart';
@@ -32,6 +33,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
   final TextEditingController _isbn10Controller = TextEditingController();
   final TextEditingController _isbn13Controller = TextEditingController();
   final TextEditingController _publisherController = TextEditingController();
+  bool _lookupLoading = false;
+  String? _lookupError;
 
   @override
   void initState() {
@@ -89,6 +92,149 @@ class _LibraryScreenState extends State<LibraryScreen> {
         _loading = false;
       });
       return false;
+    }
+  }
+
+  Future<void> _lookupByIsbn(
+    String isbn, {
+    required TextEditingController isbnController,
+    TextEditingController? isbn10Controller,
+    TextEditingController? isbn13Controller,
+    TextEditingController? titleController,
+    TextEditingController? authorsController,
+    TextEditingController? publisherController,
+    TextEditingController? descriptionController,
+    TextEditingController? pageCountController,
+    TextEditingController? genresController,
+  }) async {
+    setState(() {
+      _lookupLoading = true;
+      _lookupError = null;
+    });
+
+    try {
+      final lookupService = GoogleBooksLookupService();
+      final book = await lookupService.lookupByIsbn(isbn);
+      lookupService.close();
+
+      if (!mounted) return;
+
+      if (book == null) {
+        setState(() {
+          _lookupError = 'No book found with ISBN $isbn';
+          _lookupLoading = false;
+        });
+        return;
+      }
+
+      // Check for duplicates
+      final existingBook = await widget.repository.getBookByIsbn(isbn);
+      if (existingBook != null) {
+        setState(() {
+          _lookupError =
+              'Book already exists in library: ${existingBook.title}';
+          _lookupLoading = false;
+        });
+        // Still show preview for field selection
+        await _showLookupPreview(book, existing: true);
+        return;
+      }
+
+      await _showLookupPreview(book);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _lookupError = 'Lookup failed: $e';
+        _lookupLoading = false;
+      });
+    }
+  }
+
+  Future<void> _showLookupPreview(
+    Book catalogBook, {
+    bool existing = false,
+  }) async {
+    final preview = Book(
+      id: 0,
+      title: catalogBook.title,
+      authors: catalogBook.authors,
+      description: catalogBook.description,
+      publisher: catalogBook.publisher,
+      publicationDate: catalogBook.publicationDate,
+      pageCount: catalogBook.pageCount,
+      genres: catalogBook.genres,
+      isbn10: catalogBook.isbn10,
+      isbn13: catalogBook.isbn13,
+      externalCatalogId: catalogBook.externalCatalogId,
+      externalSourceUrl: catalogBook.externalSourceUrl,
+      thumbnailUrl: catalogBook.thumbnailUrl,
+    );
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Catalog Preview'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (existing)
+                const Text(
+                  '⚠️ Book already exists in library',
+                  style: TextStyle(color: Colors.orange),
+                ),
+              const SizedBox(height: 8),
+              Text('Title: ${preview.title}'),
+              Text('Authors: ${preview.authors}'),
+              if (preview.publisher != null)
+                Text('Publisher: ${preview.publisher}'),
+              if (preview.pageCount != null)
+                Text('Pages: ${preview.pageCount}'),
+              if (preview.genres != null && preview.genres!.isNotEmpty)
+                Text('Genres: ${preview.genres}'),
+              if (preview.description != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Description: ${preview.description}',
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              const SizedBox(height: 12),
+              const Text(
+                'Select fields to import:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text('• Title, Authors (required if importing)'),
+              const Text('• Publisher, Date, Pages, Genres, Description'),
+              const Text(
+                '• NOTE: Rating, progress, notes, purchase/lending data will NOT be overwritten',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Import Selected'),
+          ),
+        ],
+      ),
+    );
+
+    setState(() => _lookupLoading = false);
+
+    if (result == true && !existing) {
+      // Import the book with selected fields
+      // User can edit before saving
+      // For now, just proceed with manual edit
+      // This would be enhanced with field selection UI
     }
   }
 
@@ -192,13 +338,70 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
+                _lookupLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _lookupError != null
+                    ? Column(
+                        children: [
+                          Text(
+                            _lookupError!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                          ElevatedButton(
+                            onPressed: () =>
+                                setState(() => _lookupError = null),
+                            child: const Text('Dismiss'),
+                          ),
+                        ],
+                      )
+                    : const SizedBox(),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'ISBN-10'),
+                  decoration: InputDecoration(
+                    labelText: 'ISBN-10',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () async {
+                        final isbn = _isbn10Controller.text.trim();
+                        if (isbn.isEmpty) return;
+                        await _lookupByIsbn(
+                          isbn,
+                          isbnController: _isbn10Controller,
+                          isbn13Controller: _isbn13Controller,
+                          titleController: titleController,
+                          authorsController: authorsController,
+                          publisherController: TextEditingController(),
+                          descriptionController: descriptionController,
+                          pageCountController: pageCountController,
+                          genresController: TextEditingController(),
+                        );
+                      },
+                    ),
+                  ),
                   controller: TextEditingController(text: book?.isbn10 ?? ''),
                   onChanged: (value) => _isbn10Controller.text = value,
                 ),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'ISBN-13'),
+                  decoration: InputDecoration(
+                    labelText: 'ISBN-13',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () async {
+                        final isbn = _isbn13Controller.text.trim();
+                        if (isbn.isEmpty) return;
+                        await _lookupByIsbn(
+                          isbn,
+                          isbnController: _isbn13Controller,
+                          isbn10Controller: _isbn10Controller,
+                          titleController: titleController,
+                          authorsController: authorsController,
+                          publisherController: TextEditingController(),
+                          descriptionController: descriptionController,
+                          pageCountController: pageCountController,
+                          genresController: TextEditingController(),
+                        );
+                      },
+                    ),
+                  ),
                   controller: TextEditingController(text: book?.isbn13 ?? ''),
                   onChanged: (value) => _isbn13Controller.text = value,
                 ),

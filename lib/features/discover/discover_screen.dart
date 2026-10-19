@@ -61,40 +61,25 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       final records = await widget.repository.listReadingRecords();
       _engine = RecommendationEngine(books, records);
 
-      final candidates = books.where((book) {
-        final record = records.firstWhere(
-          (r) => r.bookId == book.id,
-          orElse: () =>
-              ReadingRecord(bookId: book.id, status: ReadingStatus.wantToRead),
-        );
-        return record.status != ReadingStatus.finished && !book.isInWishlist;
-      }).toList();
+      // Exclude books already in library or wishlist
+      final excludeIds = books
+          .where((b) => b.isInWishlist)
+          .map((b) => b.id)
+          .toSet();
 
-      final scoredCandidates = candidates.map((book) {
-        final result = _engine!.score(book);
-        return {
-          'book': book,
-          'score': result.score,
-          'reasons': result.explanations,
-        };
-      }).toList();
-
-      scoredCandidates.sort(
-        (a, b) => (b['score'] as double).compareTo(a['score'] as double),
+      final scored = _engine!.recommend(
+        candidates: books,
+        excludeBookIds: excludeIds,
       );
 
       final reasonsMap = <int, List<String>>{};
-      for (final candidate in scoredCandidates) {
-        final book = candidate['book'] as Book;
-        reasonsMap[book.id] = candidate['reasons'] as List<String>;
+      for (final candidate in scored) {
+        reasonsMap[candidate.book.id] = candidate.explanations;
       }
 
       if (!mounted) return;
       setState(() {
-        _libraryCandidates = scoredCandidates
-            .map((c) => c['book'])
-            .cast<Book>()
-            .toList();
+        _libraryCandidates = scored.map((c) => c.book).toList();
         _recommendationReasons = reasonsMap;
         _loadingLibrary = false;
       });
@@ -114,6 +99,13 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     });
     try {
       final books = await widget.repository.getAll();
+      final records = await widget.repository.listReadingRecords();
+      final engine = RecommendationEngine(books, records);
+
+      // Get all library book IDs to exclude
+      final excludeIds = books.map((b) => b.id).toSet();
+
+      // Use top genre for search query
       final genreCounts = <String, int>{};
       for (final book in books) {
         if (book.genres != null && book.genres!.isNotEmpty) {
@@ -136,9 +128,16 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       final query = 'books about $topGenre';
 
       final results = await _lookupService.searchByTitleOrAuthor(query);
+
+      // Rank catalog candidates using the same engine
+      final scored = engine.recommend(
+        candidates: results,
+        excludeBookIds: excludeIds,
+      );
+
       if (!mounted) return;
       setState(() {
-        _catalogCandidates = results;
+        _catalogCandidates = scored.map((c) => c.book).toList();
         _loadingCatalog = false;
       });
     } on Object catch (e) {
@@ -157,12 +156,14 @@ class _DiscoverScreenState extends State<DiscoverScreen>
         try {
           final response = await http.get(Uri.parse(book.thumbnailUrl!));
           if (response.statusCode == 200) {
+            final uuid = const Uuid().v4();
+            final key = 'covers/cover_$uuid.png';
             final success = await CoverImageService.storeImage(
               response.bodyBytes,
-              key: 'covers/cover_${const Uuid().v4()}.png',
+              key: key,
             );
             if (success) {
-              coverAssetKey = 'covers/cover_${const Uuid().v4()}.png';
+              coverAssetKey = key;
             }
           }
         } on Object catch (_) {}

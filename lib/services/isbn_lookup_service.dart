@@ -3,13 +3,30 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dandelion/features/library/book.dart';
 
+/// Mock response types for testing
+enum IsbnLookupMockResponse {
+  success,
+  notFound,
+  rateLimit,
+  malformed,
+  missingCover,
+  timeout,
+}
+
 /// Service for looking up book metadata by ISBN using external catalogs.
 class IsbnLookupService {
   final String _baseUrl = 'https://openlibrary.org';
   final http.Client _httpClient;
+  final IsbnLookupMockResponse? _mockResponse;
+  final Book? _mockBook;
 
-  IsbnLookupService({http.Client? httpClient})
-    : _httpClient = httpClient ?? http.Client();
+  IsbnLookupService({
+    http.Client? httpClient,
+    IsbnLookupMockResponse? mockResponse,
+    Book? mockBook,
+  }) : _httpClient = httpClient ?? http.Client(),
+       _mockResponse = mockResponse,
+       _mockBook = mockBook;
 
   /// Looks up book metadata by ISBN-10 or ISBN-13.
   ///
@@ -28,6 +45,11 @@ class IsbnLookupService {
       return null;
     }
 
+    // Handle mock responses for testing
+    if (_mockResponse != null) {
+      return _handleMockResponse(normalizedIsbn);
+    }
+
     try {
       final uri = Uri.parse('$_baseUrl/isbn/$normalizedIsbn.json');
       final response = await _httpClient
@@ -40,6 +62,9 @@ class IsbnLookupService {
       } else if (response.statusCode == 404) {
         // ISBN not found
         return null;
+      } else if (response.statusCode == 429) {
+        // Rate limited
+        return null;
       } else {
         // Other HTTP error
         return null;
@@ -51,8 +76,48 @@ class IsbnLookupService {
       // JSON parsing error
       return null;
     } catch (_) {
-      // Other unexpected error
+      // Other unexpected error (including timeout)
       return null;
+    }
+  }
+
+  Book? _handleMockResponse(String normalizedIsbn) {
+    switch (_mockResponse!) {
+      case IsbnLookupMockResponse.success:
+        return _mockBook ??
+            Book(
+              id: 0,
+              title: 'Mock Book Title',
+              authors: 'Mock Author',
+              description: 'Mock description',
+              isbn10: normalizedIsbn.length == 10 ? normalizedIsbn : null,
+              isbn13: normalizedIsbn.length == 13 ? normalizedIsbn : null,
+              publisher: 'Mock Publisher',
+              publicationDate: DateTime(2020),
+              pageCount: 300,
+              genres: 'Fiction, Mystery',
+              externalCatalogId: normalizedIsbn,
+              externalSourceUrl: '$_baseUrl/isbn/$normalizedIsbn',
+            );
+      case IsbnLookupMockResponse.notFound:
+        return null;
+      case IsbnLookupMockResponse.rateLimit:
+        return null;
+      case IsbnLookupMockResponse.malformed:
+        return null;
+      case IsbnLookupMockResponse.missingCover:
+        return _mockBook ??
+            Book(
+              id: 0,
+              title: 'Mock Book No Cover',
+              authors: 'Mock Author',
+              isbn10: normalizedIsbn.length == 10 ? normalizedIsbn : null,
+              isbn13: normalizedIsbn.length == 13 ? normalizedIsbn : null,
+              externalCatalogId: normalizedIsbn,
+              externalSourceUrl: '$_baseUrl/isbn/$normalizedIsbn',
+            );
+      case IsbnLookupMockResponse.timeout:
+        return null;
     }
   }
 

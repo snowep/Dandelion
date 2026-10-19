@@ -1,32 +1,74 @@
 import 'package:dandelion/features/library/book.dart';
 import 'package:dandelion/features/library/reading_record.dart';
 
-/// A simple recommendation engine for the Discover screen.
+/// A recommendation engine for the Discover screen.
 ///
-/// It computes a score for a book candidate based on the user's library
-/// using the formula from PRD §8:
-///   score = 0.25*genreSimilarity + 0.10*authorSimilarity + 0.20*textSimilarity
-///           + 0.35*historyFit + 0.10*novelty
-///
-/// For now, we implement genre similarity (Jaccard), author similarity
-/// (preference for authors of finished/rated books), and novelty.
-/// Text similarity and history fit are stubbed to 0, and we normalize
-/// the weights over the available signals.
+/// Computes a score for a book candidate based on the user's library
+/// using only signals that can be computed from local data.
+/// Weights are normalized over available signals only.
 class RecommendationEngine {
   RecommendationEngine(this._libraryBooks, this._readingRecords);
 
   final List<Book> _libraryBooks;
   final List<ReadingRecord> _readingRecords;
 
-  /// Build a user profile from the library: preferred genres and authors.
-  /// We consider books that are finished or have a rating >= 3 as positive signals.
+  /// Computes recommendations for all candidates in one pass.
+  /// Returns scored candidates sorted by score descending, then by title for stable ordering.
+  List<ScoredCandidate> recommend({
+    required List<Book> candidates,
+    Set<int>? excludeBookIds,
+  }) {
+    final profile = _buildUserProfile();
+    final bookIdToRecord = <int, ReadingRecord>{};
+    for (final record in _readingRecords) {
+      bookIdToRecord[record.bookId] = record;
+    }
+
+    final scored = <ScoredCandidate>[];
+    for (final candidate in candidates) {
+      // Skip books already in library/wishlist
+      if (excludeBookIds != null && excludeBookIds.contains(candidate.id)) {
+        continue;
+      }
+      // Skip if already finished in library
+      final record = bookIdToRecord[candidate.id];
+      if (record != null && record.status == ReadingStatus.finished) {
+        continue;
+      }
+
+      final result = _scoreCandidate(candidate, profile, record);
+      scored.add(
+        ScoredCandidate(
+          book: candidate,
+          score: result.score,
+          explanations: result.explanations,
+        ),
+      );
+    }
+
+    // Stable sort: score descending, then title ascending, then id ascending
+    scored.sort((a, b) {
+      final scoreCmp = b.score.compareTo(a.score);
+      if (scoreCmp != 0) return scoreCmp;
+      final titleCmp = a.book.title.toLowerCase().compareTo(
+        b.book.title.toLowerCase(),
+      );
+      if (titleCmp != 0) return titleCmp;
+      return a.book.id.compareTo(b.book.id);
+    });
+
+    return scored;
+  }
+
+  /// Builds a user preference profile from reading records.
+  /// Called once per recommendation request.
   UserProfile _buildUserProfile() {
-    final Set<String> preferredGenres = {};
-    final Set<String> preferredAuthors = {};
+    final preferredGenres = <String>{};
+    final preferredAuthors = <String>{};
 
     for (final record in _readingRecords) {
-      // Only consider finished or rated >= 3 as positive.
-      final bool isPositive =
+      // Only consider finished or rated >= 3 as positive signals
+      final isPositive =
           record.status == ReadingStatus.finished ||
           (record.personalRating ?? 0) >= 3;
       if (!isPositive) continue;
@@ -35,13 +77,20 @@ class RecommendationEngine {
         (b) => b.id == record.bookId,
         orElse: () => Book(id: 0, title: '', authors: ''),
       );
+
       if (book.genres != null && book.genres!.isNotEmpty) {
         for (final genre in book.genres!.split(',')) {
-          preferredGenres.add(genre.trim().toLowerCase());
+          final g = genre.trim().toLowerCase();
+          if (g.isNotEmpty) {
+            preferredGenres.add(g);
+          }
         }
       }
       if (book.authors.isNotEmpty) {
-        preferredAuthors.add(book.authors.toLowerCase());
+        final author = book.authors.toLowerCase();
+        if (author.isNotEmpty) {
+          preferredAuthors.add(author);
+        }
       }
     }
 
@@ -51,35 +100,42 @@ class RecommendationEngine {
     );
   }
 
-  /// Score a candidate book (from library or catalog) relative to the user profile.
-  /// Returns a score between 0 and 1, and a list of explanation strings.
-  ///
-  /// For catalog candidates, we may have missing fields; we normalize weights
-  /// over the available signals.
-  ScoreResult score(Book candidate) {
-    final profile = _buildUserProfile();
-
-    // Genre similarity: Jaccard index between candidate genres and preferred genres.
+  /// Scores a single candidate against the user profile.
+  /// Returns score in [0, 1] and explanations that match actual positive signals.
+  ScoreResult _scoreCandidate(
+    Book candidate,
+    UserProfile profile,
+    ReadingRecord? existingRecord,
+  ) {
     double genreSimilarity = 0.0;
-    if (candidate.genres != null && candidate.genres!.isNotEmpty) {
+    bool hasGenreSignal = false;
+    bool hasAuthorSignal = false;
+
+    // Genre similarity: Jaccard index between candidate genres and preferred genres
+    if (candidate.genres != null &&
+        candidate.genres!.isNotEmpty &&
+        profile.preferredGenres.isNotEmpty) {
+      hasGenreSignal = true;
       final candidateGenres = <String>{};
       for (final g in candidate.genres!.split(',')) {
-        candidateGenres.add(g.trim().toLowerCase());
+        final trimmed = g.trim();
+        if (trimmed.isNotEmpty) {
+          candidateGenres.add(trimmed.toLowerCase());
+        }
       }
-      if (candidateGenres.isNotEmpty && profile.preferredGenres.isNotEmpty) {
+      if (candidateGenres.isNotEmpty) {
         final intersection = candidateGenres
             .intersection(profile.preferredGenres)
             .length;
         final union = candidateGenres.union(profile.preferredGenres).length;
-        genreSimilarity = intersection / union;
+        genreSimilarity = union > 0 ? intersection / union : 0.0;
       }
     }
 
-    // Author similarity: 1 if any author matches preferred authors, else 0.
+    // Author similarity: 1 if any author matches preferred authors, else 0
     double authorSimilarity = 0.0;
     if (candidate.authors.isNotEmpty && profile.preferredAuthors.isNotEmpty) {
-      // Simple check: if the author string contains any preferred author.
-      // For simplicity, we split by ',' and trim.
+      hasAuthorSignal = true;
       final candidateAuthors = <String>{};
       for (final a in candidate.authors.split(',')) {
         candidateAuthors.add(a.trim().toLowerCase());
@@ -89,69 +145,65 @@ class RecommendationEngine {
       }
     }
 
-    // Text similarity: stubbed to 0 (would need TF-IDF over title/description).
-    double textSimilarity = 0.0;
-
-    // History fit: stubbed to 0 (would need more complex modeling).
-    double historyFit = 0.0;
-
-    // Novelty: bonus for books not already finished or dismissed.
-    // We consider a book novel if it is not in the library with status finished.
+    // Novelty: 1 if not already finished, 0 if finished
+    // Only counts as a signal if we have some reading history (cold start check)
     double novelty = 0.0;
-    final bool isAlreadyFinished = _readingRecords.any(
-      (record) =>
-          record.bookId == candidate.id &&
-          record.status == ReadingStatus.finished,
-    );
-    if (!isAlreadyFinished) {
+    final bool hasReadingHistory =
+        profile.preferredGenres.isNotEmpty ||
+        profile.preferredAuthors.isNotEmpty;
+    final bool hasNoveltySignal = hasReadingHistory;
+    if (existingRecord != null &&
+        existingRecord.status == ReadingStatus.finished) {
+      novelty = 0.0;
+    } else {
       novelty = 1.0;
     }
 
-    // Weights from PRD §8.
+    // Weights from PRD §8 - only include available signals
     const double wGenre = 0.25;
     const double wAuthor = 0.10;
-    const double wText = 0.20;
-    const double wHistory = 0.35;
+    // Text similarity and history fit are not implemented - omitted from weights
     const double wNovelty = 0.10;
 
-    // Determine which signals are available (non-zero weight and we have data).
-    // For simplicity, we consider a signal available if we can compute it
-    // (i.e., not stubbed to 0 due to missing data). In this implementation,
-    // genre and author are based on actual data; text and history are stubbed.
-    // Novelty is based on data.
     double totalWeight = 0.0;
     double weightedSum = 0.0;
 
-    totalWeight += wGenre;
-    weightedSum += wGenre * genreSimilarity;
-    totalWeight += wAuthor;
-    weightedSum += wAuthor * authorSimilarity;
-    totalWeight += wText;
-    weightedSum += wText * textSimilarity;
-    totalWeight += wHistory;
-    weightedSum += wHistory * historyFit;
-    totalWeight += wNovelty;
-    weightedSum += wNovelty * novelty;
+    if (hasGenreSignal) {
+      totalWeight += wGenre;
+      weightedSum += wGenre * genreSimilarity;
+    }
+    if (hasAuthorSignal) {
+      totalWeight += wAuthor;
+      weightedSum += wAuthor * authorSimilarity;
+    }
+    if (hasNoveltySignal) {
+      totalWeight += wNovelty;
+      weightedSum += wNovelty * novelty;
+    }
 
-    // Avoid division by zero.
-    final double score = totalWeight > 0 ? weightedSum / totalWeight : 0.0;
+    // Cold start: no positive signals from reading history
+    if (totalWeight == 0) {
+      return ScoreResult(
+        score: 0.0,
+        explanations: ['No reading history to base recommendations on'],
+      );
+    }
 
-    // Build explanation from the top signals.
-    final List<String> explanations = <String>[];
-    if (genreSimilarity > 0.3) {
+    final score = (weightedSum / totalWeight).clamp(0.0, 1.0);
+
+    // Build explanations from actual positive signals only
+    final explanations = <String>[];
+    if (hasGenreSignal && genreSimilarity > 0.2) {
       explanations.add('Shares genres with books you rated highly');
-    } else if (authorSimilarity > 0.5) {
+    }
+    if (hasAuthorSignal && authorSimilarity > 0.5) {
       explanations.add('By an author you like');
     }
-    if (novelty > 0.5) {
+    if (hasNoveltySignal && novelty > 0.5) {
       explanations.add('New to your library');
     }
-    // We could add more explanations based on text or history.
 
-    return ScoreResult(
-      score: score.clamp(0.0, 1.0),
-      explanations: explanations,
-    );
+    return ScoreResult(score: score, explanations: explanations);
   }
 }
 
@@ -167,4 +219,16 @@ class ScoreResult {
   final List<String> explanations;
 
   ScoreResult({required this.score, required this.explanations});
+}
+
+class ScoredCandidate {
+  final Book book;
+  final double score;
+  final List<String> explanations;
+
+  ScoredCandidate({
+    required this.book,
+    required this.score,
+    required this.explanations,
+  });
 }

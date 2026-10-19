@@ -1,42 +1,38 @@
-# Roadmap — toward a defensible Dandelion 1.0 release
+# Roadmap toward a defensible Dandelion stable release
 
-## Release-history gate comes first
+**Baseline:** `master` at `b285f5cf7a61dabfde4ccb8bdefba70ffa0cf207` (2026-10-19).
 
-This repository already has Git tags `v1.0.0` and `v1.0.1`; the latter points at current `master`. The source manifest still says `0.2.0+1` and the GitHub Releases API contains no release records. Existing tag targets are not ready according to this audit. The plan below is therefore a **1.0 readiness roadmap**, not permission to rewrite tag history.
+## Release history gate
 
-Recommended version policy: preserve existing tags and make the next actual stable release `v1.0.2` after all gates pass. If the maintainer insists on a true `v1.0.0` tag for the first stable release, pause before RC and explicitly decide whether those already-pushed tags can be retired. See `VERSIONING_AND_TAG_POLICY.md`.
+The repository already has `v1.0.0` and `v1.0.1`, but neither points at the current `master`; both point to older commits. `pubspec.yaml` still declares `0.2.0+1`, and there are no published GitHub Release entries. A version string or tag alone is not evidence that the application is release-ready.
 
-## Execution phases
+Default recommendation: preserve both pushed tags, complete the readiness work, and publish the next valid release as `v1.0.2` with a matching `pubspec.yaml` version. If the owner insists that the next usable stable package must be named `v1.0.0`, stop before the release candidate and explicitly decide how to handle existing tags. Do not force-move or delete tags as part of routine cleanup.
 
-| Order | Update | Main outcome | Must pass before continuing |
+## Ordered update plan
+
+| Order | Update | Main outcome | Gate |
 |---|---|---|---|
-| U0 | Build, Settings and CI recovery | All imported files exist; one ProviderScope; formatting/analyze work; route tests exist | `dart format`, `flutter analyze`, `flutter test` all pass; no missing imports |
-| U1 | Schema v4 migration | v3 users retain books and gain purchase/lending fields | Migration fixture from v3 upgrades without data loss; schema generation clean |
-| U2 | Backup/import correctness | Full book and reading metadata + covers round-trip; failed import leaves current data unchanged | Export→import round-trip; injected write failure proves rollback |
-| U3 | Cross-platform cover storage | Native and web can select, save, read and back up covers offline | Web compile/deployed smoke test; native tests; key consistency proven |
-| U4 | Repository/model correctness | Pagination, filters, sort, ISBN, clearable fields and note search behave correctly | Unit/database regression tests for each exposed action |
-| U5 | Catalog and library flows | Manual entry, optional lookup, preview, dedup, fallback and saved metadata integrate | Mocked provider tests, manual fallback offline, no personal-field overwrite |
-| U6 | Explainable recommendations | Local and bounded external candidates ranked deterministically with grounded reasons | Tests for cold start, missing metadata, ties, dismissals and external candidates |
-| U7 | Scope and UX completion | Settings, accessibility, reading tracker/purchase/lending specs align with UI and docs | Compact/wide layouts, keyboard/semantics, large text, both themes verified |
-| U8 | Performance and platform validation | Large fixture responsive; data survives restart per supported platform | 5,000-book test/profiling; target smoke tests; browser persistence limitations documented |
-| U9 | Release candidate | Clean dependency lock, migration/export evidence, changelog, version decision and rollback notes | Full CI green and manual checklist in `RELEASE_CHECKLIST.md` |
-| U10 | Stable release | Create/publish exactly one agreed, immutable release tag and release notes | All blockers closed; CI green on release commit; backups tested before upgrade |
+| U0 | CI/analyzer/test unblock | Remove four diagnostics, run tests and web build end-to-end | Current-head CI fully green; no skipped steps |
+| U1 | Import matching and transaction safety | Import never mistakes the first book for a title match; no partial restore | Round-trip, conflict/overwrite and rollback tests pass |
+| U2 | Real schema v3→v4 migration test | Existing libraries retain records through migration | Legacy v3 DB fixture upgraded and validated |
+| U3 | Cross-platform cover storage | Native and web cover selection/read/write/export work | Web build + deployed smoke test + native tests |
+| U4 | Repository and model correctness | Fix offset, status filter, sorting, ISBN and clearable nullables | Database/domain regressions pass |
+| U5 | Catalog and offline library flow | Optional lookup integrates with add/edit and exact cover persistence | Provider mocked; offline/manual flow passes |
+| U6 | Recommendation integrity | Only implemented signals contribute; local and external candidates are ranked | Cold-start/missing-data/determinism/explanation tests pass |
+| U7 | Settings, accessibility and docs | Real theme options, responsive behavior, updated product docs | Theme/UI/accessibility checklist passes; docs cite verified state |
+| U8 | Performance and platform validation | Large-library behavior and declared platform support are measured | 5,000-book profile and platform matrix complete |
+| U9 | Release candidate | Version/changelog/backup proof and complete CI | All automated and manual gates green |
+| U10 | Stable release | One agreed tag and release artifact/release notes | No open P0/P1; release tag matches `pubspec.yaml` |
 
-## First tasks in exact order
+## Immediate execution order
 
-1. Read `updates/00-build-and-settings-repair.md`. Apply `dart format .` in a focused commit; implement the Settings files required by imports or remove the intended feature consistently. Keep only one ProviderScope at the root. Add a real `test/` suite immediately. Rerun CI so analyze is no longer skipped.
-2. Build schema-version 4 migration from current v3. Do not edit `book_database.g.dart` by hand; run Drift generation and review the output.
-3. Fix export/import before changing more persisted fields. Add purchase/lending fields to export and import, add full cover bytes, validate before writing, and make database changes transactional.
-4. Replace the shared native-only cover service with native/browser implementations. Test deployed web, not only local dev server.
-5. Correct query/model edge cases and add one regression test per exposed sort/filter/status/nullable field.
-6. Finish catalog integration and recommendation scoring; don't add another provider or an LLM to solve this.
-7. Update PRD and project status to match actual behavior. Treat purchase price and lending/borrowing as MVP only if you complete migration, UI, privacy/data handling and backup support for them.
-8. Complete performance/accessibility/platform smoke tests; then RC and release gate.
+1. Give the agent `updates/00-ci-analysis-and-test-unblock.md` only. Fix the current analyzer findings and ensure `flutter test` and `flutter build web` actually execute.
+2. Immediately after CI is runnable, give it `updates/01-import-matching-and-transaction-safety.md`. Treat current archive import as untrusted until this passes.
+3. Give it `updates/02-real-v3-v4-migration-test.md`; schema version 4 exists, but current tests do not exercise migration.
+4. Continue through U3–U8 in order. Keep changes small and commit each acceptance unit separately.
+5. Before U9, update stale repository docs and the file manifest. Decide formal tag/version policy explicitly.
+6. Do not add remote sync, community, social accounts, AI/LLM recommendation calls, or ebook-reader scope before 1.0.
 
-## Non-goals through 1.0
+## Acceptance definition
 
-No account system, remote sync, community, social profiles, reading-session timers, annotations, ebook reader, LLM recommendation calls, speculative service framework, or bulk catalog harvesting. Do not do major dependency upgrades while basic CI is red; upgrade dependencies only in a separate, tested migration if an actual incompatibility requires it.
-
-## Release acceptance criteria
-
-Dandelion 1.0 is ready only when: the app compiles and tests pass; existing databases migrate; an export fully restores books, reading records and cover assets; import failures roll back; offline library actions work; catalog failure never blocks manual entry; search/filter/sort match their UI; recommendations are deterministic and explainable; all six declared targets are tested or explicitly marked unsupported with a user-facing limitation; keyboard/screen-reader/text-scale behavior is reviewed; and docs/release notes describe only verified behavior.
+A stable release requires: full CI green; actual v3→v4 migration tests; safe export/import round trips including reading records, all book fields and covers; rollback on import failure; correct filters/sort/pagination/search; no nullable-clear defects; correct cover storage on every declared target or a documented unsupported-platform decision; deterministic explainable recommendations; usable theme behavior; keyboard/semantics/large-text checks; 5,000-book performance evidence; clean changelog/version/docs; and a tested backup before upgrading existing user data.

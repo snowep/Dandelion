@@ -1,44 +1,35 @@
-# CI and verification gates
+# CI and release gates
 
-## Current truth
+## Current CI evidence
 
-The current Actions workflow starts on push/PR and installs Flutter `3.47.7`; Flutter setup and dependency installation passed on the latest run. That run failed at format check because seven files were not formatted. Analyze, tests, and web build were skipped. The repository currently has no `test/` directory. Treat CI as red.
+Latest run: [Flutter CI run #34](https://github.com/snowep/Dandelion/actions/runs/39174776122), commit `b285f5cf7a61dabfde4ccb8bdefba70ffa0cf207`.
 
-## Required CI pipeline
+- Dependency setup: passed.
+- Format check: passed (`46 files (0 changed)`).
+- Analyze: failed with four findings (two warnings and two infos).
+- Tests: skipped.
+- Web build: skipped.
 
-Run in this order, failing fast:
+## Required CI order
 
-1. `dart format --output=none --set-exit-if-changed .`
-2. `flutter analyze`
-3. `flutter test`
-4. `flutter build web`
-5. Build/test native targets on CI runners that support them, or require a documented/manual platform smoke test where runners aren't available (notably iOS/macOS require macOS runner).
-6. Validate generated Drift code is current. Use the project's locked `build_runner` version and ensure the working tree does not change after generation.
+1. Checkout exact commit.
+2. Install pinned Flutter stable SDK compatible with `environment.sdk: ^3.13.5`.
+3. `flutter pub get`.
+4. `dart format --output=none --set-exit-if-changed .`.
+5. `flutter analyze`.
+6. `flutter test --reporter expanded` (or the project-supported equivalent).
+7. `flutter build web`.
+8. Produce a separate platform smoke-test report for every platform the release claims to support. Native compile/build jobs should be added where runners and SDKs are available.
 
-Use a Flutter version compatible with `environment.sdk: ^3.13.5`, pin it to a known stable release, and keep `pubspec.lock` committed. Avoid `flutter pub upgrade --major-versions` in a fix PR.
+## Required coverage before stable release
 
-## Minimum automated suite before data feature work
+- Widget tests: root app, root `ProviderScope`, routes and selected navigation, theme selection, no duplicate app bars, empty/error/loading states, narrow layout and large text.
+- Database/repository: create/read/update/archive/delete; schema v3→v4 migration preserving old rows; status filter; all visible sort values; pagination offset; search; ISBN normalization/duplicates; nullable clearing.
+- Import/export: full field round trip; reading-record round trip; cover bytes/keys; valid legacy/current archive policy; malformed archive, unsupported schema, missing/invalid fields, incoming duplicates, destination conflicts, skip/overwrite semantics, full import rollback on injected failure.
+- Cover: selected bytes when path is absent, native and web storage, missing directory, invalid format/size, load/store/delete, import/export restoration.
+- Catalog: mock responses, no network, provider errors, missing metadata, offline manual entry and dedup flow.
+- Recommendations: cold start, metadata gaps, tie stability, positive/negative signals and actual ranking of catalog candidates.
 
-- App startup and all nav destinations at compact/wide sizes; one page header only.
-- Settings theme provider reads/writes in the same root ProviderScope.
-- Book create/edit/delete/archive; unique/empty ISBN and title validation.
-- Nullable fields can be cleared; reading progress bounds and status/date transitions.
-- Drift migration from the current v3 schema and reopen/persistence.
-- Search, filters, every sort option, stable tie ordering, pagination offset, note search.
-- Cover key store/load/delete; native and web storage adapter tests.
-- Catalog parsing, malformed payload, no result, timeout/rate-limit/network failure, and manual fallback.
-- Export/import round-trip of all fields, reading records and covers; failed import rolls back unchanged data; duplicate/conflict choices.
-- Recommendation engine scores, explanations, missing inputs, cold start, tie order and external candidates.
-- 5,000-book fixture for list/search/sort and bounded cover loading.
+## Release gates
 
-A command that exits 0 with zero tests is not an acceptable quality gate; ensure meaningful test files exist and are discovered.
-
-## Platform validation evidence
-
-For Android, iOS, web, Windows, macOS and Linux, record actual build/run version, OS/browser, persistence check, image picker/store/load, and backup/restore result. If a platform cannot be built in the available environment, state that explicitly and do not mark it supported as verified.
-
-Web checks must use both local run and deployed build: `sqlite3.wasm` and Drift worker URLs, WASM MIME type, base path, browser storage persistence, reload/reopen, private browsing behavior, CORS for catalog lookup, and cover/blob export/import. Browser storage can be cleared/evicted; export is still required.
-
-## Release gate
-
-No tag until: format/analyze/tests/build pass; no P0/P1 finding remains; DB upgrade and backup restore are demonstrated; all declared target behaviors are either tested or transparently limited; docs/changelog match actual behavior; `pubspec.yaml` version agrees with chosen tag; and tag-history conflict is resolved under `VERSIONING_AND_TAG_POLICY.md`.
+No stable tag until format/analyze/test/web build pass on the same commit, user-data migration and backup restore are demonstrated, P0/P1 findings are closed, platform support is explicit, docs match implementation, and the tag/package version decision is approved.

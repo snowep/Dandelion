@@ -1,3 +1,5 @@
+const Object _sentinel = Object();
+
 /// Book entity representing a book in the Dandelion library.
 ///
 /// Fields correspond to the PRD.md data model and Drift database schema.
@@ -130,69 +132,111 @@ class Book {
        isInWishlist = isInWishlistParam ?? false;
 
   /// Copy with modified fields - used for updates and archiving
+  /// Use _clear sentinel to explicitly clear nullable fields (e.g., description: _clear)
   Book copyWith({
     int? id,
     String? title,
     String? authors,
-    String? description,
-    String? genres,
-    String? isbn10,
-    String? isbn13,
-    String? publisher,
-    DateTime? publicationDate,
-    int? pageCount,
-    String? coverAssetKey,
+    Object? description = _sentinel,
+    Object? genres = _sentinel,
+    Object? isbn10 = _sentinel,
+    Object? isbn13 = _sentinel,
+    Object? publisher = _sentinel,
+    Object? publicationDate = _sentinel,
+    Object? pageCount = _sentinel,
+    Object? coverAssetKey = _sentinel,
     bool? isInWishlist,
-    String? externalCatalogId,
-    String? externalSourceUrl,
-    String? thumbnailUrl,
-    double? purchasePrice,
-    String? purchaseCurrency,
+    Object? externalCatalogId = _sentinel,
+    Object? externalSourceUrl = _sentinel,
+    Object? thumbnailUrl = _sentinel,
+    Object? purchasePrice = _sentinel,
+    Object? purchaseCurrency = _sentinel,
     bool? isBorrowed,
-    String? lenderName,
-    String? lenderContact,
-    DateTime? borrowDate,
-    DateTime? expectedReturnDate,
+    Object? lenderName = _sentinel,
+    Object? lenderContact = _sentinel,
+    Object? borrowDate = _sentinel,
+    Object? expectedReturnDate = _sentinel,
     bool? isLent,
-    String? borrowerName,
-    String? borrowerContact,
-    DateTime? lendDate,
-    DateTime? expectedLendReturnDate,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    DateTime? archivedAt,
+    Object? borrowerName = _sentinel,
+    Object? borrowerContact = _sentinel,
+    Object? lendDate = _sentinel,
+    Object? expectedLendReturnDate = _sentinel,
+    Object? createdAt = _sentinel,
+    Object? updatedAt = _sentinel,
+    Object? archivedAt = _sentinel,
   }) {
     return Book(
       id: id ?? this.id,
       title: title ?? this.title,
       authors: authors ?? this.authors,
-      description: description ?? this.description,
-      genres: genres ?? this.genres,
-      isbn10: isbn10 ?? this.isbn10,
-      isbn13: isbn13 ?? this.isbn13,
-      publisher: publisher ?? this.publisher,
-      publicationDate: publicationDate ?? this.publicationDate,
-      pageCount: pageCount ?? this.pageCount,
-      coverAssetKey: coverAssetKey ?? this.coverAssetKey,
-      externalCatalogId: externalCatalogId ?? this.externalCatalogId,
-      externalSourceUrl: externalSourceUrl ?? this.externalSourceUrl,
-      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      purchasePrice: purchasePrice ?? this.purchasePrice,
-      purchaseCurrency: purchaseCurrency ?? this.purchaseCurrency,
+      description: identical(description, _sentinel)
+          ? this.description
+          : description as String?,
+      genres: identical(genres, _sentinel) ? this.genres : genres as String?,
+      isbn10: identical(isbn10, _sentinel) ? this.isbn10 : isbn10 as String?,
+      isbn13: identical(isbn13, _sentinel) ? this.isbn13 : isbn13 as String?,
+      publisher: identical(publisher, _sentinel)
+          ? this.publisher
+          : publisher as String?,
+      publicationDate: identical(publicationDate, _sentinel)
+          ? this.publicationDate
+          : publicationDate as DateTime?,
+      pageCount: identical(pageCount, _sentinel)
+          ? this.pageCount
+          : pageCount as int?,
+      coverAssetKey: identical(coverAssetKey, _sentinel)
+          ? this.coverAssetKey
+          : coverAssetKey as String?,
+      externalCatalogId: identical(externalCatalogId, _sentinel)
+          ? this.externalCatalogId
+          : externalCatalogId as String?,
+      externalSourceUrl: identical(externalSourceUrl, _sentinel)
+          ? this.externalSourceUrl
+          : externalSourceUrl as String?,
+      thumbnailUrl: identical(thumbnailUrl, _sentinel)
+          ? this.thumbnailUrl
+          : thumbnailUrl as String?,
+      purchasePrice: identical(purchasePrice, _sentinel)
+          ? this.purchasePrice
+          : purchasePrice as double?,
+      purchaseCurrency: identical(purchaseCurrency, _sentinel)
+          ? this.purchaseCurrency
+          : purchaseCurrency as String?,
       isBorrowed: isBorrowed ?? this.isBorrowed,
-      lenderName: lenderName ?? this.lenderName,
-      lenderContact: lenderContact ?? this.lenderContact,
-      borrowDate: borrowDate ?? this.borrowDate,
-      expectedReturnDate: expectedReturnDate ?? this.expectedReturnDate,
+      lenderName: identical(lenderName, _sentinel)
+          ? this.lenderName
+          : lenderName as String?,
+      lenderContact: identical(lenderContact, _sentinel)
+          ? this.lenderContact
+          : lenderContact as String?,
+      borrowDate: identical(borrowDate, _sentinel)
+          ? this.borrowDate
+          : borrowDate as DateTime?,
+      expectedReturnDate: identical(expectedReturnDate, _sentinel)
+          ? this.expectedReturnDate
+          : expectedReturnDate as DateTime?,
       isLent: isLent ?? this.isLent,
-      borrowerName: borrowerName ?? this.borrowerName,
-      borrowerContact: borrowerContact ?? this.borrowerContact,
-      lendDate: lendDate ?? this.lendDate,
-      expectedLendReturnDate:
-          expectedLendReturnDate ?? this.expectedLendReturnDate,
-      createdAtParam: createdAt ?? this.createdAt,
-      updatedAtParam: updatedAt ?? this.updatedAt,
-      archivedAt: archivedAt ?? this.archivedAt,
+      borrowerName: identical(borrowerName, _sentinel)
+          ? this.borrowerName
+          : borrowerName as String?,
+      borrowerContact: identical(borrowerContact, _sentinel)
+          ? this.borrowerContact
+          : borrowerContact as String?,
+      lendDate: identical(lendDate, _sentinel)
+          ? this.lendDate
+          : lendDate as DateTime?,
+      expectedLendReturnDate: identical(expectedLendReturnDate, _sentinel)
+          ? this.expectedLendReturnDate
+          : expectedLendReturnDate as DateTime?,
+      createdAtParam: identical(createdAt, _sentinel)
+          ? this.createdAt
+          : createdAt as DateTime?,
+      updatedAtParam: identical(updatedAt, _sentinel)
+          ? this.updatedAt
+          : updatedAt as DateTime?,
+      archivedAt: identical(archivedAt, _sentinel)
+          ? this.archivedAt
+          : archivedAt as DateTime?,
       isInWishlistParam: isInWishlist ?? this.isInWishlist,
     );
   }

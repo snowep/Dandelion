@@ -47,6 +47,8 @@ dependencies:
   sqlite3: ^3.7.1
   web: ^1.1.1
   archive: ^4.0.3
+  indexed_db: ^1.0.1
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:

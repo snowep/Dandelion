@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 part 'book_database.g.dart';
+part 'v3_database.dart';
 
 @DataClassName('BookRow')
 @TableIndex(
@@ -109,14 +110,18 @@ class AppDatabase extends _$AppDatabase {
   Future<List<BookRow>> getAllBooks({
     bool includeArchived = false,
     int? limit,
+    int? offset,
   }) {
     final query = select(books)
-      ..orderBy([(book) => OrderingTerm.desc(book.updatedAt)]);
+      ..orderBy([
+        (book) => OrderingTerm.desc(book.updatedAt),
+        (book) => OrderingTerm.asc(book.id),
+      ]);
     if (!includeArchived) {
       query.where((book) => book.archivedAt.isNull());
     }
     if (limit != null) {
-      query.limit(limit);
+      query.limit(limit, offset: offset);
     }
     return query.get();
   }
@@ -165,6 +170,11 @@ class AppDatabase extends _$AppDatabase {
     readingRecords,
   )..where((record) => record.bookId.equals(bookId))).getSingleOrNull();
 
+  Future<List<ReadingRecordRow>> getReadingRecordsForBook(int bookId) =>
+      (select(
+        readingRecords,
+      )..where((record) => record.bookId.equals(bookId))).get();
+
   Future<int> saveReadingRecord(ReadingRecordsCompanion record) =>
       into(readingRecords).insertOnConflictUpdate(record);
 
@@ -174,6 +184,7 @@ class AppDatabase extends _$AppDatabase {
     String? search,
     String? status,
     String? genre,
+    String? searchNotes,
     String? sortBy,
     bool ascending = true,
     int? limit,
@@ -193,7 +204,17 @@ class AppDatabase extends _$AppDatabase {
       );
     }
 
+    if (searchNotes != null && searchNotes.trim().isNotEmpty) {
+      // Search reading notes using a join with distinct to avoid duplicate books
+      final term = '%${searchNotes.trim()}%';
+      query.join([
+        innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
+      ]);
+      query.where((tbl) => readingRecords.notes.like(term));
+    }
+
     if (status != null && status.trim().isNotEmpty) {
+      // Use a join with distinct to avoid join duplication issues
       query.join([
         innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
       ]);
@@ -205,7 +226,7 @@ class AppDatabase extends _$AppDatabase {
       query.where((tbl) => tbl.genres.contains(lowerGenre));
     }
 
-    // Sorting
+    // Sorting - map all supported sort values to database expressions with stable tie-breaker
     switch (sortBy) {
       case 'title':
         query.orderBy([
@@ -213,6 +234,7 @@ class AppDatabase extends _$AppDatabase {
             expression: tbl.title,
             mode: ascending ? OrderingMode.asc : OrderingMode.desc,
           ),
+          (tbl) => OrderingTerm.asc(tbl.id),
         ]);
         break;
       case 'author':
@@ -221,20 +243,34 @@ class AppDatabase extends _$AppDatabase {
             expression: tbl.author,
             mode: ascending ? OrderingMode.asc : OrderingMode.desc,
           ),
+          (tbl) => OrderingTerm.asc(tbl.id),
         ]);
         break;
       case 'date':
+      case 'updated':
         query.orderBy([
           (tbl) => OrderingTerm(
             expression: tbl.updatedAt,
             mode: ascending ? OrderingMode.asc : OrderingMode.desc,
           ),
+          (tbl) => OrderingTerm.asc(tbl.id),
+        ]);
+        break;
+      case 'added':
+      case 'created':
+        query.orderBy([
+          (tbl) => OrderingTerm(
+            expression: tbl.createdAt,
+            mode: ascending ? OrderingMode.asc : OrderingMode.desc,
+          ),
+          (tbl) => OrderingTerm.asc(tbl.id),
         ]);
         break;
       default:
-        // default to title ascending
+        // default to title ascending with stable tie-breaker
         query.orderBy([
           (tbl) => OrderingTerm(expression: tbl.title, mode: OrderingMode.asc),
+          (tbl) => OrderingTerm.asc(tbl.id),
         ]);
     }
 

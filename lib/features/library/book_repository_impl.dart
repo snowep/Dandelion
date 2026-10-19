@@ -165,9 +165,10 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<List<Book>> getAll({int? limit, int? offset}) async =>
-      (await _database.getAllBooks(limit: limit))
-          .map(_toBook)
-          .toList(growable: false);
+      (await _database.getAllBooks(
+        limit: limit,
+        offset: offset,
+      )).map(_toBook).toList(growable: false);
 
   @override
   Future<List<Book>> listBooks({
@@ -180,10 +181,12 @@ class BookRepositoryImpl implements BookRepository {
     final search = filters?['search'];
     final status = filters?['status'];
     final genre = filters?['genre'];
+    final searchNotes = filters?['searchNotes'];
     final rows = await _database.getBooksFiltered(
       search: search,
       status: status,
       genre: genre,
+      searchNotes: searchNotes,
       sortBy: sortBy,
       ascending: ascending,
       limit: limit,
@@ -231,6 +234,7 @@ class BookRepositoryImpl implements BookRepository {
     String? search,
     String? status,
     String? genre,
+    String? searchNotes,
     String? sortBy,
     bool ascending = true,
   }) async {
@@ -238,6 +242,7 @@ class BookRepositoryImpl implements BookRepository {
       search: search,
       status: status,
       genre: genre,
+      searchNotes: searchNotes,
       sortBy: sortBy,
       ascending: ascending,
     );
@@ -540,6 +545,34 @@ class BookRepositoryImpl implements BookRepository {
     if (rating != null && (rating < 0 || rating > 5)) {
       throw ArgumentError.value(rating, 'personalRating');
     }
+    // Validate date relationships
+    if (record.startDate != null && record.finishDate != null) {
+      if (record.finishDate!.isBefore(record.startDate!)) {
+        throw ArgumentError.value(
+          record.finishDate,
+          'finishDate',
+          'Finish date cannot be before start date',
+        );
+      }
+    }
+    if (record.startDate != null) {
+      if (record.lastReadDate.isBefore(record.startDate!)) {
+        throw ArgumentError.value(
+          record.lastReadDate,
+          'lastReadDate',
+          'Last read date cannot be before start date',
+        );
+      }
+    }
+    if (record.finishDate != null) {
+      if (record.lastReadDate.isAfter(record.finishDate!)) {
+        throw ArgumentError.value(
+          record.lastReadDate,
+          'lastReadDate',
+          'Last read date cannot be after finish date',
+        );
+      }
+    }
   }
 
   static void _validateBook(Book book) {
@@ -549,11 +582,71 @@ class BookRepositoryImpl implements BookRepository {
     if (book.pageCount != null && book.pageCount! <= 0) {
       throw ArgumentError.value(book.pageCount, 'pageCount');
     }
+    // Validate ISBN checksums
+    if (!_validateIsbnChecksum(book.isbn10)) {
+      throw ArgumentError.value(
+        book.isbn10,
+        'isbn10',
+        'Invalid ISBN-10 checksum',
+      );
+    }
+    if (!_validateIsbnChecksum(book.isbn13)) {
+      throw ArgumentError.value(
+        book.isbn13,
+        'isbn13',
+        'Invalid ISBN-13 checksum',
+      );
+    }
   }
 
   static String? _normalizeIsbn(String? isbn) {
     final normalized = isbn?.replaceAll(RegExp('[^0-9Xx]'), '').toUpperCase();
     return normalized == null || normalized.isEmpty ? null : normalized;
+  }
+
+  static bool _isValidIsbn10(String isbn) {
+    if (isbn.length != 10) return false;
+    int sum = 0;
+    for (int i = 0; i < 9; i++) {
+      final char = isbn[i];
+      final code = char.codeUnitAt(0);
+      if (code < '0'.codeUnitAt(0) || code > '9'.codeUnitAt(0)) return false;
+      sum += (code - '0'.codeUnitAt(0)) * (10 - i);
+    }
+    final lastChar = isbn[9];
+    int lastValue;
+    if (lastChar == 'X') {
+      lastValue = 10;
+    } else {
+      final code = lastChar.codeUnitAt(0);
+      if (code < '0'.codeUnitAt(0) || code > '9'.codeUnitAt(0)) return false;
+      lastValue = code - '0'.codeUnitAt(0);
+    }
+    sum += lastValue;
+    return sum % 11 == 0;
+  }
+
+  static bool _isValidIsbn13(String isbn) {
+    if (isbn.length != 13) return false;
+    int sum = 0;
+    for (int i = 0; i < 12; i++) {
+      final char = isbn[i];
+      final code = char.codeUnitAt(0);
+      if (code < '0'.codeUnitAt(0) || code > '9'.codeUnitAt(0)) return false;
+      final digit = code - '0'.codeUnitAt(0);
+      sum += (i % 2 == 0) ? digit : digit * 3;
+    }
+    final checkDigit = isbn[12].codeUnitAt(0) - '0'.codeUnitAt(0);
+    return (10 - (sum % 10)) % 10 == checkDigit;
+  }
+
+  static bool _validateIsbnChecksum(String? isbn) {
+    if (isbn == null) return true;
+    final normalized = _normalizeIsbn(isbn);
+    if (normalized == null) return true;
+    if (normalized.length == 10) return _isValidIsbn10(normalized);
+    if (normalized.length == 13) return _isValidIsbn13(normalized);
+    return false;
   }
 
   static String? _optional(String? value) =>
