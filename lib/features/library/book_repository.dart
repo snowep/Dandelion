@@ -35,7 +35,11 @@ abstract class BookRepository {
   Future<List<ReadingRecord>> listReadingRecords({int? bookId});
   Future<void> close();
 
-  // Additional methods for dashboard and statistics
+    /// Execute a transaction - all operations within the callback will be
+    /// performed atomically. If the callback throws, the transaction is rolled back.
+    Future<T> transaction<T>(Future<T> Function() action);
+
+    // Additional methods for dashboard and statistics
   Future<int> getTotalBooksCount();
   Future<int> getWishlistCount();
   Future<Map<String, int>> getReadingStatusCounts();

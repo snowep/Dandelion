@@ -750,87 +750,99 @@ class ImportService {
 
     final exportData = ExportData.fromJson(jsonMap);
 
-    for (final bookJson in exportData.books) {
-      final book = Book(
-        id: bookJson['id'],
-        title: bookJson['title'] as String,
-        authors: bookJson['authors'] as String,
-        description: bookJson['description'],
-        genres: bookJson['genres'],
-        isbn10: bookJson['isbn10'],
-        isbn13: bookJson['isbn13'],
-        publisher: bookJson['publisher'],
-        publicationDate: bookJson['publicationDate'] != null
-            ? DateTime.parse(bookJson['publicationDate'] as String)
-            : null,
-        pageCount: bookJson['pageCount'],
-        coverAssetKey: bookJson['coverAssetKey'],
-        isInWishlistParam: bookJson['isInWishlist'] ?? false,
-        externalCatalogId: bookJson['externalCatalogId'],
-        externalSourceUrl: bookJson['externalSourceUrl'],
-        purchasePrice: bookJson['purchasePrice'] != null
-            ? (bookJson['purchasePrice'] as num).toDouble()
-            : null,
-        purchaseCurrency: bookJson['purchaseCurrency'],
-        isBorrowed: bookJson['isBorrowed'] ?? false,
-        lenderName: bookJson['lenderName'],
-        lenderContact: bookJson['lenderContact'],
-        borrowDate: bookJson['borrowDate'] != null
-            ? DateTime.parse(bookJson['borrowDate'] as String)
-            : null,
-        expectedReturnDate: bookJson['expectedReturnDate'] != null
-            ? DateTime.parse(bookJson['expectedReturnDate'] as String)
-            : null,
-        isLent: bookJson['isLent'] ?? false,
-        borrowerName: bookJson['borrowerName'],
-        borrowerContact: bookJson['borrowerContact'],
-        lendDate: bookJson['lendDate'] != null
-            ? DateTime.parse(bookJson['lendDate'] as String)
-            : null,
-        expectedLendReturnDate: bookJson['expectedLendReturnDate'] != null
-            ? DateTime.parse(bookJson['expectedLendReturnDate'] as String)
-            : null,
-        createdAtParam: bookJson['createdAt'] != null
-            ? DateTime.parse(bookJson['createdAt'] as String)
-            : DateTime.now(),
-        updatedAtParam: bookJson['updatedAt'] != null
-            ? DateTime.parse(bookJson['updatedAt'] as String)
-            : DateTime.now(),
-        archivedAt: bookJson['archivedAt'] != null
-            ? DateTime.parse(bookJson['archivedAt'] as String)
-            : null,
-      );
+    // Fix 1: Source-to-destination ID mapping
+        final sourceToDestId = <int, int>{};
 
-      final normalizedIsbn = _normalizeIsbn(
-        (bookJson['isbn13'] as String?) ?? (bookJson['isbn10'] as String?),
-      );
-      final title = (bookJson['title'] as String?) ?? '';
-      final author = (bookJson['authors'] as String?) ?? '';
+        // Fix 5: Atomic rollback using database transaction
+        await _repository.transaction(() async {
+      for (final bookJson in exportData.books) {
+        final sourceId = bookJson['id'] as int;
+        final normalizedIsbn = _normalizeIsbn(
+          (bookJson['isbn13'] as String?) ?? (bookJson['isbn10'] as String?),
+        );
+        final title = (bookJson['title'] as String?) ?? '';
+        final author = (bookJson['authors'] as String?) ?? '';
 
-      Book? existingBook;
+        Book? existingBook;
 
-      // Matching precedence: ISBN -> exact title+author -> create new
-      if (normalizedIsbn != null && normalizedIsbn.isNotEmpty) {
-        existingBook = await _repository.getBookByIsbn(normalizedIsbn);
-      }
+        // Matching precedence: ISBN -> exact title+author -> create new
+        if (normalizedIsbn != null && normalizedIsbn.isNotEmpty) {
+          existingBook = await _repository.getBookByIsbn(normalizedIsbn);
+        }
 
-      if (existingBook == null && title.isNotEmpty && author.isNotEmpty) {
-        existingBook = await _repository.getBookByTitleAndAuthor(title, author);
-      }
+        if (existingBook == null && title.isNotEmpty && author.isNotEmpty) {
+          existingBook = await _repository.getBookByTitleAndAuthor(title, author);
+        }
 
-      final shouldSkip = skipConflicts && existingBook != null;
-      final shouldOverwrite = overwrite && existingBook != null;
+        final shouldSkip = skipConflicts && existingBook != null;
+        final shouldOverwrite = overwrite && existingBook != null;
 
-      if (shouldSkip && !shouldOverwrite) {
-        // Update existing reading record to match imported data rather than skipping
-        final existing = existingBook;
-        final recordJson = exportData.readingRecords
-            .where((r) => r['bookId'] == existing.id)
-            .firstOrNull;
-        if (recordJson != null) {
-          await _repository.updateReadingRecord(
-            ReadingRecord(
-              bookId: existing.id,
+        // Fix 2: Correct skip behavior - truly skip, no updates to existing book/record
+        if (shouldSkip && !shouldOverwrite) {
+          continue;
+        }
+
+        // Fix 4: Overwrite semantics - overwrite both book AND reading record
+        if (existingBook != null && shouldOverwrite) {
+          final book = Book(
+            id: bookJson['id'],
+            title: bookJson['title'] as String,
+            authors: bookJson['authors'] as String,
+            description: bookJson['description'],
+            genres: bookJson['genres'],
+            isbn10: bookJson['isbn10'],
+            isbn13: bookJson['isbn13'],
+            publisher: bookJson['publisher'],
+            publicationDate: bookJson['publicationDate'] != null
+                ? DateTime.parse(bookJson['publicationDate'] as String)
+                : null,
+            pageCount: bookJson['pageCount'],
+            coverAssetKey: bookJson['coverAssetKey'],
+            isInWishlistParam: bookJson['isInWishlist'] ?? false,
+            externalCatalogId: bookJson['externalCatalogId'],
+            externalSourceUrl: bookJson['externalSourceUrl'],
+            purchasePrice: bookJson['purchasePrice'] != null
+                ? (bookJson['purchasePrice'] as num).toDouble()
+                : null,
+            purchaseCurrency: bookJson['purchaseCurrency'],
+            isBorrowed: bookJson['isBorrowed'] ?? false,
+            lenderName: bookJson['lenderName'],
+            lenderContact: bookJson['lenderContact'],
+            borrowDate: bookJson['borrowDate'] != null
+                ? DateTime.parse(bookJson['borrowDate'] as String)
+                : null,
+            expectedReturnDate: bookJson['expectedReturnDate'] != null
+                ? DateTime.parse(bookJson['expectedReturnDate'] as String)
+                : null,
+            isLent: bookJson['isLent'] ?? false,
+            borrowerName: bookJson['borrowerName'],
+            borrowerContact: bookJson['borrowerContact'],
+            lendDate: bookJson['lendDate'] != null
+                ? DateTime.parse(bookJson['lendDate'] as String)
+                : null,
+            expectedLendReturnDate: bookJson['expectedLendReturnDate'] != null
+                ? DateTime.parse(bookJson['expectedLendReturnDate'] as String)
+                : null,
+            createdAtParam: bookJson['createdAt'] != null
+                ? DateTime.parse(bookJson['createdAt'] as String)
+                : DateTime.now(),
+            updatedAtParam: bookJson['updatedAt'] != null
+                ? DateTime.parse(bookJson['updatedAt'] as String)
+                : DateTime.now(),
+            archivedAt: bookJson['archivedAt'] != null
+                ? DateTime.parse(bookJson['archivedAt'] as String)
+                : null,
+          );
+          
+          await _repository.updateBook(book.copyWith(id: existingBook.id, updatedAt: DateTime.now()));
+          
+          // Also overwrite reading record
+          final recordJson = exportData.readingRecords
+              .where((r) => r['bookId'] == sourceId)
+              .firstOrNull;
+          if (recordJson != null) {
+            await _repository.updateReadingRecord(ReadingRecord(
+              bookId: existingBook.id,
               status: ReadingStatus.values.firstWhere(
                 (s) => s.name == recordJson['status'],
                 orElse: () => ReadingStatus.wantToRead,
@@ -843,61 +855,108 @@ class ImportService {
               finishDate: recordJson['finishDate'] != null
                   ? DateTime.parse(recordJson['finishDate'] as String)
                   : null,
-              lastReadDate: DateTime.parse(
-                recordJson['lastReadDate'] as String,
-              ),
+              lastReadDate: DateTime.parse(recordJson['lastReadDate'] as String),
               personalRating: recordJson['personalRating'],
               notes: recordJson['notes'],
-            ),
+            ));
+          }
+          sourceToDestId[sourceId] = existingBook.id;
+        } else {
+          // Create new book (Fix 1: source ID not reused, new destination ID assigned)
+          final book = Book(
+            id: bookJson['id'],
+            title: bookJson['title'] as String,
+            authors: bookJson['authors'] as String,
+            description: bookJson['description'],
+            genres: bookJson['genres'],
+            isbn10: bookJson['isbn10'],
+            isbn13: bookJson['isbn13'],
+            publisher: bookJson['publisher'],
+            publicationDate: bookJson['publicationDate'] != null
+                ? DateTime.parse(bookJson['publicationDate'] as String)
+                : null,
+            pageCount: bookJson['pageCount'],
+            coverAssetKey: bookJson['coverAssetKey'],
+            isInWishlistParam: bookJson['isInWishlist'] ?? false,
+            externalCatalogId: bookJson['externalCatalogId'],
+            externalSourceUrl: bookJson['externalSourceUrl'],
+            purchasePrice: bookJson['purchasePrice'] != null
+                ? (bookJson['purchasePrice'] as num).toDouble()
+                : null,
+            purchaseCurrency: bookJson['purchaseCurrency'],
+            isBorrowed: bookJson['isBorrowed'] ?? false,
+            lenderName: bookJson['lenderName'],
+            lenderContact: bookJson['lenderContact'],
+            borrowDate: bookJson['borrowDate'] != null
+                ? DateTime.parse(bookJson['borrowDate'] as String)
+                : null,
+            expectedReturnDate: bookJson['expectedReturnDate'] != null
+                ? DateTime.parse(bookJson['expectedReturnDate'] as String)
+                : null,
+            isLent: bookJson['isLent'] ?? false,
+            borrowerName: bookJson['borrowerName'],
+            borrowerContact: bookJson['borrowerContact'],
+            lendDate: bookJson['lendDate'] != null
+                ? DateTime.parse(bookJson['lendDate'] as String)
+                : null,
+            expectedLendReturnDate: bookJson['expectedLendReturnDate'] != null
+                ? DateTime.parse(bookJson['expectedLendReturnDate'] as String)
+                : null,
+            createdAtParam: bookJson['createdAt'] != null
+                ? DateTime.parse(bookJson['createdAt'] as String)
+                : DateTime.now(),
+            updatedAtParam: bookJson['updatedAt'] != null
+                ? DateTime.parse(bookJson['updatedAt'] as String)
+                : DateTime.now(),
+            archivedAt: bookJson['archivedAt'] != null
+                ? DateTime.parse(bookJson['archivedAt'] as String)
+                : null,
           );
+          
+          final id = await _repository.createBook(book, initialStatus: ReadingStatus.wantToRead);
+          sourceToDestId[sourceId] = id;
+
+          // Fix 3: Correct record matching - use source book ID from export to find matching destination record
+          final recordJson = exportData.readingRecords
+              .where((r) => r['bookId'] == sourceId)
+              .firstOrNull;
+          if (recordJson != null) {
+            await _repository.updateReadingRecord(ReadingRecord(
+              bookId: id,
+              status: ReadingStatus.values.firstWhere(
+                (status) => status.name == recordJson['status'],
+                orElse: () => ReadingStatus.wantToRead,
+              ),
+              currentPage: recordJson['currentPage'],
+              percentageOnlyProgress: recordJson['percentageOnlyProgress'],
+              startDate: recordJson['startDate'] != null
+                  ? DateTime.parse(recordJson['startDate'] as String)
+                  : null,
+              finishDate: recordJson['finishDate'] != null
+                  ? DateTime.parse(recordJson['finishDate'] as String)
+                  : null,
+              lastReadDate: DateTime.parse(recordJson['lastReadDate'] as String),
+              personalRating: recordJson['personalRating'],
+              notes: recordJson['notes'],
+            ));
+          }
         }
-        continue;
       }
 
-      if (existingBook != null && shouldOverwrite) {
-        await _repository.updateBook(
-          book.copyWith(id: existingBook.id, updatedAt: DateTime.now()),
-        );
-      } else {
-        final id = await _repository.createBook(
-          book,
-          initialStatus: ReadingStatus.wantToRead,
-        );
-
-        final recordJson = exportData.readingRecords
-            .where((r) => r['bookId'] == book.id)
-            .firstOrNull;
-
-        if (recordJson != null) {
-          final readingRecord = ReadingRecord(
-            bookId: id,
-            status: ReadingStatus.values.firstWhere(
-              (status) => status.name == recordJson['status'],
-              orElse: () => ReadingStatus.wantToRead,
-            ),
-            currentPage: recordJson['currentPage'],
-            percentageOnlyProgress: recordJson['percentageOnlyProgress'],
-            startDate: recordJson['startDate'] != null
-                ? DateTime.parse(recordJson['startDate'] as String)
-                : null,
-            finishDate: recordJson['finishDate'] != null
-                ? DateTime.parse(recordJson['finishDate'] as String)
-                : null,
-            lastReadDate: DateTime.parse(recordJson['lastReadDate'] as String),
-            personalRating: recordJson['personalRating'],
-            notes: recordJson['notes'],
-          );
-
-          await _repository.updateReadingRecord(readingRecord);
+      // Fix 6: Cover failure visibility - check cover-storage results and report failures
+      final failedCovers = <String>[];
+      for (final entry in exportData.coversBase64.entries) {
+        final key = entry.key;
+        final bytes = base64Decode(entry.value);
+        final success = await CoverImageService.storeImage(bytes, key: key);
+        if (!success) {
+          failedCovers.add(key);
         }
       }
-    }
-
-    for (final entry in exportData.coversBase64.entries) {
-      final key = entry.key;
-      final bytes = base64Decode(entry.value);
-      await CoverImageService.storeImage(bytes, key: key);
-    }
+      if (failedCovers.isNotEmpty) {
+        throw StateError('Cover storage failed for keys: ${failedCovers.join(', ')}');
+      }
+    });
   }
 
   Future<void> importFromFile(File file) async {

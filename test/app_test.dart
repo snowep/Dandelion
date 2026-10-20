@@ -78,6 +78,9 @@ class MockBookRepository implements BookRepository {
   @override
   Future<void> close() => Future.value();
 
+  @override
+  Future<T> transaction<T>(Future<T> Function() action) => action();
+
   // Additional methods for dashboard and statistics
   @override
   Future<int> getTotalBooksCount() => Future.value(0);
