@@ -71,18 +71,13 @@ class CoverImageService {
       final key = 'covers/cover_${const Uuid().v4()}.png';
 
       if (kIsWeb) {
-        // For now, we'll just return the key without actual web storage
-        // In a real implementation, we would use IndexedDB or similar
-        // For testing purposes, we'll simulate success
+        final success = await _storeImageWeb(thumbnailBytes, key: key);
+        if (!success) return null;
         return key;
       } else {
         // Get storage directory and save the thumbnail.
         final directory = await getApplicationDocumentsDirectory();
-        final coversDir = Directory('${directory.path}/covers');
-        if (!await coversDir.exists()) {
-          await coversDir.create(recursive: true);
-        }
-        final filePath = '${coversDir.path}/$key';
+        final filePath = '${directory.path}/$key';
         final thumbnailFile = File(filePath);
         await thumbnailFile.writeAsBytes(thumbnailBytes);
 
