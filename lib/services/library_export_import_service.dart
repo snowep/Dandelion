@@ -888,7 +888,7 @@ class ImportService {
             notes: recordJson['notes'],
           );
 
-          await _repository.createReadingRecord(readingRecord);
+          await _repository.updateReadingRecord(readingRecord);
         }
       }
     }

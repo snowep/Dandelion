@@ -190,7 +190,7 @@ class AppDatabase extends _$AppDatabase {
     int? limit,
     int? offset,
   }) {
-    var query = select(books)..where((tbl) => tbl.archivedAt.isNull());
+    dynamic query = select(books)..where((tbl) => tbl.archivedAt.isNull());
 
     if (search != null && search.trim().isNotEmpty) {
       final term = '%${search.trim()}%';
@@ -207,7 +207,7 @@ class AppDatabase extends _$AppDatabase {
     if (searchNotes != null && searchNotes.trim().isNotEmpty) {
       // Search reading notes using a join with distinct to avoid duplicate books
       final term = '%${searchNotes.trim()}%';
-      query.join([
+      query = query.join([
         innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
       ]);
       query.where((tbl) => readingRecords.notes.like(term));
@@ -215,7 +215,7 @@ class AppDatabase extends _$AppDatabase {
 
     if (status != null && status.trim().isNotEmpty) {
       // Use a join with distinct to avoid join duplication issues
-      query.join([
+      query = query.join([
         innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
       ]);
       query.where((tbl) => readingRecords.status.equals(status));

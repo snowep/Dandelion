@@ -5,6 +5,8 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:uuid/uuid.dart';
+import 'package:idb_shim/idb.dart';
+import 'package:idb_shim/idb_browser.dart';
 
 /// Service for picking and storing cover images.
 class CoverImageService {
@@ -66,7 +68,7 @@ class CoverImageService {
       final thumbnailBytes = Uint8List.fromList(img.encodePng(thumbnail));
 
       // Generate a unique key for storage.
-      final key = 'cover_${const Uuid().v4()}.png';
+      final key = 'covers/cover_${const Uuid().v4()}.png';
 
       if (kIsWeb) {
         // For now, we'll just return the key without actual web storage
@@ -192,24 +194,81 @@ class CoverImageService {
 
   // Web implementations
   static Future<Uint8List?> _loadImageWeb(String key) async {
-    // For web, we would load from IndexedDB
-    // For testing purposes, we'll return null (not found)
-    return null;
+    if (!kIsWeb) return null;
+    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\\.png$');
+    if (!regExp.hasMatch(key)) return null;
+    try {
+      final factory = idbFactoryBrowser;
+      final db = await factory.open('dandelion_covers', version: 1,
+          onUpgradeNeeded: (VersionChangeEvent e) {
+            final db = e.database;
+            if (!db.objectStoreNames.contains('covers')) {
+              db.createObjectStore('covers');
+            }
+          });
+      final txn = db.transaction('covers', idbModeReadOnly);
+      final store = txn.objectStore('covers');
+      final result = await store.getObject(key);
+      await txn.completed;
+      if (result == null) return null;
+      if (result is Uint8List) return result as Uint8List;
+      if (result is List<int>) return Uint8List.fromList(result);
+      return null;
+    } catch (e) {
+      debugPrint('Error loading image from IndexedDB: $e');
+      return null;
+    }
   }
 
   static Future<bool> _storeImageWeb(
     Uint8List bytes, {
     required String key,
   }) async {
-    // For web, we would store in IndexedDB
-    // For testing purposes, we'll simulate success
-    return true;
+    if (!kIsWeb) return false;
+    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\\.png$');
+    if (!regExp.hasMatch(key)) return false;
+    try {
+      final factory = idbFactoryBrowser;
+      final db = await factory.open('dandelion_covers', version: 1,
+          onUpgradeNeeded: (VersionChangeEvent e) {
+            final db = e.database;
+            if (!db.objectStoreNames.contains('covers')) {
+              db.createObjectStore('covers');
+            }
+          });
+      final txn = db.transaction('covers', idbModeReadWrite);
+      final store = txn.objectStore('covers');
+      await store.put(bytes, key);
+      await txn.completed;
+      return true;
+    } catch (e) {
+      debugPrint('Error storing image to IndexedDB: $e');
+      return false;
+    }
   }
 
   static Future<bool> _deleteImageWeb(String key) async {
-    // For web, we would delete from IndexedDB
-    // For testing purposes, we'll simulate success
-    return true;
+    if (!kIsWeb) return false;
+    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\\.png$');
+    if (!regExp.hasMatch(key)) return false;
+    try {
+      final factory = idbFactoryBrowser;
+      final db = await factory.open('dandelion_covers', version: 1,
+          onUpgradeNeeded: (VersionChangeEvent e) {
+            final db = e.database;
+            if (!db.objectStoreNames.contains('covers')) {
+              db.createObjectStore('covers');
+            }
+          });
+      final txn = db.transaction('covers', idbModeReadWrite);
+      final store = txn.objectStore('covers');
+      await store.delete(key);
+      await txn.completed;
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting image from IndexedDB: $e');
+      return false;
+    }
   }
 
   /// Generates a thumbnail maintaining aspect ratio within maxWidth and maxHeight.
