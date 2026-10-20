@@ -192,26 +192,38 @@ class AppDatabase extends _$AppDatabase {
   }) {
     dynamic query = select(books)..where((tbl) => tbl.archivedAt.isNull());
 
-    // Build join and where conditions for reading records
-    bool hasReadRecordJoin = false;
-    if (searchNotes != null && searchNotes.trim().isNotEmpty) {
-      hasReadRecordJoin = true;
-      final term = '%${searchNotes.trim()}%';
-      query = query.join([
-        innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
-      ]);
-      query.where((tbl) => readingRecords.notes.like(term));
-    }
+        // Build join and where conditions for reading records
+        bool hasReadRecordJoin = false;
+        if (search != null && search.trim().isNotEmpty) {
+          final term = '%${search.trim()}%';
+          query.where(
+            (tbl) =>
+                tbl.title.like(term) |
+                tbl.author.like(term) |
+                tbl.isbn.like(term) |
+                tbl.genres.like(term) |
+                tbl.description.like(term),
+          );
+        }
 
-    if (status != null && status.trim().isNotEmpty) {
-      // Only add join if not already added for searchNotes
-      if (!hasReadRecordJoin) {
-        query = query.join([
-          innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
-        ]);
-      }
-      query.where((tbl) => readingRecords.status.equals(status));
-    }
+        if (searchNotes != null && searchNotes.trim().isNotEmpty) {
+          hasReadRecordJoin = true;
+          final term = '%${searchNotes.trim()}%';
+          query = query.join([
+            innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
+          ]);
+          query.where((tbl) => readingRecords.notes.like(term));
+        }
+
+        if (status != null && status.trim().isNotEmpty) {
+          // Only add join if not already added for searchNotes
+          if (!hasReadRecordJoin) {
+            query = query.join([
+              innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
+            ]);
+          }
+          query.where((tbl) => readingRecords.status.equals(status));
+        }
 
     if (genre != null && genre.trim().isNotEmpty) {
       final lowerGenre = genre.trim().toLowerCase();
