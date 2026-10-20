@@ -22,11 +22,9 @@ class IsbnLookupService {
 
   IsbnLookupService({
     http.Client? httpClient,
-    IsbnLookupMockResponse? mockResponse,
-    Book? mockBook,
-  }) : _httpClient = httpClient ?? http.Client(),
-       _mockResponse = mockResponse,
-       _mockBook = mockBook;
+    this._mockResponse,
+    this._mockBook,
+  }) : _httpClient = httpClient ?? http.Client();
 
   /// Looks up book metadata by ISBN-10 or ISBN-13.
   ///

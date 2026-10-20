@@ -34,10 +34,10 @@ class BookCard extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSecondaryContainer,
                 ),
               )
-            : null, // TODO: cover image
+            : null,
         title: Text(book.title),
         subtitle: Text(book.authors.isEmpty ? 'Unknown author' : book.authors),
-        onTap: () {}, // TODO: progress editor
+        onTap: () {},
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
