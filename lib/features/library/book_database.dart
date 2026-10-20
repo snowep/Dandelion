@@ -192,20 +192,10 @@ class AppDatabase extends _$AppDatabase {
   }) {
     dynamic query = select(books)..where((tbl) => tbl.archivedAt.isNull());
 
-    if (search != null && search.trim().isNotEmpty) {
-      final term = '%${search.trim()}%';
-      query.where(
-        (tbl) =>
-            tbl.title.like(term) |
-            tbl.author.like(term) |
-            tbl.isbn.like(term) |
-            tbl.genres.like(term) |
-            tbl.description.like(term),
-      );
-    }
-
+    // Build join and where conditions for reading records
+    bool hasReadRecordJoin = false;
     if (searchNotes != null && searchNotes.trim().isNotEmpty) {
-      // Search reading notes using a join with distinct to avoid duplicate books
+      hasReadRecordJoin = true;
       final term = '%${searchNotes.trim()}%';
       query = query.join([
         innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
@@ -214,10 +204,12 @@ class AppDatabase extends _$AppDatabase {
     }
 
     if (status != null && status.trim().isNotEmpty) {
-      // Use a join with distinct to avoid join duplication issues
-      query = query.join([
-        innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
-      ]);
+      // Only add join if not already added for searchNotes
+      if (!hasReadRecordJoin) {
+        query = query.join([
+          innerJoin(readingRecords, readingRecords.bookId.equalsExp(books.id)),
+        ]);
+      }
       query.where((tbl) => readingRecords.status.equals(status));
     }
 
