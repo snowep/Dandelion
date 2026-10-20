@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:dandelion/features/library/book.dart';
 import 'package:dandelion/features/library/book_database.dart';
 import 'package:dandelion/features/library/book_repository_impl.dart';
-import 'package:dandelion/features/library/reading_record.dart';
 
 /// Helper that builds an isolated in-memory repository.
 Future<BookRepositoryImpl> buildRepo() async {

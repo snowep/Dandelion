@@ -5,7 +5,7 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:uuid/uuid.dart';
-import 'package:idb_shim/idb.dart';
+
 import 'package:idb_shim/idb_browser.dart';
 
 /// Service for picking and storing cover images.
@@ -209,7 +209,7 @@ class CoverImageService {
       final result = await store.getObject(key);
       await txn.completed;
       if (result == null) return null;
-      if (result is Uint8List) return result as Uint8List;
+      if (result is Uint8List) return result;
       if (result is List<int>) return Uint8List.fromList(result);
       return null;
     } catch (e) {
