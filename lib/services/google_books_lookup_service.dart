@@ -34,7 +34,7 @@ class GoogleBooksLookupService {
     this._mockResponse,
     this._mockBook,
     this._mockSearchResults,
-  })  : _httpClient = httpClient ?? http.Client();
+  }) : _httpClient = httpClient ?? http.Client();
 
   /// Looks up book metadata by ISBN-10 or ISBN-13.
   ///
