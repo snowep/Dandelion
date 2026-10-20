@@ -21,6 +21,9 @@ class BookRepositoryImpl implements BookRepository {
 
   final AppDatabase _database;
 
+  /// @visibleForTesting
+  AppDatabase get testDatabase => _database;
+
   @override
   Future<int> createBook(
     Book book, {
@@ -56,6 +59,7 @@ class BookRepositoryImpl implements BookRepository {
               id: Value.absentIfNull(book.id > 0 ? book.id : null),
               title: book.title.trim(),
               author: Value(authorsList.isNotEmpty ? authorsList.first : null),
+              authors: Value(book.authors),
               description: Value(_optional(book.description)),
               genres: Value(
                 genresList.isNotEmpty ? genresList.join(',') : null,
@@ -127,6 +131,7 @@ class BookRepositoryImpl implements BookRepository {
         id: Value(book.id),
         title: Value(book.title.trim()),
         author: Value(firstAuthor),
+        authors: Value(book.authors),
         description: Value(_optional(book.description)),
         genres: Value(_optional(book.genres)),
         isbn: Value(book.isbn13 ?? book.isbn10),
@@ -455,37 +460,44 @@ class BookRepositoryImpl implements BookRepository {
     return count;
   }
 
-  Book _toBook(BookRow row) => Book(
-    id: row.id,
-    title: row.title,
-    authors: row.authors ?? '',
-    description: row.description,
-    genres: row.genres,
-    isbn10: row.isbn?.length == 10 ? row.isbn : null,
-    isbn13: row.isbn?.length == 13 ? row.isbn : null,
-    publisher: row.publisher,
-    publicationDate: row.publicationDate,
-    pageCount: row.pageCount,
-    coverAssetKey: row.coverAssetKey,
-    externalCatalogId: row.externalCatalogId,
-    externalSourceUrl: row.externalSourceUrl,
-    purchasePrice: row.purchasePrice?.toDouble(),
-    purchaseCurrency: row.purchaseCurrency,
-    isBorrowed: row.isBorrowed,
-    lenderName: row.lenderName,
-    lenderContact: row.lenderContact,
-    borrowDate: row.borrowDate,
-    expectedReturnDate: row.expectedReturnDate,
-    isLent: row.isLent,
-    borrowerName: row.borrowerName,
-    borrowerContact: row.borrowerContact,
-    lendDate: row.lendDate,
-    expectedLendReturnDate: row.expectedLendReturnDate,
-    createdAtParam: row.createdAt,
-    updatedAtParam: row.updatedAt,
-    archivedAt: row.archivedAt,
-    isInWishlistParam: row.isInWishlist,
-  );
+  Book _toBook(BookRow row) {
+    final authors = (row.authors != null && row.authors!.isNotEmpty)
+        ? row.authors!
+        : (row.author != null && row.author!.isNotEmpty)
+        ? row.author!
+        : '';
+    return Book(
+      id: row.id,
+      title: row.title,
+      authors: authors,
+      description: row.description,
+      genres: row.genres,
+      isbn10: row.isbn?.length == 10 ? row.isbn : null,
+      isbn13: row.isbn?.length == 13 ? row.isbn : null,
+      publisher: row.publisher,
+      publicationDate: row.publicationDate,
+      pageCount: row.pageCount,
+      coverAssetKey: row.coverAssetKey,
+      externalCatalogId: row.externalCatalogId,
+      externalSourceUrl: row.externalSourceUrl,
+      purchasePrice: row.purchasePrice?.toDouble(),
+      purchaseCurrency: row.purchaseCurrency,
+      isBorrowed: row.isBorrowed,
+      lenderName: row.lenderName,
+      lenderContact: row.lenderContact,
+      borrowDate: row.borrowDate,
+      expectedReturnDate: row.expectedReturnDate,
+      isLent: row.isLent,
+      borrowerName: row.borrowerName,
+      borrowerContact: row.borrowerContact,
+      lendDate: row.lendDate,
+      expectedLendReturnDate: row.expectedLendReturnDate,
+      createdAtParam: row.createdAt,
+      updatedAtParam: row.updatedAt,
+      archivedAt: row.archivedAt,
+      isInWishlistParam: row.isInWishlist,
+    );
+  }
 
   ReadingRecordsCompanion _toCompanion(ReadingRecord record) =>
       ReadingRecordsCompanion(
