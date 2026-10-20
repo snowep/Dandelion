@@ -823,12 +823,14 @@ class ImportService {
 
       if (shouldSkip && !shouldOverwrite) {
         // Update existing reading record to match imported data rather than skipping
+        final existing = existingBook;
         final recordJson = exportData.readingRecords
-            .where((r) => r['bookId'] == existingBook.id)
+            .where((r) => r['bookId'] == existing.id)
             .firstOrNull;
-          if (recordJson != null) {
-            await _repository.updateReadingRecord(ReadingRecord(
-              bookId: existingBook.id,
+        if (recordJson != null) {
+          await _repository.updateReadingRecord(
+            ReadingRecord(
+              bookId: existing.id,
               status: ReadingStatus.values.firstWhere(
                 (s) => s.name == recordJson['status'],
                 orElse: () => ReadingStatus.wantToRead,
@@ -841,11 +843,13 @@ class ImportService {
               finishDate: recordJson['finishDate'] != null
                   ? DateTime.parse(recordJson['finishDate'] as String)
                   : null,
-              lastReadDate: DateTime.parse(recordJson['lastReadDate'] as String),
+              lastReadDate: DateTime.parse(
+                recordJson['lastReadDate'] as String,
+              ),
               personalRating: recordJson['personalRating'],
               notes: recordJson['notes'],
-            ));
-          }
+            ),
+          );
         }
         continue;
       }
