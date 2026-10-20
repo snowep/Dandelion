@@ -194,13 +194,16 @@ class CoverImageService {
     if (!regExp.hasMatch(key)) return null;
     try {
       final factory = idbFactoryBrowser;
-      final db = await factory.open('dandelion_covers', version: 1,
-          onUpgradeNeeded: (VersionChangeEvent e) {
-            final db = e.database;
-            if (!db.objectStoreNames.contains('covers')) {
-              db.createObjectStore('covers');
-            }
-          });
+      final db = await factory.open(
+        'dandelion_covers',
+        version: 1,
+        onUpgradeNeeded: (VersionChangeEvent e) {
+          final db = e.database;
+          if (!db.objectStoreNames.contains('covers')) {
+            db.createObjectStore('covers');
+          }
+        },
+      );
       final txn = db.transaction('covers', idbModeReadOnly);
       final store = txn.objectStore('covers');
       final result = await store.getObject(key);
@@ -224,13 +227,16 @@ class CoverImageService {
     if (!regExp.hasMatch(key)) return false;
     try {
       final factory = idbFactoryBrowser;
-      final db = await factory.open('dandelion_covers', version: 1,
-          onUpgradeNeeded: (VersionChangeEvent e) {
-            final db = e.database;
-            if (!db.objectStoreNames.contains('covers')) {
-              db.createObjectStore('covers');
-            }
-          });
+      final db = await factory.open(
+        'dandelion_covers',
+        version: 1,
+        onUpgradeNeeded: (VersionChangeEvent e) {
+          final db = e.database;
+          if (!db.objectStoreNames.contains('covers')) {
+            db.createObjectStore('covers');
+          }
+        },
+      );
       final txn = db.transaction('covers', idbModeReadWrite);
       final store = txn.objectStore('covers');
       await store.put(bytes, key);
@@ -248,13 +254,16 @@ class CoverImageService {
     if (!regExp.hasMatch(key)) return false;
     try {
       final factory = idbFactoryBrowser;
-      final db = await factory.open('dandelion_covers', version: 1,
-          onUpgradeNeeded: (VersionChangeEvent e) {
-            final db = e.database;
-            if (!db.objectStoreNames.contains('covers')) {
-              db.createObjectStore('covers');
-            }
-          });
+      final db = await factory.open(
+        'dandelion_covers',
+        version: 1,
+        onUpgradeNeeded: (VersionChangeEvent e) {
+          final db = e.database;
+          if (!db.objectStoreNames.contains('covers')) {
+            db.createObjectStore('covers');
+          }
+        },
+      );
       final txn = db.transaction('covers', idbModeReadWrite);
       final store = txn.objectStore('covers');
       await store.delete(key);
