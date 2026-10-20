@@ -1,12 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../features/library/library_notifier.dart';
 import '../../services/library_export_import_service.dart';
@@ -80,53 +77,32 @@ class _ExportImportSectionState extends ConsumerState<_ExportImportSection> {
   String? _message;
 
   Future<void> _export() async {
-    if (!mounted) return;
-    setState(() {
-      _exporting = true;
-      _message = null;
-    });
-    try {
-      final repository = ref.read(bookRepositoryProvider);
-      final exportService = ExportService(repository);
-
       if (!mounted) return;
+      setState(() {
+        _exporting = true;
+        _message = null;
+      });
+      try {
+        final repository = ref.read(bookRepositoryProvider);
+        final exportService = ExportService(repository);
 
-      final data = await exportService.export();
-      final bytes = utf8.encode(jsonEncode(data.toJson()));
-      final Uri? fileUri = await FilePicker.saveFile(
-        bytes: bytes,
-        dialogTitle: 'Export Library',
-        fileName: 'dandelion_library_export.zip',
-        type: FileType.custom,
-        allowedExtensions: ['zip'],
-      );
-
-      if (fileUri == null) {
+        if (!mounted) return;
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/dandelion_library_export.zip');
+        await exportService.exportToFile(file);
+        if (!mounted) return;
         setState(() {
           _exporting = false;
-          _message = 'Export cancelled';
+          _message = 'Library exported successfully';
         });
-        return;
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _exporting = false;
+          _message = 'Export failed: $e';
+        });
       }
-
-      if (!kIsWeb) {
-        final file = File(fileUri.path);
-        await file.writeAsBytes(Uint8List.fromList(bytes));
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _exporting = false;
-        _message = 'Library exported successfully';
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _exporting = false;
-        _message = 'Export failed: $e';
-      });
     }
-  }
 
   Future<void> _import() async {
     if (!mounted) return;
