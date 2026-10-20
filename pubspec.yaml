@@ -50,6 +50,7 @@ dependencies:
   indexed_db: ^1.0.1
   idb_shim: ^2.0.3
   shared_preferences: ^2.3.2
+  share_plus: ^13.3.1
 
 dev_dependencies:
   flutter_test:
