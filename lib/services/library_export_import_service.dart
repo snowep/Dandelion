@@ -785,7 +785,7 @@ class ImportService {
         // Fix 4: Overwrite semantics - overwrite both book AND reading record
         if (existingBook != null && shouldOverwrite) {
           final book = Book(
-            id: bookJson['id'],
+            id: 0,
             title: bookJson['title'] as String,
             authors: bookJson['authors'] as String,
             description: bookJson['description'],
@@ -864,7 +864,7 @@ class ImportService {
         } else {
           // Create new book (Fix 1: source ID not reused, new destination ID assigned)
           final book = Book(
-            id: bookJson['id'],
+            id: 0,
             title: bookJson['title'] as String,
             authors: bookJson['authors'] as String,
             description: bookJson['description'],
