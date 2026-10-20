@@ -77,32 +77,32 @@ class _ExportImportSectionState extends ConsumerState<_ExportImportSection> {
   String? _message;
 
   Future<void> _export() async {
+    if (!mounted) return;
+    setState(() {
+      _exporting = true;
+      _message = null;
+    });
+    try {
+      final repository = ref.read(bookRepositoryProvider);
+      final exportService = ExportService(repository);
+
+      if (!mounted) return;
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/dandelion_library_export.zip');
+      await exportService.exportToFile(file);
       if (!mounted) return;
       setState(() {
-        _exporting = true;
-        _message = null;
+        _exporting = false;
+        _message = 'Library exported successfully';
       });
-      try {
-        final repository = ref.read(bookRepositoryProvider);
-        final exportService = ExportService(repository);
-
-        if (!mounted) return;
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/dandelion_library_export.zip');
-        await exportService.exportToFile(file);
-        if (!mounted) return;
-        setState(() {
-          _exporting = false;
-          _message = 'Library exported successfully';
-        });
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          _exporting = false;
-          _message = 'Export failed: $e';
-        });
-      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _exporting = false;
+        _message = 'Export failed: $e';
+      });
     }
+  }
 
   Future<void> _import() async {
     if (!mounted) return;
