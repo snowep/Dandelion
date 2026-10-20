@@ -75,14 +75,18 @@ class CoverImageService {
         if (!success) return null;
         return key;
       } else {
-        // Get storage directory and save the thumbnail.
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/$key';
-        final thumbnailFile = File(filePath);
-        await thumbnailFile.writeAsBytes(thumbnailBytes);
+              // Get storage directory and ensure covers subdirectory exists.
+              final directory = await getApplicationDocumentsDirectory();
+              final coversDir = Directory('${directory.path}/covers');
+              if (!await coversDir.exists()) {
+                await coversDir.create(recursive: true);
+              }
+              final filePath = '${coversDir.path}/$key';
+              final thumbnailFile = File(filePath);
+              await thumbnailFile.writeAsBytes(thumbnailBytes);
 
-        return key;
-      }
+              return key;
+            }
     } catch (e) {
       debugPrint('Error picking and storing image: $e');
       rethrow;
@@ -142,27 +146,30 @@ class CoverImageService {
   }
 
   static Future<bool> _storeImageNative(
-    Uint8List bytes, {
-    required String key,
-  }) async {
-    try {
-      // Validate key format to prevent path traversal
-      if (key.contains('..') ||
-          !RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\.png$').hasMatch(key)) {
+      Uint8List bytes, {
+      required String key,
+    }) async {
+      try {
+        // Validate key format to prevent path traversal
+        if (key.contains('..') ||
+            !RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\.png$').hasMatch(key)) {
+          return false;
+        }
+        final directory = await getApplicationDocumentsDirectory();
+        final coversDir = Directory('${directory.path}/covers');
+        if (!await coversDir.exists()) {
+          await coversDir.create(recursive: true);
+        }
+        final filePath = '${coversDir.path}/$key';
+        final file = File(filePath);
+
+        await file.writeAsBytes(bytes);
+        return true;
+      } catch (e) {
+        debugPrint('Error storing image: $e');
         return false;
       }
-
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/$key';
-      final file = File(filePath);
-
-      await file.writeAsBytes(bytes);
-      return true;
-    } catch (e) {
-      debugPrint('Error storing image: $e');
-      return false;
     }
-  }
 
   static Future<bool> _deleteImageNative(String key) async {
     try {
@@ -190,7 +197,7 @@ class CoverImageService {
   // Web implementations
   static Future<Uint8List?> _loadImageWeb(String key) async {
     if (!kIsWeb) return null;
-    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\\.png$');
+    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\.png$');
     if (!regExp.hasMatch(key)) return null;
     try {
       final factory = idbFactoryBrowser;
@@ -223,7 +230,7 @@ class CoverImageService {
     required String key,
   }) async {
     if (!kIsWeb) return false;
-    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\\.png$');
+    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\.png$');
     if (!regExp.hasMatch(key)) return false;
     try {
       final factory = idbFactoryBrowser;
@@ -250,7 +257,7 @@ class CoverImageService {
 
   static Future<bool> _deleteImageWeb(String key) async {
     if (!kIsWeb) return false;
-    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\\.png$');
+    final RegExp regExp = RegExp(r'^covers/cover_[0-9a-fA-F-]{36}\.png$');
     if (!regExp.hasMatch(key)) return false;
     try {
       final factory = idbFactoryBrowser;
