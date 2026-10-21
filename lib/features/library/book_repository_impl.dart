@@ -321,19 +321,19 @@ class BookRepositoryImpl implements BookRepository {
   }
 
   @override
-    Future<void> close() => _database.close();
+  Future<void> close() => _database.close();
 
-    @override
-    Future<T> transaction<T>(Future<T> Function() action) {
-      return _database.transaction(action);
-    }
+  @override
+  Future<T> transaction<T>(Future<T> Function() action) {
+    return _database.transaction(action);
+  }
 
-    @override
-    Future<int> getTotalBooksCount() async {
-      return (await (_database.select(
-        _database.books,
-      )..where((book) => book.archivedAt.isNull())).get()).length;
-    }
+  @override
+  Future<int> getTotalBooksCount() async {
+    return (await (_database.select(
+      _database.books,
+    )..where((book) => book.archivedAt.isNull())).get()).length;
+  }
 
   @override
   Future<int> getWishlistCount() async {

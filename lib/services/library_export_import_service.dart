@@ -751,10 +751,10 @@ class ImportService {
     final exportData = ExportData.fromJson(jsonMap);
 
     // Fix 1: Source-to-destination ID mapping
-        final sourceToDestId = <int, int>{};
+    final sourceToDestId = <int, int>{};
 
-        // Fix 5: Atomic rollback using database transaction
-        await _repository.transaction(() async {
+    // Fix 5: Atomic rollback using database transaction
+    await _repository.transaction(() async {
       for (final bookJson in exportData.books) {
         final sourceId = bookJson['id'] as int;
         final normalizedIsbn = _normalizeIsbn(
@@ -771,7 +771,10 @@ class ImportService {
         }
 
         if (existingBook == null && title.isNotEmpty && author.isNotEmpty) {
-          existingBook = await _repository.getBookByTitleAndAuthor(title, author);
+          existingBook = await _repository.getBookByTitleAndAuthor(
+            title,
+            author,
+          );
         }
 
         final shouldSkip = skipConflicts && existingBook != null;
@@ -833,32 +836,38 @@ class ImportService {
                 ? DateTime.parse(bookJson['archivedAt'] as String)
                 : null,
           );
-          
-          await _repository.updateBook(book.copyWith(id: existingBook.id, updatedAt: DateTime.now()));
-          
+
+          await _repository.updateBook(
+            book.copyWith(id: existingBook.id, updatedAt: DateTime.now()),
+          );
+
           // Also overwrite reading record
           final recordJson = exportData.readingRecords
               .where((r) => r['bookId'] == sourceId)
               .firstOrNull;
           if (recordJson != null) {
-            await _repository.updateReadingRecord(ReadingRecord(
-              bookId: existingBook.id,
-              status: ReadingStatus.values.firstWhere(
-                (s) => s.name == recordJson['status'],
-                orElse: () => ReadingStatus.wantToRead,
+            await _repository.updateReadingRecord(
+              ReadingRecord(
+                bookId: existingBook.id,
+                status: ReadingStatus.values.firstWhere(
+                  (s) => s.name == recordJson['status'],
+                  orElse: () => ReadingStatus.wantToRead,
+                ),
+                currentPage: recordJson['currentPage'],
+                percentageOnlyProgress: recordJson['percentageOnlyProgress'],
+                startDate: recordJson['startDate'] != null
+                    ? DateTime.parse(recordJson['startDate'] as String)
+                    : null,
+                finishDate: recordJson['finishDate'] != null
+                    ? DateTime.parse(recordJson['finishDate'] as String)
+                    : null,
+                lastReadDate: DateTime.parse(
+                  recordJson['lastReadDate'] as String,
+                ),
+                personalRating: recordJson['personalRating'],
+                notes: recordJson['notes'],
               ),
-              currentPage: recordJson['currentPage'],
-              percentageOnlyProgress: recordJson['percentageOnlyProgress'],
-              startDate: recordJson['startDate'] != null
-                  ? DateTime.parse(recordJson['startDate'] as String)
-                  : null,
-              finishDate: recordJson['finishDate'] != null
-                  ? DateTime.parse(recordJson['finishDate'] as String)
-                  : null,
-              lastReadDate: DateTime.parse(recordJson['lastReadDate'] as String),
-              personalRating: recordJson['personalRating'],
-              notes: recordJson['notes'],
-            ));
+            );
           }
           sourceToDestId[sourceId] = existingBook.id;
         } else {
@@ -912,8 +921,11 @@ class ImportService {
                 ? DateTime.parse(bookJson['archivedAt'] as String)
                 : null,
           );
-          
-          final id = await _repository.createBook(book, initialStatus: ReadingStatus.wantToRead);
+
+          final id = await _repository.createBook(
+            book,
+            initialStatus: ReadingStatus.wantToRead,
+          );
           sourceToDestId[sourceId] = id;
 
           // Fix 3: Correct record matching - use source book ID from export to find matching destination record
@@ -921,24 +933,28 @@ class ImportService {
               .where((r) => r['bookId'] == sourceId)
               .firstOrNull;
           if (recordJson != null) {
-            await _repository.updateReadingRecord(ReadingRecord(
-              bookId: id,
-              status: ReadingStatus.values.firstWhere(
-                (status) => status.name == recordJson['status'],
-                orElse: () => ReadingStatus.wantToRead,
+            await _repository.updateReadingRecord(
+              ReadingRecord(
+                bookId: id,
+                status: ReadingStatus.values.firstWhere(
+                  (status) => status.name == recordJson['status'],
+                  orElse: () => ReadingStatus.wantToRead,
+                ),
+                currentPage: recordJson['currentPage'],
+                percentageOnlyProgress: recordJson['percentageOnlyProgress'],
+                startDate: recordJson['startDate'] != null
+                    ? DateTime.parse(recordJson['startDate'] as String)
+                    : null,
+                finishDate: recordJson['finishDate'] != null
+                    ? DateTime.parse(recordJson['finishDate'] as String)
+                    : null,
+                lastReadDate: DateTime.parse(
+                  recordJson['lastReadDate'] as String,
+                ),
+                personalRating: recordJson['personalRating'],
+                notes: recordJson['notes'],
               ),
-              currentPage: recordJson['currentPage'],
-              percentageOnlyProgress: recordJson['percentageOnlyProgress'],
-              startDate: recordJson['startDate'] != null
-                  ? DateTime.parse(recordJson['startDate'] as String)
-                  : null,
-              finishDate: recordJson['finishDate'] != null
-                  ? DateTime.parse(recordJson['finishDate'] as String)
-                  : null,
-              lastReadDate: DateTime.parse(recordJson['lastReadDate'] as String),
-              personalRating: recordJson['personalRating'],
-              notes: recordJson['notes'],
-            ));
+            );
           }
         }
       }
@@ -954,7 +970,9 @@ class ImportService {
         }
       }
       if (failedCovers.isNotEmpty) {
-        throw StateError('Cover storage failed for keys: ${failedCovers.join(', ')}');
+        throw StateError(
+          'Cover storage failed for keys: ${failedCovers.join(', ')}',
+        );
       }
     });
   }
