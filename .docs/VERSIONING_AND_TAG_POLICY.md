@@ -1,8 +1,8 @@
 # Dandelion versioning and existing tag policy
 
-## Verified state on 2026-10-19
+## Verified state on 2026-10-20
 
-- `master` HEAD: `b285f5cf7a61dabfde4ccb8bdefba70ffa0cf207`.
+- `master` HEAD: `2dbcf7f`.
 - Tag `v1.0.0` targets commit `193d9c2e31fdfab61397596645b26df5ddeb7e9d`.
 - Tag `v1.0.1` targets commit `86e48560e8500221f4056c2ba92089f01f57a125`.
 - Current `pubspec.yaml`: `version: 0.2.0+1`.

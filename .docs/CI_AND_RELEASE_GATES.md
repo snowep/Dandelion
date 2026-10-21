@@ -2,13 +2,15 @@
 
 ## Current CI evidence
 
-Latest run: [Flutter CI run #34](https://github.com/snowep/Dandelion/actions/runs/39174776122), commit `b285f5cf7a61dabfde4ccb8bdefba70ffa0cf207`.
+Latest run: [Flutter CI run #53](https://github.com/snowep/Dandelion/actions/runs/39411469009), commit `2dbcf7f`.
 
 - Dependency setup: passed.
-- Format check: passed (`46 files (0 changed)`).
-- Analyze: failed with four findings (two warnings and two infos).
-- Tests: skipped.
-- Web build: skipped.
+- Format check: passed (`52 files (0 changed)`).
+- Analyze: passed — no issues found.
+- Tests: passed — 43 tests passed.
+- Web build: passed.
+- Native builds for all declared targets: not verified by this workflow.
+- Deployed-browser persistence test: not verified.
 
 ## Required CI order
 

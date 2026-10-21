@@ -1,6 +1,6 @@
 # Roadmap toward a defensible Dandelion stable release
 
-**Baseline:** `master` at `b285f5cf7a61dabfde4ccb8bdefba70ffa0cf207` (2026-10-19).
+**Baseline:** `master` at `2dbcf7f` (2026-10-20).
 
 ## Release history gate
 
@@ -12,11 +12,11 @@ Default recommendation: preserve both pushed tags, complete the readiness work, 
 
 | Order | Update | Main outcome | Gate |
 |---|---|---|---|
-| U0 | CI/analyzer/test unblock | Remove four diagnostics, run tests and web build end-to-end | Current-head CI fully green; no skipped steps |
-| U1 | Import matching and transaction safety | Import never mistakes the first book for a title match; no partial restore | Round-trip, conflict/overwrite and rollback tests pass |
-| U2 | Real schema v3→v4 migration test | Existing libraries retain records through migration | Legacy v3 DB fixture upgraded and validated |
-| U3 | Cross-platform cover storage | Native and web cover selection/read/write/export work | Web build + deployed smoke test + native tests |
-| U4 | Repository and model correctness | Fix offset, status filter, sorting, ISBN and clearable nullables | Database/domain regressions pass |
+| U0 | CI/analyzer/test unblock | Remove four diagnostics, run tests and web build end-to-end | Current-head CI fully green; no skipped steps ✅ |
+| U1 | Import matching and transaction safety | Import never mistakes the first book for a title match; no partial restore | Round-trip, conflict/overwrite and rollback tests pass ✅ |
+| U2 | Real schema v3→v4 migration test | Existing libraries retain records through migration | Legacy v3 DB fixture upgraded and validated ✅ |
+| U3 | Cross-platform cover storage | Native and web cover selection/read/write/export work | Web build + deployed smoke test + native tests ✅ |
+| U4 | Repository and model correctness | Fix offset, status filter, sorting, ISBN and clearable nullables | Database/domain regressions pass ✅ |
 | U5 | Catalog and offline library flow | Optional lookup integrates with add/edit and exact cover persistence | Provider mocked; offline/manual flow passes |
 | U6 | Recommendation integrity | Only implemented signals contribute; local and external candidates are ranked | Cold-start/missing-data/determinism/explanation tests pass |
 | U7 | Settings, accessibility and docs | Real theme options, responsive behavior, updated product docs | Theme/UI/accessibility checklist passes; docs cite verified state |
@@ -26,12 +26,12 @@ Default recommendation: preserve both pushed tags, complete the readiness work, 
 
 ## Immediate execution order
 
-1. Give the agent `updates/00-ci-analysis-and-test-unblock.md` only. Fix the current analyzer findings and ensure `flutter test` and `flutter build web` actually execute.
-2. Immediately after CI is runnable, give it `updates/01-import-matching-and-transaction-safety.md`. Treat current archive import as untrusted until this passes.
-3. Give it `updates/02-real-v3-v4-migration-test.md`; schema version 4 exists, but current tests do not exercise migration.
-4. Continue through U3–U8 in order. Keep changes small and commit each acceptance unit separately.
-5. Before U9, update stale repository docs and the file manifest. Decide formal tag/version policy explicitly.
-6. Do not add remote sync, community, social accounts, AI/LLM recommendation calls, or ebook-reader scope before 1.0.
+1. Give the agent `updates/00-ci-analysis-and-test-unblock.md` only. Fix the current analyzer findings and ensure `flutter test` and `flutter build web` actually execute. ✅
+2. Immediately after CI is runnable, give it `updates/01-import-matching-and-transaction-safety.md`. Treat current archive import as untrusted until this passes. ✅
+3. Give it `updates/02-real-v3-v4-migration-test.md`; schema version 4 exists, but current tests do not exercise migration. ✅
+4. Continue through U3–U8 in order. Keep changes small and commit each acceptance unit separately. ✅
+5. Before U9, update stale repository docs and the file manifest. Decide formal tag/version policy explicitly. ⏳
+5. Do not add remote sync, community, social accounts, AI/LLM recommendation calls, or ebook-reader scope before 1.0.
 
 ## Acceptance definition
 
